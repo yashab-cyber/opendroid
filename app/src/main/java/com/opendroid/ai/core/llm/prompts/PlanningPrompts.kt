@@ -107,6 +107,11 @@ You have access to the following Action Modules. You must select from these ACTI
     - READ_FILE {filePath: String}
     - WRITE_FILE {filePath: String, content: String}
     - DELETE_FILE {filePath: String}
+    - CREATE_DIRECTORY {path: String}
+    - COPY_FILE {sourcePath: String, destPath: String}
+    - MOVE_FILE {sourcePath: String, destPath: String}
+    - ZIP_FILES {sourcePath: String, zipFilePath: String}
+    - UNZIP_FILE {zipFilePath: String, destDirPath: String}
 
 12. OTHER APPS CONTROL (ACCESSIBILITY AUTOMATION)
     - LIST_INSTALLED_APPS {}

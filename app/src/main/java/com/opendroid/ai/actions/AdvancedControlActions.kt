@@ -57,6 +57,11 @@ class AdvancedControlActions @Inject constructor() {
         ReadFileAction(),
         WriteFileAction(),
         DeleteFileAction(),
+        CreateDirectoryAction(),
+        CopyFileAction(),
+        MoveFileAction(),
+        ZipFilesAction(),
+        UnzipFileAction(),
         TakePhotoBackgroundAction(),
         ListInstalledAppsAction(),
         CloseAppAction(),
@@ -207,11 +212,11 @@ class AdvancedControlActions @Inject constructor() {
                 if (!file.exists()) {
                     return ActionResult(false, null, "File does not exist: $filePath")
                 }
-                val deleted = file.delete()
+                val deleted = file.deleteRecursively()
                 if (deleted) {
                     ActionResult(true, "Successfully deleted $filePath", null)
                 } else {
-                    ActionResult(false, null, "Failed to delete file (unknown reason)")
+                    ActionResult(false, null, "Failed to delete path (unknown reason)")
                 }
             } catch (e: Exception) {
                 ActionResult(false, null, "Failed to delete file: ${e.localizedMessage}")
@@ -457,4 +462,199 @@ class AdvancedControlActions @Inject constructor() {
             return ActionResult(success, if (success) "Clicked at coordinates ($x, $y)" else "Failed to click at coordinates", null)
         }
     }
+
+    private class CreateDirectoryAction : Action {
+        override val name: String = "CREATE_DIRECTORY"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            checkStoragePermission(context)?.let { return it }
+            val pathStr = params["path"] ?: return ActionResult(false, null, "path parameter is missing")
+            return try {
+                val dir = File(pathStr)
+                if (dir.exists()) {
+                    if (dir.isDirectory) {
+                        ActionResult(true, "Directory already exists: $pathStr", null)
+                    } else {
+                        ActionResult(false, null, "Path exists but is a file, not a directory: $pathStr")
+                    }
+                } else {
+                    val created = dir.mkdirs()
+                    if (created) {
+                        ActionResult(true, "Successfully created directory: $pathStr", null)
+                    } else {
+                        ActionResult(false, null, "Failed to create directory: $pathStr")
+                    }
+                }
+            } catch (e: Exception) {
+                ActionResult(false, null, "Failed to create directory: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private class CopyFileAction : Action {
+        override val name: String = "COPY_FILE"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            checkStoragePermission(context)?.let { return it }
+            val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
+            val destPath = params["destPath"] ?: return ActionResult(false, null, "destPath parameter is missing")
+            return try {
+                val src = File(srcPath)
+                val dest = File(destPath)
+                if (!src.exists()) {
+                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                }
+                copyRecursively(src, dest)
+                ActionResult(true, "Successfully copied $srcPath to $destPath", null)
+            } catch (e: Exception) {
+                ActionResult(false, null, "Failed to copy: ${e.localizedMessage}")
+            }
+        }
+
+        private fun copyRecursively(src: File, dest: File) {
+            if (src.isDirectory) {
+                if (!dest.exists()) {
+                    dest.mkdirs()
+                }
+                src.listFiles()?.forEach { file ->
+                    copyRecursively(file, File(dest, file.name))
+                }
+            } else {
+                dest.parentFile?.mkdirs()
+                src.inputStream().use { input ->
+                    dest.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        }
+    }
+
+    private class MoveFileAction : Action {
+        override val name: String = "MOVE_FILE"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            checkStoragePermission(context)?.let { return it }
+            val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
+            val destPath = params["destPath"] ?: return ActionResult(false, null, "destPath parameter is missing")
+            return try {
+                val src = File(srcPath)
+                val dest = File(destPath)
+                if (!src.exists()) {
+                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                }
+                dest.parentFile?.mkdirs()
+                val renamed = src.renameTo(dest)
+                if (renamed) {
+                    ActionResult(true, "Successfully moved/renamed $srcPath to $destPath", null)
+                } else {
+                    copyRecursively(src, dest)
+                    deleteRecursively(src)
+                    ActionResult(true, "Successfully moved $srcPath to $destPath via copy-and-delete", null)
+                }
+            } catch (e: Exception) {
+                ActionResult(false, null, "Failed to move: ${e.localizedMessage}")
+            }
+        }
+
+        private fun copyRecursively(src: File, dest: File) {
+            if (src.isDirectory) {
+                if (!dest.exists()) {
+                    dest.mkdirs()
+                }
+                src.listFiles()?.forEach { file ->
+                    copyRecursively(file, File(dest, file.name))
+                }
+            } else {
+                dest.parentFile?.mkdirs()
+                src.inputStream().use { input ->
+                    dest.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        }
+
+        private fun deleteRecursively(file: File) {
+            if (file.isDirectory) {
+                file.listFiles()?.forEach { deleteRecursively(it) }
+            }
+            file.delete()
+        }
+    }
+
+    private class ZipFilesAction : Action {
+        override val name: String = "ZIP_FILES"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            checkStoragePermission(context)?.let { return it }
+            val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
+            val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")
+            return try {
+                val src = File(srcPath)
+                val zipFile = File(zipFilePath)
+                if (!src.exists()) {
+                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                }
+                zipFile.parentFile?.mkdirs()
+                java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(zipFile.outputStream())).use { zos ->
+                    zipRecursively(src, src, zos)
+                }
+                ActionResult(true, "Successfully zipped $srcPath into $zipFilePath", null)
+            } catch (e: Exception) {
+                ActionResult(false, null, "Failed to zip: ${e.localizedMessage}")
+            }
+        }
+
+        private fun zipRecursively(root: File, file: File, zos: java.util.zip.ZipOutputStream) {
+            val relativePath = file.absolutePath.substring(root.parentFile?.absolutePath?.length?.plus(1) ?: 0)
+            if (file.isDirectory) {
+                val entryName = if (relativePath.endsWith("/")) relativePath else "$relativePath/"
+                zos.putNextEntry(java.util.zip.ZipEntry(entryName))
+                zos.closeEntry()
+                file.listFiles()?.forEach { child ->
+                    zipRecursively(root, child, zos)
+                }
+            } else {
+                zos.putNextEntry(java.util.zip.ZipEntry(relativePath))
+                file.inputStream().use { input ->
+                    input.copyTo(zos)
+                }
+                zos.closeEntry()
+            }
+        }
+    }
+
+    private class UnzipFileAction : Action {
+        override val name: String = "UNZIP_FILE"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            checkStoragePermission(context)?.let { return it }
+            val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")
+            val destDirPath = params["destDirPath"] ?: return ActionResult(false, null, "destDirPath parameter is missing")
+            return try {
+                val zipFile = File(zipFilePath)
+                val destDir = File(destDirPath)
+                if (!zipFile.exists()) {
+                    return ActionResult(false, null, "Zip file does not exist: $zipFilePath")
+                }
+                destDir.mkdirs()
+                java.util.zip.ZipInputStream(java.io.BufferedInputStream(zipFile.inputStream())).use { zis ->
+                    var entry = zis.nextEntry
+                    while (entry != null) {
+                        val file = File(destDir, entry.name)
+                        if (entry.isDirectory) {
+                            file.mkdirs()
+                        } else {
+                            file.parentFile?.mkdirs()
+                            file.outputStream().use { output ->
+                                zis.copyTo(output)
+                            }
+                        }
+                        zis.closeEntry()
+                        entry = zis.nextEntry
+                    }
+                }
+                ActionResult(true, "Successfully unzipped $zipFilePath into $destDirPath", null)
+            } catch (e: Exception) {
+                ActionResult(false, null, "Failed to unzip: ${e.localizedMessage}")
+            }
+        }
+    }
 }
+
