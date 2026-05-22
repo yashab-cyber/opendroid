@@ -1,7 +1,7 @@
 # OpenDroid
 
 <p align="center">
-  <img src="assets/removebckground.png" alt="OpenDroid Logo" width="180px">
+  <img src="assets/backgroundremoved.png" alt="OpenDroid Logo" width="180px">
 </p>
 
 > **"Your Open Autonomous Android Agent"**
