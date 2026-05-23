@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenDroid — Autonomous, Self-Planning AI Agent for Android</title>
+    <meta name="description" content="OpenDroid is a premium, open-source, local-first autonomous AI agent for Android. It executes complex commands via dynamic planning, accessibility services, and screenshots.">
+    <meta name="keywords" content="Android AI, AI Agent, Autonomous Planning, Accessibility Automation, Local LLM, Android Automation, Open Source AI">
+    <meta property="og:title" content="OpenDroid — Autonomous Android Agent">
+    <meta property="og:description" content="Production-ready, autonomous, self-planning AI assistant for Android with multi-tier memory and local wake-word.">
+    <meta property="og:image" content="assets/opendroid.png">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/png" href="assets/backgroundremoved.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Backdrop Blobs -->
+    <div class="ambient-glow glow-1" id="bg-glow-top-left"></div>
+    <div class="ambient-glow glow-2" id="bg-glow-bottom-right"></div>
+    <div class="ambient-glow glow-3" id="bg-glow-center"></div>
+
+    <!-- Header Navigation -->
+    <header id="main-header">
+        <div class="container nav-container">
+            <a href="#" class="logo" id="header-logo-link">
+                <img src="assets/backgroundremoved.png" alt="OpenDroid Logo">
+                <span class="text-gradient">OPENDROID</span>
+            </a>
+            
+            <button class="menu-toggle" id="menu-toggle-btn" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-links" id="nav-menu">
+                <li><a href="#features" id="nav-link-features">Features</a></li>
+                <li><a href="#demo" id="nav-link-demo">Interactive Demo</a></li>
+                <li><a href="#architecture" id="nav-link-arch">Architecture</a></li>
+                <li><a href="#commands" id="nav-link-cmds">Commands</a></li>
+                <!-- Theme Toggle Button -->
+                <li><button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Theme">
+                    <span class="toggle-icon" id="theme-toggle-icon">🌙</span>
+                </button></li>
+                <li><a href="https://github.com/yashab-cyber/opendroid" class="btn btn-secondary" id="github-btn-header" target="_blank">
+                    <span class="btn-icon">🐙</span> GitHub
+                </a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <div class="hero-top-badges">
+                    <div class="section-badge">Autonomous Assistant</div>
+                    <!-- Live GitHub Stats -->
+                    <div class="github-badges-row">
+                        <iframe src="https://ghbtns.com/github-btn.html?user=yashab-cyber&repo=opendroid&type=star&count=true&size=large" frameborder="0" scrolling="0" width="130" height="30" title="GitHub Stars"></iframe>
+                        <iframe src="https://ghbtns.com/github-btn.html?user=yashab-cyber&repo=opendroid&type=fork&count=true&size=large" frameborder="0" scrolling="0" width="130" height="30" title="GitHub Forks"></iframe>
+                    </div>
+                </div>
+                <h1>Your Open <br><span class="text-gradient-cyan">Autonomous</span> <br>Android Agent</h1>
+                <p>OpenDroid is a production-ready, self-planning AI assistant that runs on your Android device. It translates complex verbal goals into sequential actions, automates third-party apps via accessibility controls, and adapts dynamically using screenshot vision engines.</p>
+                <div class="hero-ctas">
+                    <a href="https://github.com/yashab-cyber/opendroid/releases" class="btn btn-primary" id="hero-download-btn">
+                        <span>📥</span> Download APK
+                    </a>
+                    <a href="https://github.com/yashab-cyber/opendroid" class="btn btn-secondary" id="hero-code-btn" target="_blank">
+                        <span>🔍</span> View Source Code
+                    </a>
+                </div>
+                <div class="hero-features-list">
+                    <div class="hero-feat-item">
+                        <span class="hero-feat-num" id="stat-latency">&lt;250ms</span>
+                        <span class="hero-feat-label">Avg Core Latency</span>
+                    </div>
+                    <div class="hero-feat-item">
+                        <span class="hero-feat-num" id="stat-offline">100%</span>
+                        <span class="hero-feat-label">Local Voice Engine</span>
+                    </div>
+                    <div class="hero-feat-item">
+                        <span class="hero-feat-num" id="stat-memory">4-Tier</span>
+                        <span class="hero-feat-label">Persistent Memory</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="orb-container" id="pulsing-orb-container">
+                <div class="orb-wrapper">
+                    <!-- Layered glowing backdrops representing voice assistant listening -->
+                    <div class="orb-glow-layer"></div>
+                    <!-- Undistorted 3D floating bot avatar -->
+                    <img src="assets/bot.png" alt="OpenDroid Assistant Bot" class="bot-avatar" id="voice-assistant-bot" title="Click to trigger wake-word interaction">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Core Capabilities</div>
+                <h2>Built for Absolute Autonomy</h2>
+                <p>OpenDroid bypasses simple prompt-response chatbot models to deliver a real agentic automation system that acts on your behalf.</p>
+            </div>
+            
+            <div class="features-grid">
+                <!-- Card 1 -->
+                <div class="feature-card glass-panel" id="feat-planning">
+                    <div class="feature-icon-wrapper">
+                        <!-- Brain Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-4.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2z"/>
+                            <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-4.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Autonomous Planning</h3>
+                    <p>Decomposes complex requests into multiple distinct execution actions. Validates progress and adapts planning steps dynamically when system states change.</p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="feature-card glass-panel" id="feat-vision">
+                    <div class="feature-icon-wrapper">
+                        <!-- Eye/Vision Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <h3>Vision & Screenshot OCR</h3>
+                    <p>Captures screen buffers via accessibility layers and leverages multimodal analysis. Automatically falls back to layout tree scraping when screen capture is restricted.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="feature-card glass-panel" id="feat-memory">
+                    <div class="feature-icon-wrapper">
+                        <!-- Database Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>
+                        </svg>
+                    </div>
+                    <h3>Multi-Tier Memory</h3>
+                    <p>Maintains Working, Episodic, Semantic, and Procedural layers. Structured personal facts are extracted via an LLM fact-mining parser to keep queries grounded.</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="feature-card glass-panel" id="feat-voice">
+                    <div class="feature-icon-wrapper">
+                        <!-- Mic Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </div>
+                    <h3>Offline Voice Processing</h3>
+                    <p>Uses local wake-word detection and local speech recognition engines. Translates voice commands quickly, falling back to ElevenLabs when cloud services are desired.</p>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="feature-card glass-panel" id="feat-fallback">
+                    <div class="feature-icon-wrapper">
+                        <!-- Shield/Safety Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3>System Intent Safeguard</h3>
+                    <p>Ensures zero-refusal messaging and calling by defaulting to background services. Seamlessly launches system composer fallbacks if standard permissions are missing.</p>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="feature-card glass-panel" id="feat-macros">
+                    <div class="feature-icon-wrapper">
+                        <!-- Zap/Macro Icon -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <h3>Procedural Macro Engine</h3>
+                    <p>Records sequential device operations and registers custom workflows. Macros can be scheduled using standard cron expressions to run tasks automatically.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo / Latency Benchmark Section -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Live Simulation</div>
+                <h2>Interactive Engine Monitor</h2>
+                <p>Choose a prompt command below and trigger the local planner simulator to witness OpenDroid's execution cycle and low-latency benchmark feeds.</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Developer Terminal/Console -->
+                <div class="glass-panel dashboard-console" id="console-window">
+                    <div class="console-header">
+                        <div class="console-dots">
+                            <span class="console-dot red"></span>
+                            <span class="console-dot yellow"></span>
+                            <span class="console-dot green"></span>
+                        </div>
+                        <div class="console-title">opendroid-agent-core.log</div>
+                        <div class="console-status-light">🟢 Live</div>
+                    </div>
+                    <div class="console-body" id="console-logs-output">
+                        <div class="console-log console-input-line">
+                            <span>&gt;</span><span>System Idle. Ready to execute: "Check rain forecast, if wet message Wife that I'll be late, and schedule alarm for 6 PM."</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls & Live Meters -->
+                <div class="glass-panel dashboard-controls" id="controls-panel">
+                    <div class="control-selector">
+                        <h3>Select Scenario</h3>
+                        <p class="control-desc">Toggle different command intents to inspect the planning route:</p>
+                        
+                        <div class="demo-selector-buttons">
+                            <button class="demo-option-btn active" data-demo="rain" id="demo-btn-rain">
+                                <span class="label">🌧️ Weather & SMS (Compound Intent)</span>
+                                <span class="arrow">→</span>
+                            </button>
+                            <button class="demo-option-btn" data-demo="screen" id="demo-btn-screen">
+                                <span class="label">👁️ Vision Spanish OCR & Translate</span>
+                                <span class="arrow">→</span>
+                            </button>
+                            <button class="demo-option-btn" data-demo="morning" id="demo-btn-morning">
+                                <span class="label">🌅 Run Morning Macro Routine</span>
+                                <span class="arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="run-demo-action">
+                        <button class="btn btn-primary" id="run-demo-btn" style="width: 100%;">
+                            Test Autonomous Flow
+                        </button>
+                        
+                        <!-- Benchmark Latency Meters -->
+                        <div class="benchmark-meters">
+                            <!-- Meter 1 -->
+                            <div class="benchmark-meter-item">
+                                <div class="meter-labels">
+                                    <span class="meter-name">Intent Parsing</span>
+                                    <span class="meter-value" id="meter-val-parser">0%</span>
+                                </div>
+                                <div class="meter-bar-outer">
+                                    <div class="meter-bar-inner" id="meter-bar-parser"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 2 -->
+                            <div class="benchmark-meter-item">
+                                <div class="meter-labels">
+                                    <span class="meter-name">Vision Engine Processing</span>
+                                    <span class="meter-value" id="meter-val-vision">0%</span>
+                                </div>
+                                <div class="meter-bar-outer">
+                                    <div class="meter-bar-inner" id="meter-bar-vision"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 3 -->
+                            <div class="benchmark-meter-item">
+                                <div class="meter-labels">
+                                    <span class="meter-name">Action Dispatch Manager</span>
+                                    <span class="meter-value" id="meter-val-dispatcher">0%</span>
+                                </div>
+                                <div class="meter-bar-outer">
+                                    <div class="meter-bar-inner" id="meter-bar-dispatcher"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 4 -->
+                            <div class="benchmark-meter-item">
+                                <div class="meter-labels">
+                                    <span class="meter-name">Telephony & Network fallbacks</span>
+                                    <span class="meter-value" id="meter-val-telephony">0%</span>
+                                </div>
+                                <div class="meter-bar-outer">
+                                    <div class="meter-bar-inner" id="meter-bar-telephony"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="arch-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Inside OpenDroid</div>
+                <h2>System Architecture Flow</h2>
+                <p>Designed with clean architecture principles, utilizing Dagger-Hilt for system dependency orchestration, local database caching, and accessibility automation loops.</p>
+            </div>
+            
+            <div class="arch-grid">
+                <!-- Pipeline List -->
+                <div class="arch-visualizer" id="arch-flow-visualizer">
+                    <!-- Node 1 -->
+                    <div class="arch-node active" data-node="voice" id="arch-node-voice">
+                        <div class="arch-node-dot">INPUT</div>
+                        <div class="arch-node-content">
+                            <h4>Voice / Chat Interface</h4>
+                            <p>Ingests local sound waves, wakes the agent offline, or processes text strings.</p>
+                        </div>
+                    </div>
+                    <!-- Node 2 -->
+                    <div class="arch-node" data-node="planner" id="arch-node-planner">
+                        <div class="arch-node-dot">PLANNER</div>
+                        <div class="arch-node-content">
+                            <h4>LLM Planner & Re-Evaluator</h4>
+                            <p>Evaluates context intents, compiles execution tasks, and validates results post-action.</p>
+                        </div>
+                    </div>
+                    <!-- Node 3 -->
+                    <div class="arch-node" data-node="memory" id="arch-node-memory">
+                        <div class="arch-node-dot">MEMORY</div>
+                        <div class="arch-node-content">
+                            <h4>Multi-Tier Database Repository</h4>
+                            <p>Resolves preferences via Room DB, updates history indices, and fetches macros.</p>
+                        </div>
+                    </div>
+                    <!-- Node 4 -->
+                    <div class="arch-node" data-node="dispatcher" id="arch-node-dispatcher">
+                        <div class="arch-node-dot">DISPATCHER</div>
+                        <div class="arch-node-content">
+                            <h4>Action Dispatcher</h4>
+                            <p>Instructs system controls and schedules tasks via fallback-safe system triggers.</p>
+                        </div>
+                    </div>
+                    <!-- Node 5 -->
+                    <div class="arch-node" data-node="accessibility" id="arch-node-accessibility">
+                        <div class="arch-node-dot">AUTOMATION</div>
+                        <div class="arch-node-content">
+                            <h4>Accessibility & Vision Services</h4>
+                            <p>Clicks coordinates, types layouts, reads active nodes, and captures screens for the OCR models.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info detail card -->
+                <div class="glass-panel arch-details-card" id="arch-details-display">
+                    <h3 id="arch-details-title">Voice Input & Wake Word</h3>
+                    <p id="arch-details-desc">The entry point for hands-free local control. Monitors environmental audio offsets completely offline.</p>
+                    <ul class="arch-details-list" id="arch-details-list">
+                        <li>Porcupine Wake Word engine (offline listening)</li>
+                        <li>Android native speech recognition (Speech-to-Text)</li>
+                        <li>Seamless fallback: switches to manual chat input on speech failure</li>
+                        <li>High fidelity TTS fallback with ElevenLabs API support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commands database reference table -->
+    <section id="commands" class="commands-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Developer Docs</div>
+                <h2>Supported Action Intents</h2>
+                <p>Below is a dynamic index of native and accessibility commands recognized by the Action Dispatcher and Planner engines.</p>
+            </div>
+            
+            <div class="table-header-controls">
+                <div class="category-tabs" id="tab-controls">
+                    <button class="tab-btn active" data-category="all" id="tab-all">All Actions</button>
+                    <button class="tab-btn" data-category="system" id="tab-system">System</button>
+                    <button class="tab-btn" data-category="communication" id="tab-comm">Communication</button>
+                    <button class="tab-btn" data-category="accessibility" id="tab-access">Accessibility</button>
+                    <button class="tab-btn" data-category="files" id="tab-files">File System</button>
+                </div>
+                
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="cmd-search" class="search-input" placeholder="Search commands...">
+                </div>
+            </div>
+
+            <div class="glass-panel commands-table-container">
+                <table class="cmd-table" id="action-commands-table">
+                    <thead>
+                        <tr>
+                            <th>Action Name</th>
+                            <th>Category</th>
+                            <th>Key Parameters</th>
+                            <th>Description / Execution Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-category="communication">
+                            <td class="cmd-name">MAKE_CALL</td>
+                            <td><span class="cmd-category-tag tag-communication">communication</span></td>
+                            <td class="cmd-param">contact / phone</td>
+                            <td class="cmd-desc">Resolves contact with fuzzy matcher. Calls in background, falls back to native dialer if permissions fail.</td>
+                        </tr>
+                        <tr data-category="communication">
+                            <td class="cmd-name">SEND_SMS</td>
+                            <td><span class="cmd-category-tag tag-communication">communication</span></td>
+                            <td class="cmd-param">contact, message</td>
+                            <td class="cmd-desc">Attempts background SMS dispatch. Launches native compose intent on tablet/telephony failure.</td>
+                        </tr>
+                        <tr data-category="communication">
+                            <td class="cmd-name">SEND_WHATSAPP</td>
+                            <td><span class="cmd-category-tag tag-communication">communication</span></td>
+                            <td class="cmd-param">contact, message</td>
+                            <td class="cmd-desc">Deep-links into chat, uses Accessibility service node inspections to automate clicking "Send".</td>
+                        </tr>
+                        <tr data-category="system">
+                            <td class="cmd-name">TOGGLE_FLASHLIGHT</td>
+                            <td><span class="cmd-category-tag tag-system">system</span></td>
+                            <td class="cmd-param">on / off</td>
+                            <td class="cmd-desc">Binds to hardware CameraManager and flips flashlight state safely.</td>
+                        </tr>
+                        <tr data-category="system">
+                            <td class="cmd-name">TOGGLE_WIFI</td>
+                            <td><span class="cmd-category-tag tag-system">system</span></td>
+                            <td class="cmd-param">on / off</td>
+                            <td class="cmd-desc">Controls WifiManager settings to switch the Wi-Fi card state.</td>
+                        </tr>
+                        <tr data-category="system">
+                            <td class="cmd-name">TOGGLE_BLUETOOTH</td>
+                            <td><span class="cmd-category-tag tag-system">system</span></td>
+                            <td class="cmd-param">on / off</td>
+                            <td class="cmd-desc">Switches Bluetooth adapter states using Android Bluetooth settings API.</td>
+                        </tr>
+                        <tr data-category="system">
+                            <td class="cmd-name">OPEN_APP</td>
+                            <td><span class="cmd-category-tag tag-system">system</span></td>
+                            <td class="cmd-param">appName</td>
+                            <td class="cmd-desc">Resolves application query and fires launcher intents for target packages.</td>
+                        </tr>
+                        <tr data-category="accessibility">
+                            <td class="cmd-name">CLICK_TEXT</td>
+                            <td><span class="cmd-category-tag tag-accessibility">accessibility</span></td>
+                            <td class="cmd-param">text</td>
+                            <td class="cmd-desc">Traverses active accessibility view hierarchy node tree and clicks elements containing matching text.</td>
+                        </tr>
+                        <tr data-category="accessibility">
+                            <td class="cmd-name">CLICK_COORDINATES</td>
+                            <td><span class="cmd-category-tag tag-accessibility">accessibility</span></td>
+                            <td class="cmd-param">x, y</td>
+                            <td class="cmd-desc">Fires programmatic touch and click motions at specified coordinate layout parameters.</td>
+                        </tr>
+                        <tr data-category="accessibility">
+                            <td class="cmd-name">TYPE_TEXT</td>
+                            <td><span class="cmd-category-tag tag-accessibility">accessibility</span></td>
+                            <td class="cmd-param">targetText, content</td>
+                            <td class="cmd-desc">Finds an editable field, focuses, and injects string values using accessibility node APIs.</td>
+                        </tr>
+                        <tr data-category="accessibility">
+                            <td class="cmd-name">ANALYZE_SCREENSHOT</td>
+                            <td><span class="cmd-category-tag tag-accessibility">accessibility</span></td>
+                            <td class="cmd-param">-</td>
+                            <td class="cmd-desc">Captures screen buffer (WebP format), base64-encodes, and requests Vision LLM description. Falls back to text scraping on old APIs.</td>
+                        </tr>
+                        <tr data-category="files">
+                            <td class="cmd-name">LIST_FILES</td>
+                            <td><span class="cmd-category-tag tag-files">files</span></td>
+                            <td class="cmd-param">path</td>
+                            <td class="cmd-desc">Inspects directory contents at target path and returns list structure.</td>
+                        </tr>
+                        <tr data-category="files">
+                            <td class="cmd-name">READ_FILE</td>
+                            <td><span class="cmd-category-tag tag-files">files</span></td>
+                            <td class="cmd-param">path</td>
+                            <td class="cmd-desc">Loads file contents into memory stream, returning plain text with a size limit safety constraint.</td>
+                        </tr>
+                        <tr data-category="files">
+                            <td class="cmd-name">WRITE_FILE</td>
+                            <td><span class="cmd-category-tag tag-files">files</span></td>
+                            <td class="cmd-param">path, content</td>
+                            <td class="cmd-desc">Writes content to local text document. Resolves directory creation if paths don't exist.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call To Action -->
+    <section class="cta-section" id="call-to-action">
+        <div class="container">
+            <div class="glass-panel cta-box">
+                <div class="cta-content">
+                    <h2>Take Control of Your Android Device</h2>
+                    <p>Experience the next generation of mobile autonomy. Download the latest debug APK from GitHub and give OpenDroid a test flight today.</p>
+                    <div class="cta-buttons">
+                        <a href="https://github.com/yashab-cyber/opendroid/releases" class="btn btn-primary" id="cta-download-btn">
+                            Download Now
+                        </a>
+                        <a href="https://github.com/yashab-cyber/opendroid" class="btn btn-secondary" id="cta-github-btn" target="_blank">
+                            Explore Repository
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>OPENDROID</h3>
+                    <p>OpenDroid is an open-source autonomous agent for Android devices, building the future of local-first mobile automation.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#demo">Live Simulator</a></li>
+                        <li><a href="#architecture">Architecture</a></li>
+                        <li><a href="#commands">Commands Index</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>GitHub Project</h4>
+                    <ul>
+                        <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">Repository</a></li>
+                        <li><a href="https://github.com/yashab-cyber/opendroid/issues" target="_blank">Issue Tracker</a></li>
+                        <li><a href="https://github.com/yashab-cyber/opendroid/pulls" target="_blank">Pull Requests</a></li>
+                        <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Releases</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 OpenDroid Contributors. Released under Apache License 2.0.</p>
+                <div class="footer-socials">
+                    <a href="https://github.com/yashab-cyber/opendroid" target="_blank" title="GitHub" aria-label="GitHub">🐙</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
