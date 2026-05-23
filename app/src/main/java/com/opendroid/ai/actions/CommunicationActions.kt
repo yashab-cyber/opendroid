@@ -31,11 +31,16 @@ class CommunicationActions @Inject constructor() {
     )
 
     companion object {
+        /**
+         * Resolve a contact name/number to a phone number.
+         * Throws IllegalArgumentException if the contact cannot be found.
+         */
         private fun resolveContactToPhoneNumber(context: Context, contact: String): String {
             if (contact.startsWith("$")) {
                 throw IllegalArgumentException("Unresolved contact placeholder: $contact")
             }
             val cleaned = contact.replace(" ", "").replace("-", "")
+            // If it's already a phone number, return it directly
             if (cleaned.startsWith("+") || (cleaned.isNotEmpty() && cleaned.all { it.isDigit() })) {
                 return cleaned
             }
@@ -46,8 +51,8 @@ class CommunicationActions @Inject constructor() {
                 return result.phoneNumber
             }
 
-            // Fallback: return the cleaned input (may be a name the dialer can handle)
-            return cleaned
+            // Contact not found — throw so the action can report a clear error
+            throw IllegalArgumentException("Contact '$contact' not found in your contacts")
         }
     }
 
@@ -57,7 +62,12 @@ class CommunicationActions @Inject constructor() {
             val contact = params["contact"] ?: return ActionResult(false, null, "contact is missing")
             val message = params["message"] ?: return ActionResult(false, null, "message is missing")
             
-            val phone = resolveContactToPhoneNumber(context, contact)
+            val phone: String
+            try {
+                phone = resolveContactToPhoneNumber(context, contact)
+            } catch (e: IllegalArgumentException) {
+                return ActionResult(false, null, e.message ?: "Contact '$contact' not found")
+            }
 
             return try {
                 // Step 1: Open WhatsApp chat via deep link (self-contained — no need for separate OPEN_APP)
@@ -110,8 +120,13 @@ class CommunicationActions @Inject constructor() {
                 ?: params["phoneNumber"]
                 ?: return ActionResult(false, null, "contact or number parameter missing")
 
-            val phone = resolveContactToPhoneNumber(context, contact)
-            val cleanPhone = phone.replace(Regex("[\\s\\-\\(\\)]"), "").trim()
+            val cleanPhone: String
+            try {
+                val phone = resolveContactToPhoneNumber(context, contact)
+                cleanPhone = phone.replace(Regex("[\\s\\-\\(\\)]"), "").trim()
+            } catch (e: IllegalArgumentException) {
+                return ActionResult(false, null, e.message ?: "Contact '$contact' not found")
+            }
 
             return try {
                 val callUri = Uri.parse("tel:$cleanPhone")
@@ -130,7 +145,6 @@ class CommunicationActions @Inject constructor() {
                     ActionResult(true, "Opened dialer for $contact ($cleanPhone). Tap call to proceed.", null, true)
                 }
             } catch (e: SecurityException) {
-                // Security fallback — try ACTION_DIAL
                 try {
                     val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cleanPhone")).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -157,7 +171,12 @@ class CommunicationActions @Inject constructor() {
                 ?: params["text"]
                 ?: params["body"]
                 ?: return ActionResult(false, null, "message parameter missing")
-            val phone = resolveContactToPhoneNumber(context, contact)
+            val phone: String
+            try {
+                phone = resolveContactToPhoneNumber(context, contact)
+            } catch (e: IllegalArgumentException) {
+                return ActionResult(false, null, e.message ?: "Contact '$contact' not found")
+            }
 
             // Always try to open SMS compose intent first (works on all devices)
             // Direct SmsManager.sendTextMessage can fail on devices without telephony
