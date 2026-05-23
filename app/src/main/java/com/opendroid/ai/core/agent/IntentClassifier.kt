@@ -66,8 +66,31 @@ class IntentClassifier @Inject constructor(
 
     fun classifyComplexity(query: String): QueryComplexity {
         val lowercaseQuery = query.lowercase()
-        
-        // Count action triggers or conjunctions using regex/keywords
+
+        // Check for compound indicators FIRST — these always indicate multi-step tasks
+        val compoundIndicators = listOf(
+            " and then ", " then ", " after that ", " after ",
+            " also ", " plus ", "and send", "and message",
+            "and call", "and tell", "and notify", "and text",
+            "and book", "and set", "and create", "and open",
+            "then send", "then call", "then message",
+            "then open", "then set", "then play",
+            "and also ", "followed by", "afterwards"
+        )
+
+        val isCompound = compoundIndicators.any { lowercaseQuery.contains(it) }
+
+        // Additionally check for " and " with action verbs on both sides
+        val andWithActions = hasActionsAroundAnd(lowercaseQuery)
+
+        if (isCompound || andWithActions) {
+            // Compound tasks are ALWAYS at least MEDIUM
+            // Check if it's complex (3+ actions)
+            val compoundCount = compoundIndicators.count { lowercaseQuery.contains(it) }
+            return if (compoundCount >= 2) QueryComplexity.COMPLEX else QueryComplexity.MEDIUM
+        }
+
+        // ONLY then check for simple patterns using original logic
         val actionTriggers = listOf(
             "open", "launch", "start", "turn", "toggle", "enable", "disable", "set", "lock", "restart",
             "take", "record", "send", "make", "play", "pause", "resume", "next", "prev", "order", "search",
@@ -99,5 +122,24 @@ class IntentClassifier @Inject constructor(
             totalComplexityScore >= 2.0 -> QueryComplexity.MEDIUM
             else -> QueryComplexity.SIMPLE
         }
+    }
+
+    private fun hasActionsAroundAnd(query: String): Boolean {
+        // Detect patterns like "open X and send Y" where "and" connects two action verbs
+        val actionVerbs = listOf(
+            "open", "send", "call", "message", "set", "play", "book",
+            "create", "make", "turn", "toggle", "take", "record",
+            "search", "order", "pay", "check", "read", "write"
+        )
+        val andIndex = query.indexOf(" and ")
+        if (andIndex == -1) return false
+
+        val before = query.substring(0, andIndex)
+        val after = query.substring(andIndex + 5)
+
+        val hasActionBefore = actionVerbs.any { before.contains(it) }
+        val hasActionAfter = actionVerbs.any { after.contains(it) }
+
+        return hasActionBefore && hasActionAfter
     }
 }

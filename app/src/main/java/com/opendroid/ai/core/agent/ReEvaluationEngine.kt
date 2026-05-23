@@ -5,9 +5,7 @@ import com.opendroid.ai.core.llm.LLMProviderFactory
 import com.opendroid.ai.core.llm.LLMRequest
 import com.opendroid.ai.core.llm.ResponseFormat
 import com.opendroid.ai.core.llm.prompts.ReEvalPrompts
-import com.opendroid.ai.data.db.dao.MemoryDao
 import com.opendroid.ai.data.db.dao.UnknownActionDao
-import com.opendroid.ai.data.db.entities.MemoryEntity
 import com.opendroid.ai.data.db.entities.UnknownActionEntity
 import com.opendroid.ai.data.models.Plan
 import com.opendroid.ai.data.models.PlanStep
@@ -22,7 +20,6 @@ import javax.inject.Singleton
 class ReEvaluationEngine @Inject constructor(
     private val llmProviderFactory: LLMProviderFactory,
     private val actionDispatcher: dagger.Lazy<ActionDispatcher>,
-    private val memoryDao: dagger.Lazy<MemoryDao>,
     private val unknownActionDao: dagger.Lazy<UnknownActionDao>
 ) {
     private val json = Json {
@@ -145,7 +142,7 @@ class ReEvaluationEngine @Inject constructor(
             val cleaned = cleanJsonString(response.content)
             val result = json.decodeFromString<ReEvalResult>(cleaned)
             
-            // Log to unknown actions DB that we successfully replanned
+            // Log to unknown actions DB only — never to semantic memory
             try {
                 unknownActionDao.get().insertUnknownAction(
                     UnknownActionEntity(
@@ -158,7 +155,7 @@ class ReEvaluationEngine @Inject constructor(
             
             result
         } catch (e: Exception) {
-            // Log failed status to DB
+            // Log failed status to DB only — never to semantic memory
             try {
                 unknownActionDao.get().insertUnknownAction(
                     UnknownActionEntity(
@@ -178,18 +175,19 @@ class ReEvaluationEngine @Inject constructor(
     }
 
     suspend fun extractLearning(attemptedAction: String, goal: String) {
+        // Log unknown actions to the UnknownActionDao only — NEVER to semantic memory.
+        // Writing error data to semantic memory causes memory poisoning where the LLM
+        // sees the bad action name in context and keeps hallucinating the same invalid action.
         try {
-            val key = "invalid_action_$attemptedAction"
-            val value = "The action '$attemptedAction' is not registered in OpenDroid. Do not use this action name for goal '$goal' or any other goals. Instead, use only whitelisted actions like OPEN_APP or ASK_USER."
-            val memory = MemoryEntity(
-                key = key,
-                value = value,
-                type = "SEMANTIC",
-                timestamp = System.currentTimeMillis()
+            unknownActionDao.get().insertUnknownAction(
+                UnknownActionEntity(
+                    attemptedAction = attemptedAction,
+                    goal = goal,
+                    fixStatus = "LOGGED"
+                )
             )
-            memoryDao.get().insertOrUpdateMemory(memory)
         } catch (e: Exception) {
-            // Ignore memory DB errors
+            // Ignore DB errors
         }
     }
 

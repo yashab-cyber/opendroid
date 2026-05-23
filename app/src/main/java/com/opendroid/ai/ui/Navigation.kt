@@ -70,6 +70,12 @@ fun OpenDroidNavigation(
             MainDashboard(
                 onNavigateToBenchmark = {
                     navController.navigate("benchmark")
+                },
+                onNavigateToPrivacyPolicy = {
+                    navController.navigate("privacy_policy")
+                },
+                onNavigateToAbout = {
+                    navController.navigate("about")
                 }
             )
         }
@@ -78,6 +84,22 @@ fun OpenDroidNavigation(
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             BenchmarkScreen(
                 viewModel = settingsViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("privacy_policy") {
+            PrivacyPolicyScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("about") {
+            AboutScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -97,7 +119,9 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 
 @Composable
 fun MainDashboard(
-    onNavigateToBenchmark: () -> Unit
+    onNavigateToBenchmark: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -176,7 +200,9 @@ fun MainDashboard(
                 Screen.History -> LogsScreen(viewModel = historyViewModel)
                 Screen.Settings -> SettingsScreen(
                     viewModel = settingsViewModel,
-                    onNavigateToBenchmark = onNavigateToBenchmark
+                    onNavigateToBenchmark = onNavigateToBenchmark,
+                    onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+                    onNavigateToAbout = onNavigateToAbout
                 )
             }
         }

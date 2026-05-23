@@ -6,6 +6,7 @@ import com.opendroid.ai.data.models.MemoryType
 import com.opendroid.ai.data.repository.ConversationRepository
 import com.opendroid.ai.data.repository.MemoryRepository
 import android.content.Context
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
@@ -44,9 +45,11 @@ class MemoryManager @Inject constructor(
     }
 
     suspend fun getRelevantContext(currentGoal: String): String {
-        // Collect facts from semantic database
-        val facts = memoryRepository.getMemoriesByType(MemoryType.SEMANTIC)
-        val dbFacts = facts.joinToString("; ") { "${it.key}: ${it.value}" }
+        // Collect facts from semantic database — only valid (non-expired, non-poisoned) entries
+        val facts = memoryRepository.getValidMemoriesByType(MemoryType.SEMANTIC)
+        val dbFacts = facts
+            .filter { memoryExtractor.shouldStoreInSemanticMemory(it.key) && memoryExtractor.shouldStoreInSemanticMemory(it.value) }
+            .joinToString("; ") { "${it.key}: ${it.value}" }
 
         // Read user info from SharedPreferences
         val sharedPrefs = context.getSharedPreferences("opendroid_prefs", Context.MODE_PRIVATE)
@@ -115,5 +118,35 @@ class MemoryManager @Inject constructor(
         return all.filter {
             it.key.contains(query, ignoreCase = true) || it.value.contains(query, ignoreCase = true)
         }
+    }
+
+    suspend fun cleanPoisonedMemories() {
+        val poisonPhrases = listOf(
+            "invalid_action",
+            "not registered",
+            "actiondispatcher",
+            "do not use this action",
+            "whitelisted",
+            "execution error",
+            "action module",
+            "unknown action",
+            "not a valid action"
+        )
+
+        val allFacts = memoryRepository.getMemoriesByType(MemoryType.SEMANTIC)
+        val poisoned = allFacts.filter { fact ->
+            poisonPhrases.any { phrase ->
+                fact.key.contains(phrase, ignoreCase = true) ||
+                fact.value.contains(phrase, ignoreCase = true)
+            }
+        }
+
+        if (poisoned.isNotEmpty()) {
+            poisoned.forEach { memoryRepository.deleteMemory(it.key) }
+            Log.d("MemoryCleanup", "Removed ${poisoned.size} poisoned memory entries")
+        }
+
+        // Also clean expired memories
+        memoryRepository.deleteExpiredMemories()
     }
 }

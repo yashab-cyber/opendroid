@@ -11,7 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +33,8 @@ import com.opendroid.ai.ui.viewmodel.SettingsViewModel
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToBenchmark: () -> Unit,
+    onNavigateToPrivacyPolicy: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val config by viewModel.llmConfig.collectAsState()
@@ -542,6 +546,98 @@ fun SettingsScreen(
                                 )
                             )
                         }
+                    }
+                }
+            }
+
+            // Privacy Policy link card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                        .clickable { onNavigateToPrivacyPolicy() },
+                    colors = CardDefaults.cardColors(containerColor = CardBackground)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Privacy Policy",
+                            tint = AccentNeonGreen,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "PRIVACY POLICY",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                color = AccentNeonGreen
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "How OpenDroid handles your data and privacy.",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Go",
+                            tint = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            // About link card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                        .clickable { onNavigateToAbout() },
+                    colors = CardDefaults.cardColors(containerColor = CardBackground)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "About",
+                            tint = AccentPurple,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "ABOUT OPENDROID",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                color = AccentPurple
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Version info, features, and technology stack.",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Go",
+                            tint = TextSecondary
+                        )
                     }
                 }
             }

@@ -62,13 +62,32 @@ Device state: {battery, wifi, location}"""
             Available actions:
             ${registeredActions.joinToString("\n") { "  - $it" }}
 
-            SECTION C: SIMPLICITY RULES
+            SECTION C: SIMPLICITY RULES & PLAN vs SIMPLE DECISION
             For simple requests (e.g. "open [app]", "turn on wifi", "call mom", "what is the weather"), use exactly 1 step. Do not generate multi-step plans for actions that can be done immediately. The maximum number of steps allowed for this query is $maxSteps.
+            
+            CRITICAL: Use PLAN type (not SIMPLE) for ANY request that requires executing a device action. SIMPLE is ONLY for conversational responses with no action.
+            
+            SELF-CONTAINED ACTIONS — these actions handle their own app opening internally. NEVER add an OPEN_APP step before them:
+            - SEND_WHATSAPP: Opens WhatsApp, navigates to contact, and sends the message — all in one step.
+            - MAKE_CALL: Opens dialer/places call directly.
+            - SEND_SMS: Sends SMS or opens SMS compose directly.
+            - SEND_EMAIL: Opens email compose directly.
+            - BOOK_UBER, BOOK_OLA: Opens the respective app directly.
+            - PLAY_MUSIC, PLAY_YOUTUBE: Opens the media app directly.
+            
+            Example — WRONG (do NOT do this):
+              Step 1: OPEN_APP {appName: "WhatsApp"}
+              Step 2: SEND_WHATSAPP {contact: "Mom", message: "Hi"}
+            Example — CORRECT:
+              Step 1: SEND_WHATSAPP {contact: "Mom", message: "Hi"}
 
             SECTION D: UNKNOWN INFO RULE
             If a required parameter (e.g. contact phone number, email address) is unknown or not in memory, you MUST NOT hallucinate a value. You must return a step with "action" set to "ASK_USER" or use clarification options.
 
             SECTION E: DEPENDENCY & FALLBACK RULES
+            - "dependsOn" defaults to [] (empty array) for most steps. Only use dependsOn when a step genuinely needs data output from a prior step (e.g., using a search result, user input from ASK_USER, or contact lookup).
+            - Do NOT add dependsOn for simple sequential ordering — steps already execute in order.
+            - Only DATA-PRODUCING actions (like WEB_SEARCH, GET_WEATHER, ASK_USER, VERIFY_CONTACT, CALCULATE) should be referenced in dependsOn. Non-data actions (like OPEN_APP, TOGGLE_WIFI) should NEVER be in dependsOn.
             - Use "dependsOn" (array of stepId strings) to define sequential execution requirements.
             - Provide a valid alternative fallback action name in the "fallback" field for steps that are network-sensitive or might fail.
 

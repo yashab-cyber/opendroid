@@ -8,9 +8,14 @@ import javax.inject.Singleton
 
 @Singleton
 class SemanticMemory @Inject constructor(
-    private val memoryRepository: MemoryRepository
+    private val memoryRepository: MemoryRepository,
+    private val memoryExtractor: MemoryExtractor
 ) {
     suspend fun storeFact(key: String, value: String) {
+        // Guard: never store error/technical content in semantic memory
+        if (!memoryExtractor.shouldStoreInSemanticMemory(key)) return
+        if (!memoryExtractor.shouldStoreInSemanticMemory(value)) return
+
         memoryRepository.saveMemory(
             Memory(key = key, value = value, type = MemoryType.SEMANTIC)
         )

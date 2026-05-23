@@ -48,6 +48,17 @@ class MemoryRepository @Inject constructor(
         }
     }
 
+    suspend fun getValidMemoriesByType(type: MemoryType): List<Memory> {
+        return memoryDao.getValidMemoriesByType(type.name).map { entity ->
+            Memory(
+                key = entity.key,
+                value = entity.value,
+                type = MemoryType.valueOf(entity.type),
+                timestamp = entity.timestamp
+            )
+        }
+    }
+
     suspend fun saveMemory(memory: Memory) {
         memoryDao.insertOrUpdateMemory(
             MemoryEntity(
@@ -65,6 +76,10 @@ class MemoryRepository @Inject constructor(
 
     suspend fun clearMemoryByType(type: MemoryType) {
         memoryDao.clearMemoryByType(type.name)
+    }
+
+    suspend fun deleteExpiredMemories() {
+        memoryDao.deleteExpiredMemories()
     }
 
     // Task History operations

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import com.opendroid.ai.accessibility.OpenDroidAccessibilityService
+import com.opendroid.ai.accessibility.WhatsAppAutomator
 import com.opendroid.ai.actions.base.Action
 import com.opendroid.ai.actions.base.ActionResult
 import android.provider.ContactsContract
@@ -94,29 +95,39 @@ class CommunicationActions @Inject constructor() {
             val phone = resolveContactToPhoneNumber(context, contact)
 
             return try {
+                // Step 1: Open WhatsApp chat via deep link (self-contained — no need for separate OPEN_APP)
                 val encodedMsg = URLEncoder.encode(message, "UTF-8")
-                val whatsappUri = Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=$encodedMsg")
+                val whatsappUri = if (phone.matches(Regex("\\+?[0-9]+"))) {
+                    // Phone number — use direct API link
+                    Uri.parse("https://api.whatsapp.com/send?phone=$phone&text=$encodedMsg")
+                } else {
+                    // Name — use generic WhatsApp send
+                    Uri.parse("whatsapp://send?text=$encodedMsg")
+                }
                 val intent = Intent(Intent.ACTION_VIEW, whatsappUri).apply {
                     setPackage("com.whatsapp")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
 
-                // Accessibility Automation Fallback: 
-                // Wait for the window to load and trigger the accessibility automator to click "send" button
+                // Step 2: Use WhatsAppAutomator for full send automation via Accessibility
                 val service = OpenDroidAccessibilityService.getInstance()
                 if (service != null) {
-                    kotlinx.coroutines.delay(2000) // wait for WhatsApp chat to open
-                    // Try to click send button using text or content descriptions
+                    val autoSent = WhatsAppAutomator.automateSend(message)
+                    if (autoSent) {
+                        return ActionResult(true, "WhatsApp message sent automatically to $contact via Accessibility service.", null)
+                    }
+                    // Fallback: try simple click on send button
+                    kotlinx.coroutines.delay(2000)
                     val clicked = service.findAndClick("Send") || 
                                   service.findAndClick("send") || 
                                   service.findAndClick("SEND")
                     if (clicked) {
-                        return ActionResult(true, "WhatsApp sent automatically via Accessibility service.", null)
+                        return ActionResult(true, "WhatsApp message sent to $contact via send button click.", null)
                     }
                 }
                 
-                ActionResult(true, "WhatsApp deep link opened. Accessibility service was not active to auto-click send.", null)
+                ActionResult(true, "WhatsApp chat opened with $contact. Message pre-filled. Accessibility service was not active to auto-click send.", null)
             } catch (e: Exception) {
                 // Fallback to sending standard SMS if WhatsApp is not installed
                 ActionResult(false, "WhatsApp not installed or failed. Triggering SMS fallback.", e.localizedMessage, true)

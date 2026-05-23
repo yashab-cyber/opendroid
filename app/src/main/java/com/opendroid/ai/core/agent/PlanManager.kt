@@ -81,7 +81,7 @@ class PlanManager @Inject constructor(
     fun getActiveStep(): PlanStep? {
         val plan = _currentPlan.value ?: return null
         if (plan.status != PlanStatus.RUNNING) return null
-        // Return the first pending step that doesn't have pending dependencies
+        // Return the first pending step that doesn't have pending/running dependencies
         return plan.steps.firstOrNull { step ->
             step.status == StepStatus.PENDING && hasDependenciesMet(step, plan.steps)
         }
@@ -89,8 +89,14 @@ class PlanManager @Inject constructor(
 
     private fun hasDependenciesMet(step: PlanStep, allSteps: List<PlanStep>): Boolean {
         if (step.dependsOn.isEmpty()) return true
+        // A dependency is met when it has finished executing (COMPLETED or FAILED).
+        // Only PENDING or RUNNING dependencies should block execution.
+        // Previously this required COMPLETED, which meant a step with dependsOn
+        // would be stuck forever if the dependency succeeded but returned no data
+        // (since the dependency check was too strict).
         return step.dependsOn.all { depId ->
-            allSteps.find { it.stepId == depId }?.status == StepStatus.COMPLETED
+            val depStep = allSteps.find { it.stepId == depId }
+            depStep != null && (depStep.status == StepStatus.COMPLETED || depStep.status == StepStatus.FAILED)
         }
     }
 }

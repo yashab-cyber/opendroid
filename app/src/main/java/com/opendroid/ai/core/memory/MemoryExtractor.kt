@@ -11,6 +11,37 @@ import javax.inject.Singleton
 class MemoryExtractor @Inject constructor(
     private val memoryRepository: MemoryRepository
 ) {
+    companion object {
+        private val MEMORY_BLACKLIST = listOf(
+            "is not registered",
+            "invalid_action",
+            "actiondispatcher",
+            "do not use this action",
+            "whitelisted actions",
+            "not registered in",
+            "execution error",
+            "action module",
+            "fallback routine",
+            "plan sequence",
+            "stepid",
+            "dependson",
+            "canparallelize",
+            "estimatedduration",
+            "planid",
+            "unknown action",
+            "not a valid action",
+            "action failed"
+        )
+    }
+
+    fun shouldStoreInSemanticMemory(content: String): Boolean {
+        val lower = content.lowercase().trim()
+        if (lower.isEmpty()) return false
+        if (MEMORY_BLACKLIST.any { lower.contains(it) }) return false
+        if (lower.startsWith("invalid_")) return false
+        return true
+    }
+
     private val patterns = listOf(
         Regex("my name is ([a-zA-Z\\s]+)", RegexOption.IGNORE_CASE) to "user_name",
         Regex("my wife's name is ([a-zA-Z\\s]+)", RegexOption.IGNORE_CASE) to "wife_name",
@@ -29,25 +60,33 @@ class MemoryExtractor @Inject constructor(
                     val match = regex.find(msg.text)
                     if (match != null) {
                         val value = match.groupValues[1].trim()
-                        memoryRepository.saveMemory(
-                            Memory(key = key, value = value, type = MemoryType.SEMANTIC)
-                        )
+                        if (shouldStoreInSemanticMemory(key) && shouldStoreInSemanticMemory(value)) {
+                            memoryRepository.saveMemory(
+                                Memory(key = key, value = value, type = MemoryType.SEMANTIC)
+                            )
+                        }
                     }
                 }
 
                 // Dynamic extraction helper
                 val wifeMatch = Regex("([a-zA-Z]+) is my wife", RegexOption.IGNORE_CASE).find(msg.text)
                 if (wifeMatch != null) {
-                    memoryRepository.saveMemory(
-                        Memory(key = "wife_name", value = wifeMatch.groupValues[1].trim(), type = MemoryType.SEMANTIC)
-                    )
+                    val value = wifeMatch.groupValues[1].trim()
+                    if (shouldStoreInSemanticMemory("wife_name") && shouldStoreInSemanticMemory(value)) {
+                        memoryRepository.saveMemory(
+                            Memory(key = "wife_name", value = value, type = MemoryType.SEMANTIC)
+                        )
+                    }
                 }
 
                 val husbandMatch = Regex("([a-zA-Z]+) is my husband", RegexOption.IGNORE_CASE).find(msg.text)
                 if (husbandMatch != null) {
-                    memoryRepository.saveMemory(
-                        Memory(key = "husband_name", value = husbandMatch.groupValues[1].trim(), type = MemoryType.SEMANTIC)
-                    )
+                    val value = husbandMatch.groupValues[1].trim()
+                    if (shouldStoreInSemanticMemory("husband_name") && shouldStoreInSemanticMemory(value)) {
+                        memoryRepository.saveMemory(
+                            Memory(key = "husband_name", value = value, type = MemoryType.SEMANTIC)
+                        )
+                    }
                 }
             }
         }
