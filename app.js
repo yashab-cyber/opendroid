@@ -34,13 +34,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile Menu Toggle
     const menuToggle = document.querySelector('.menu-toggle');
     const navLinks = document.querySelector('.nav-links');
+
+    function closeMenu() {
+        if (navLinks && navLinks.classList.contains('active')) {
+            navLinks.classList.remove('active');
+            document.body.style.overflow = '';
+            if (menuToggle) {
+                const spans = menuToggle.querySelectorAll('span');
+                spans[0].style.transform = 'none';
+                spans[1].style.opacity = '1';
+                spans[2].style.transform = 'none';
+            }
+        }
+    }
+
     if (menuToggle && navLinks) {
         menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+            const isOpen = navLinks.classList.toggle('active');
+            document.body.style.overflow = isOpen ? 'hidden' : '';
             const spans = menuToggle.querySelectorAll('span');
-            spans[0].style.transform = navLinks.classList.contains('active') ? 'rotate(45deg) translate(6px, 6px)' : 'none';
-            spans[1].style.opacity = navLinks.classList.contains('active') ? '0' : '1';
-            spans[2].style.transform = navLinks.classList.contains('active') ? 'rotate(-45deg) translate(6px, -6px)' : 'none';
+            spans[0].style.transform = isOpen ? 'rotate(45deg) translate(6px, 6px)' : 'none';
+            spans[1].style.opacity = isOpen ? '0' : '1';
+            spans[2].style.transform = isOpen ? 'rotate(-45deg) translate(6px, -6px)' : 'none';
+        });
+
+        // Close menu when clicking any nav link
+        navLinks.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', () => {
+                closeMenu();
+            });
         });
     }
 

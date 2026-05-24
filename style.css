@@ -149,12 +149,18 @@ body {
     transition: var(--transition-premium);
 }
 
-.glass-panel:hover {
+/* Only lift small panels like feature cards — NOT console, arch, CTA, table containers */
+.feature-card.glass-panel:hover {
     border-color: var(--glass-border-glow);
     box-shadow: 
         0 20px 50px rgba(0, 0, 0, 0.4),
         0 0 40px rgba(0, 255, 136, 0.04);
     transform: translateY(-4px);
+}
+
+/* Large panels only get subtle border glow, no transform to prevent page jumping */
+.glass-panel:hover {
+    border-color: var(--glass-border-glow);
 }
 
 /* Header Navigation */
@@ -533,6 +539,12 @@ header.scrolled .nav-container {
     100% { transform: translate(var(--dx, 50px), var(--dy, -80px)) scale(0.5); opacity: 0; }
 }
 
+/* Terminal log line fade-in animation — CRITICAL: was missing, caused invisible logs */
+@keyframes logFadeIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
 /* Features Grid */
 section {
     padding: 120px 0;
@@ -634,7 +646,9 @@ section {
 .dashboard-console {
     display: flex;
     flex-direction: column;
-    height: 520px;
+    min-height: 320px;
+    max-height: 520px;
+    height: auto;
     border-radius: 20px;
     overflow: hidden;
     border: 1px solid var(--glass-border);
@@ -1334,6 +1348,10 @@ footer {
     .arch-details-card {
         padding: 2.25rem;
     }
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1354,6 +1372,7 @@ footer {
         border-top: 1px solid var(--glass-border);
         padding: 2.5rem;
         overflow-y: auto;
+        z-index: 999;
     }
     header.scrolled .nav-links {
         top: 70px;
@@ -1362,6 +1381,76 @@ footer {
     .nav-links.active {
         left: 0;
     }
+    .nav-links a {
+        font-size: 1.1rem;
+    }
+    .hero {
+        padding-top: 110px;
+        min-height: auto;
+    }
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+    .hero-ctas {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .hero-ctas .btn {
+        width: 100%;
+        max-width: 320px;
+    }
+    .hero-features-list {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .hero-feat-item {
+        align-items: center;
+        text-align: center;
+    }
+    .hero-top-badges {
+        justify-content: center;
+    }
+    .github-badges-row {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    section {
+        padding: 80px 0;
+    }
+    .section-header {
+        margin-bottom: 3rem;
+    }
+    .section-header h2 {
+        font-size: 1.75rem;
+    }
+    .section-header p {
+        font-size: 1rem;
+    }
+    .dashboard-console {
+        min-height: 250px;
+        max-height: 400px;
+    }
+    .console-body {
+        padding: 1rem;
+        font-size: 0.78rem;
+    }
+    .console-header {
+        padding: 0.8rem 1rem;
+    }
+    .dashboard-controls {
+        padding: 1.5rem;
+    }
+    .control-selector h3 {
+        font-size: 1.25rem;
+    }
+    .demo-option-btn {
+        padding: 0.85rem;
+    }
+    .demo-option-btn span.label {
+        font-size: 0.85rem;
+    }
     .table-header-controls {
         flex-direction: column;
         align-items: stretch;
@@ -1369,14 +1458,155 @@ footer {
     .search-wrapper {
         max-width: 100%;
     }
+    .category-tabs {
+        justify-content: center;
+    }
+    .tab-btn {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.8rem;
+    }
+    .cmd-table th, .cmd-table td {
+        padding: 0.85rem 1rem;
+        font-size: 0.82rem;
+    }
+    .arch-node-dot {
+        width: 80px;
+        height: 40px;
+        font-size: 0.65rem;
+    }
+    .arch-node {
+        gap: 1rem;
+    }
+    .arch-node-content h4 {
+        font-size: 1rem;
+    }
+    .arch-node-content p {
+        font-size: 0.82rem;
+    }
+    .arch-node-content {
+        padding: 1rem 1.25rem;
+    }
+    .arch-details-card {
+        padding: 1.75rem;
+    }
+    .arch-details-card h3 {
+        font-size: 1.4rem;
+    }
     .footer-grid {
         grid-template-columns: 1fr;
         gap: 2.5rem;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        gap: 1.25rem;
+        text-align: center;
     }
     .cta-box {
         padding: 4rem 2rem;
     }
     .cta-box h2 {
-        font-size: 2.5rem;
+        font-size: 2rem;
+    }
+    .cta-box p {
+        font-size: 1rem;
+    }
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .cta-buttons .btn {
+        width: 100%;
+        max-width: 320px;
+    }
+    .container {
+        padding: 0 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding-top: 100px;
+    }
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    .hero-content p {
+        font-size: 0.92rem;
+    }
+    .hero-feat-num {
+        font-size: 1.5rem;
+    }
+    .orb-container {
+        height: 260px;
+    }
+    .orb-wrapper {
+        width: 180px;
+        height: 180px;
+    }
+    .section-header h2 {
+        font-size: 1.5rem;
+    }
+    .feature-card {
+        padding: 1.75rem;
+    }
+    .feature-card h3 {
+        font-size: 1.15rem;
+    }
+    .feature-card p {
+        font-size: 0.88rem;
+    }
+    .dashboard-console {
+        min-height: 200px;
+        max-height: 320px;
+    }
+    .console-body {
+        padding: 0.75rem;
+        font-size: 0.72rem;
+    }
+    .console-title {
+        display: none;
+    }
+    .commands-table-container {
+        border-radius: 12px;
+    }
+    .cmd-table th, .cmd-table td {
+        padding: 0.7rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    .arch-visualizer::before {
+        left: 39px;
+    }
+    .arch-node-dot {
+        width: 64px;
+        height: 34px;
+        font-size: 0.55rem;
+    }
+    .arch-node-content {
+        padding: 0.75rem 1rem;
+    }
+    .arch-node-content h4 {
+        font-size: 0.9rem;
+    }
+    .arch-node-content p {
+        font-size: 0.75rem;
+    }
+    .cta-box {
+        padding: 3rem 1.5rem;
+    }
+    .cta-box h2 {
+        font-size: 1.6rem;
+    }
+    .footer-brand p {
+        font-size: 0.85rem;
+    }
+    .nav-container {
+        height: 70px;
+    }
+    .logo img {
+        height: 36px;
+    }
+    .logo span {
+        font-size: 1.1rem;
     }
 }
