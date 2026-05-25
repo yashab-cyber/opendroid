@@ -72,6 +72,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
     }
     var storageGranted by remember { mutableStateOf(hasStoragePermission(context)) }
     var accessibilityGranted by remember { mutableStateOf(isAccessibilityServiceEnabled(context)) }
+    var writeSettingsGranted by remember { mutableStateOf(Settings.System.canWrite(context)) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -91,6 +92,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     true
                 }
                 storageGranted = hasStoragePermission(context)
+                writeSettingsGranted = Settings.System.canWrite(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -189,6 +191,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     notificationsGranted = notificationsGranted,
                     storageGranted = storageGranted,
                     accessibilityGranted = accessibilityGranted,
+                    writeSettingsGranted = writeSettingsGranted,
                     onAudioGrant = { audioLauncher.launch(Manifest.permission.RECORD_AUDIO) },
                     onLocationGrant = { locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) },
                     onSmsPhoneGrant = {
@@ -201,6 +204,13 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     },
                     onCameraGrant = { cameraLauncher.launch(Manifest.permission.CAMERA) },
                     onNotificationsGrant = { notificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    onWriteSettingsGrant = {
+                        val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                            data = android.net.Uri.parse("package:${context.packageName}")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    },
                     onStorageGrant = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             try {
@@ -437,12 +447,14 @@ fun PermissionsPanelContent(
     notificationsGranted: Boolean,
     storageGranted: Boolean,
     accessibilityGranted: Boolean,
+    writeSettingsGranted: Boolean,
     onAudioGrant: () -> Unit,
     onLocationGrant: () -> Unit,
     onSmsPhoneGrant: () -> Unit,
     onContactsCalendarGrant: () -> Unit,
     onCameraGrant: () -> Unit,
     onNotificationsGrant: () -> Unit,
+    onWriteSettingsGrant: () -> Unit,
     onStorageGrant: () -> Unit,
     onAccessibilityGrant: () -> Unit,
     onFinished: () -> Unit
@@ -527,6 +539,14 @@ fun PermissionsPanelContent(
                     desc = "Needed for agent to list, read, write, and delete files.",
                     granted = storageGranted,
                     onGrant = onStorageGrant
+                )
+            }
+            item {
+                PermissionCard(
+                    title = "System Settings Control",
+                    desc = "Needed to adjust brightness, volume, and other system settings.",
+                    granted = writeSettingsGranted,
+                    onGrant = onWriteSettingsGrant
                 )
             }
             item {

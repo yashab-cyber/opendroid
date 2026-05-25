@@ -114,19 +114,19 @@ object ActionSchema {
         ),
         ActionDefinition(
             name = "SET_BRIGHTNESS",
-            description = "Sets screen brightness level",
-            params = listOf(ParamDefinition("level", ParamType.INT, true, "Brightness 0-100")),
-            examples = listOf("brightness 50", "max brightness", "dim screen"),
+            description = "Sets screen brightness level. If no level given, defaults to 50%.",
+            params = listOf(ParamDefinition("level", ParamType.INT, false, "Brightness 0-100", defaultValue = 50)),
+            examples = listOf("set brightness", "brightness 50", "set brightness to 80%", "max brightness", "set brightness to 100", "dim screen", "brightness low"),
             category = ActionCategory.SYSTEM
         ),
         ActionDefinition(
             name = "SET_VOLUME",
-            description = "Sets device volume",
+            description = "Sets device volume. Type defaults to media if not specified.",
             params = listOf(
-                ParamDefinition("type", ParamType.ENUM, true, "Volume type", listOf("media", "ring", "alarm")),
+                ParamDefinition("type", ParamType.ENUM, false, "Volume type", listOf("media", "ring", "alarm", "notification", "system"), "media"),
                 ParamDefinition("level", ParamType.INT, true, "Volume level 0-100")
             ),
-            examples = listOf("volume up", "mute", "set volume 50"),
+            examples = listOf("set volume to 50", "volume 80", "set volume to 100%", "volume up", "mute", "set media volume to 50", "set ringtone volume to 70"),
             category = ActionCategory.SYSTEM
         ),
         ActionDefinition(

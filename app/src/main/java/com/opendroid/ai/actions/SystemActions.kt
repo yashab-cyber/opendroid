@@ -53,6 +53,7 @@ class SystemActions @Inject constructor(
         VerifyContactAction(),
         PromptUserSelectionAction(agentLoop),
         GetSystemInfoAction(),
+        SetRingerModeAction(),
         AskUserAction(agentLoop),
         AnalyzeScreenshotAction(visionEngine)
     )
@@ -144,21 +145,33 @@ class SystemActions @Inject constructor(
         override val name: String = "SET_VOLUME"
         override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
             val typeStr = params["type"] ?: "media"
-            val level = params["level"]?.toIntOrNull() ?: 50
+            val level = params["level"]?.toIntOrNull()?.coerceIn(0, 100) ?: 50
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            val streamType = when (typeStr.lowercase()) {
-                "ring" -> AudioManager.STREAM_RING
+            val streamType = when (typeStr.lowercase().trim()) {
+                "ring", "ringtone", "ringer" -> AudioManager.STREAM_RING
                 "alarm" -> AudioManager.STREAM_ALARM
+                "notification", "notif" -> AudioManager.STREAM_NOTIFICATION
+                "system" -> AudioManager.STREAM_SYSTEM
                 else -> AudioManager.STREAM_MUSIC
+            }
+            val streamLabel = when (streamType) {
+                AudioManager.STREAM_RING -> "Ringtone"
+                AudioManager.STREAM_ALARM -> "Alarm"
+                AudioManager.STREAM_NOTIFICATION -> "Notification"
+                AudioManager.STREAM_SYSTEM -> "System"
+                else -> "Media"
             }
             return try {
                 val maxVolume = audioManager.getStreamMaxVolume(streamType)
                 val targetVolume = (level * maxVolume) / 100
                 audioManager.setStreamVolume(streamType, targetVolume, AudioManager.FLAG_SHOW_UI)
-                ActionResult(true, "$typeStr volume set to $level percent.", null)
+                ActionResult(true, "$streamLabel volume set to $level%.", null)
+            } catch (e: SecurityException) {
+                Log.e("SetVolume", "Volume permission denied: ${e.localizedMessage}")
+                ActionResult(false, null, "I don't have permission to change the $streamLabel volume. Please check your Do Not Disturb settings.")
             } catch (e: Exception) {
                 Log.e("SetVolume", "Volume failed: ${e.localizedMessage}")
-                ActionResult(false, null, "Couldn't change the volume.")
+                ActionResult(false, null, "Couldn't change the volume right now. Please try again.")
             }
         }
     }
@@ -166,23 +179,29 @@ class SystemActions @Inject constructor(
     private class SetBrightnessAction : Action {
         override val name: String = "SET_BRIGHTNESS"
         override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
-            val level = params["level"]?.toIntOrNull() ?: 50
+            val level = params["level"]?.toIntOrNull()?.coerceIn(0, 100) ?: 50
             val targetVal = (level * 255) / 100
             return try {
                 if (Settings.System.canWrite(context)) {
+                    // Disable auto-brightness so manual level takes effect
+                    Settings.System.putInt(
+                        context.contentResolver,
+                        Settings.System.SCREEN_BRIGHTNESS_MODE,
+                        Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+                    )
                     Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, targetVal)
-                    ActionResult(true, "Brightness is at $level percent now.", null)
+                    ActionResult(true, "Done! Brightness is set to $level%.", null)
                 } else {
                     val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
                         data = Uri.parse("package:${context.packageName}")
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(intent)
-                    ActionResult(false, "Write settings permission not granted. Prompted user.", "Permission required", true)
+                    ActionResult(false, "I need your permission to change system settings. I've opened the settings page — just flip the switch to allow OpenDroid, then try again!", null, true)
                 }
             } catch (e: Exception) {
                 Log.e("SetBrightness", "Brightness failed: ${e.localizedMessage}")
-                ActionResult(false, null, "Couldn't change the brightness.")
+                ActionResult(false, null, "Couldn't change the brightness right now. Please try again.")
             }
         }
     }
@@ -721,6 +740,34 @@ class SystemActions @Inject constructor(
             } catch (e: Exception) {
                 Log.e("ScreenshotAnalysis", "Analysis failed: ${e.localizedMessage}")
                 ActionResult(false, null, "Couldn't analyze the screen right now.")
+            }
+        }
+    }
+
+    private class SetRingerModeAction : Action {
+        override val name: String = "SET_RINGER_MODE"
+        override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
+            val mode = params["mode"]?.lowercase()?.trim() ?: "normal"
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            return try {
+                val ringerMode = when (mode) {
+                    "silent", "mute" -> AudioManager.RINGER_MODE_SILENT
+                    "vibrate", "vibration" -> AudioManager.RINGER_MODE_VIBRATE
+                    else -> AudioManager.RINGER_MODE_NORMAL
+                }
+                audioManager.ringerMode = ringerMode
+                val label = when (ringerMode) {
+                    AudioManager.RINGER_MODE_SILENT -> "silent"
+                    AudioManager.RINGER_MODE_VIBRATE -> "vibrate"
+                    else -> "normal"
+                }
+                ActionResult(true, "Phone is now on $label mode.", null)
+            } catch (e: SecurityException) {
+                Log.e("SetRingerMode", "Permission denied: ${e.localizedMessage}")
+                ActionResult(false, null, "I need Do Not Disturb access to change the ringer mode. Please grant it in Settings.")
+            } catch (e: Exception) {
+                Log.e("SetRingerMode", "Ringer mode failed: ${e.localizedMessage}")
+                ActionResult(false, null, "Couldn't change the ringer mode right now.")
             }
         }
     }
