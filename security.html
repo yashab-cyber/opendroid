@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Policy — OpenDroid</title>
+  <meta name="description" content="OpenDroid Security Policy. Learn how to report vulnerabilities and our responsible disclosure process.">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Security</span>
+    <h1>Security Policy</h1>
+    <p>How we handle security vulnerabilities and protect our users.</p>
+  </div>
+</header>
+
+<main class="container">
+  <div class="prose">
+
+    <div class="info-box">
+      <strong>Important:</strong> If you have discovered a security vulnerability, please do <strong>not</strong> open a public GitHub issue. 
+      Instead, follow the responsible disclosure process described below.
+    </div>
+
+    <h2>Our Commitment</h2>
+    <p>We take the security of OpenDroid and our users seriously. As an open-source project that interacts with sensitive device permissions (Accessibility Service, phone, SMS, system settings), we recognize the importance of promptly addressing security concerns.</p>
+
+    <h2>Supported Versions</h2>
+    <p>Only the latest release version of OpenDroid is actively supported with security updates.</p>
+
+    <table class="version-table">
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>≥ 1.0 (Latest Release)</td>
+          <td><span class="badge-supported">✓ Supported</span></td>
+        </tr>
+        <tr>
+          <td>&lt; 1.0 (Pre-release)</td>
+          <td><span class="badge-unsupported">✗ Not Supported</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Reporting a Vulnerability</h2>
+    <p>If you believe you have found a security vulnerability in OpenDroid, please report it responsibly:</p>
+
+    <h3>Step 1: Contact Us Privately</h3>
+    <p>Send a detailed report to <strong><a href="mailto:security@opendroid.ai">security@opendroid.ai</a></strong> with:</p>
+    <ul>
+      <li>A clear description of the vulnerability</li>
+      <li>Steps to reproduce the issue</li>
+      <li>Potential impact assessment</li>
+      <li>Any proof-of-concept code (if applicable)</li>
+      <li>Your contact information for follow-up</li>
+    </ul>
+
+    <h3>Step 2: Our Response</h3>
+    <p>After receiving your report:</p>
+    <ul>
+      <li><strong>Within 48 hours:</strong> We will acknowledge receipt of your report</li>
+      <li><strong>Within 7 days:</strong> We will provide an initial assessment and severity classification</li>
+      <li><strong>Within 30 days:</strong> We will work on a fix and coordinate a disclosure timeline with you</li>
+    </ul>
+
+    <h3>Step 3: Disclosure</h3>
+    <p>Once the vulnerability is patched:</p>
+    <ul>
+      <li>We will release a security update with the fix</li>
+      <li>We will publish a security advisory on the GitHub repository</li>
+      <li>We will credit you for the discovery (if desired)</li>
+    </ul>
+
+    <h2>Security Best Practices for Users</h2>
+    <p>To ensure the security of your OpenDroid installation:</p>
+    <ul>
+      <li><strong>Keep updated:</strong> Always use the latest version of OpenDroid</li>
+      <li><strong>Secure your device:</strong> Use a strong screen lock and enable device encryption</li>
+      <li><strong>Protect API keys:</strong> Never share your LLM API keys publicly</li>
+      <li><strong>Review permissions:</strong> Periodically review the permissions granted to OpenDroid</li>
+      <li><strong>Use trusted sources:</strong> Only download OpenDroid from the official GitHub repository</li>
+      <li><strong>Local models:</strong> For maximum privacy, use Ollama with local models instead of cloud providers</li>
+    </ul>
+
+    <h2>Scope</h2>
+    <p>The following areas are in scope for security reports:</p>
+    <ul>
+      <li>Accessibility Service misuse or data leakage</li>
+      <li>Unauthorized access to device functions</li>
+      <li>API key exposure or insecure storage</li>
+      <li>Memory system data leaks</li>
+      <li>Injection vulnerabilities in LLM prompts that could lead to malicious actions</li>
+      <li>Insecure communication with third-party APIs</li>
+    </ul>
+
+    <h2>Out of Scope</h2>
+    <ul>
+      <li>Vulnerabilities in third-party LLM provider APIs</li>
+      <li>Issues requiring physical access to an unlocked device</li>
+      <li>Theoretical attacks without proof of concept</li>
+      <li>Social engineering attacks</li>
+    </ul>
+
+    <h2>Acknowledgements</h2>
+    <p>We gratefully acknowledge the security researchers who help keep OpenDroid secure. Contributors who responsibly disclose vulnerabilities will be recognized in our security advisories and (optionally) in this section.</p>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

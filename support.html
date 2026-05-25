@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support — OpenDroid</title>
+  <meta name="description" content="Get help with OpenDroid. FAQ, setup guides, bug reporting, and community support channels.">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html" class="active">Support</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Help Center</span>
+    <h1>Support</h1>
+    <p>Find answers, report issues, and connect with the OpenDroid community.</p>
+  </div>
+</header>
+
+<main>
+  <!-- Contact Cards -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-grid reveal">
+        <div class="glass-card contact-card" id="contact-discord">
+          <div class="icon">💬</div>
+          <h3>Discord Community</h3>
+          <p>Join our active community for real-time help, feature discussions, and updates.</p>
+          <a href="https://discord.gg/Q4ym5cxTe" target="_blank" class="btn btn-primary">Join Server</a>
+        </div>
+        <div class="glass-card contact-card" id="contact-github">
+          <div class="icon">🐛</div>
+          <h3>Report a Bug</h3>
+          <p>Found a bug? Open an issue on GitHub with steps to reproduce and device info.</p>
+          <a href="https://github.com/yashab-cyber/opendroid/issues/new" target="_blank" class="btn btn-secondary">Open Issue</a>
+        </div>
+        <div class="glass-card contact-card" id="contact-email">
+          <div class="icon">📧</div>
+          <h3>Email</h3>
+          <p>For security vulnerabilities or private inquiries, email us directly.</p>
+          <a href="mailto:security@opendroid.ai" class="btn btn-secondary">Send Email</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><div class="divider"></div></div>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="label">FAQ</span>
+        <h2>Frequently Asked Questions</h2>
+      </div>
+
+      <div class="faq-list reveal">
+        <div class="faq-item" id="faq-1">
+          <button class="faq-question">
+            What is OpenDroid?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              OpenDroid is a free, open-source, autonomous AI assistant for Android. Unlike simple chatbots, it can break complex goals into sub-tasks, execute them through device controls and accessibility automation, and dynamically replan when things change. Think of it as giving your phone the ability to think and act independently.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-2">
+          <button class="faq-question">
+            Is OpenDroid free to use?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Yes, OpenDroid is completely free and open source under the Apache License 2.0. However, if you choose to use cloud-based LLM providers (like OpenAI, Anthropic, etc.), you'll need your own API key and any associated costs are your responsibility. You can also run it fully free using Ollama with local models.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-3">
+          <button class="faq-question">
+            What Android version do I need?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              OpenDroid targets Android SDK 34 (Android 14) and requires a minimum of Android 8.0 (Oreo). For the best experience, including screenshot-based vision analysis, Android 11+ is recommended. Older versions will automatically use text-based screen analysis as a fallback.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-4">
+          <button class="faq-question">
+            Does OpenDroid collect my data?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              No. OpenDroid does not operate any servers and does not collect, store, or transmit your personal data. Everything is processed and stored locally on your device. The only external communication happens when you explicitly use a cloud LLM provider, and that data goes directly to that provider's servers. Read our <a href="privacy.html">Privacy Policy</a> for full details.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-5">
+          <button class="faq-question">
+            How do I set up an LLM provider?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              <ol>
+                <li>Open OpenDroid and go to the <strong>Settings</strong> screen</li>
+                <li>Select your preferred LLM provider (e.g., Anthropic, OpenAI, Gemini)</li>
+                <li>Enter your API key from that provider's developer portal</li>
+                <li>Choose a model (e.g., Claude 3.5 Sonnet, GPT-4o)</li>
+                <li>Save and start chatting!</li>
+              </ol>
+              For fully offline use, install Ollama on a computer on your local network, configure the host URL in settings, and select a local model.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-6">
+          <button class="faq-question">
+            Why does OpenDroid need Accessibility Service?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              The Accessibility Service is what allows OpenDroid to interact with other apps on your behalf — clicking buttons, reading screen content, scrolling, and typing text. Without it, OpenDroid would be limited to only system-level actions. The service is used exclusively for task execution and never for data collection. You can review exactly how it's used in the <a href="https://github.com/yashab-cyber/opendroid" target="_blank">source code</a>.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-7">
+          <button class="faq-question">
+            Can I run OpenDroid completely offline?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Yes! OpenDroid supports Ollama for fully offline LLM inference. Install Ollama on any computer on your local network, download a model (like Llama 3, Mistral, etc.), and point OpenDroid to it via the Ollama Host URL setting. No internet required for the AI brain — and system actions like alarms, calls, and settings work natively on-device.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-8">
+          <button class="faq-question">
+            How do I build OpenDroid from source?
+            <span class="chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              <ol>
+                <li>Clone the repo: <code>git clone https://github.com/yashab-cyber/opendroid.git</code></li>
+                <li>Open in Android Studio (Arctic Fox or later)</li>
+                <li>Ensure JDK 17+ and Android SDK 34 are installed</li>
+                <li>Run <code>./gradlew assembleDebug</code></li>
+                <li>Find the APK at <code>app/build/outputs/apk/debug/app-debug.apk</code></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Still Need Help?</h2>
+        <p>Our Discord community is the fastest way to get answers from other users and the development team.</p>
+        <div class="cta-buttons">
+          <a href="https://discord.gg/Q4ym5cxTe" target="_blank" class="btn btn-primary">💬 Join Discord</a>
+          <a href="https://github.com/yashab-cyber/opendroid/issues" target="_blank" class="btn btn-secondary">🐛 GitHub Issues</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — OpenDroid</title>
+  <meta name="description" content="Learn about OpenDroid — the open-source autonomous Android AI agent. Our mission, vision, and the technology behind it.">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Our Story</span>
+    <h1>About OpenDroid</h1>
+    <p>An open-source mission to make autonomous AI accessible to everyone on Android.</p>
+  </div>
+</header>
+
+<main>
+  <!-- Mission -->
+  <section class="section" id="mission">
+    <div class="container">
+      <div class="about-grid reveal">
+        <div>
+          <h2>Our Mission</h2>
+          <p>OpenDroid was born from a simple belief: <strong>your phone should work for you, not the other way around.</strong></p>
+          <p>We're building the most capable, transparent, and privacy-respecting autonomous Android agent — completely open source. While big tech gatekeeps AI agents behind proprietary ecosystems, OpenDroid puts the power directly in your hands.</p>
+          <p>No cloud dependencies. No data harvesting. No subscriptions. Just a genuinely intelligent assistant that lives on your device, understands your goals, and acts on them autonomously.</p>
+        </div>
+        <div class="about-image">
+          <img src="assets/bot.png" alt="OpenDroid Bot">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><div class="divider"></div></div>
+
+  <!-- Values -->
+  <section class="section" id="values">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="label">What We Stand For</span>
+        <h2>Core Principles</h2>
+      </div>
+      <div class="feature-grid">
+        <div class="glass-card feature-card reveal">
+          <div class="icon">🔓</div>
+          <h3>Open Source First</h3>
+          <p>Every line of code is public. Audit it, fork it, improve it. Transparency is not optional — it's foundational to trust in AI.</p>
+        </div>
+        <div class="glass-card feature-card reveal">
+          <div class="icon">🛡️</div>
+          <h3>Privacy by Design</h3>
+          <p>Data stays on your device. No telemetry, no analytics, no cloud sync. You own your data completely.</p>
+        </div>
+        <div class="glass-card feature-card reveal">
+          <div class="icon">🧩</div>
+          <h3>Modular Architecture</h3>
+          <p>Clean separation of concerns, dependency injection, and extensible modules. Built for contributors to build upon.</p>
+        </div>
+        <div class="glass-card feature-card reveal">
+          <div class="icon">🌍</div>
+          <h3>Community Driven</h3>
+          <p>Shaped by contributors and users. Features are proposed, discussed, and built together in the open.</p>
+        </div>
+        <div class="glass-card feature-card reveal">
+          <div class="icon">🔌</div>
+          <h3>Provider Agnostic</h3>
+          <p>Bring your own LLM. Support for 10+ providers means you choose the AI brain — or run it fully offline with Ollama.</p>
+        </div>
+        <div class="glass-card feature-card reveal">
+          <div class="icon">⚡</div>
+          <h3>Production Ready</h3>
+          <p>Not a toy or prototype. OpenDroid is engineered for reliability with robust error handling, fallback chains, and re-evaluation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><div class="divider"></div></div>
+
+  <!-- Technology -->
+  <section class="section" id="tech-stack">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="label">Under the Hood</span>
+        <h2>Technology Stack</h2>
+        <p>Built with modern Android best practices and cutting-edge AI integration.</p>
+      </div>
+      <div class="arch-grid reveal">
+        <div class="arch-card">
+          <div class="emoji">🤖</div>
+          <h4>Kotlin</h4>
+          <p>100% Kotlin codebase</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">🎨</div>
+          <h4>Jetpack Compose</h4>
+          <p>Modern declarative UI</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">💉</div>
+          <h4>Dagger-Hilt</h4>
+          <p>Dependency injection</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">🗃️</div>
+          <h4>Room Database</h4>
+          <p>Local persistence layer</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">🔗</div>
+          <h4>Retrofit + OkHttp</h4>
+          <p>API communication</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">♿</div>
+          <h4>Accessibility API</h4>
+          <p>Device automation</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">🎤</div>
+          <h4>Android STT</h4>
+          <p>Voice recognition</p>
+        </div>
+        <div class="arch-card">
+          <div class="emoji">📐</div>
+          <h4>Clean Architecture</h4>
+          <p>Modular layered design</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><div class="divider"></div></div>
+
+  <!-- Creator -->
+  <section class="section" id="creator">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="label">Creator</span>
+        <h2>Built by yashab-cyber</h2>
+        <p>OpenDroid is developed and maintained by <a href="https://github.com/yashab-cyber" target="_blank">yashab-cyber</a>, with contributions from the open-source community.</p>
+      </div>
+      <div class="text-center reveal">
+        <div class="cta-buttons">
+          <a href="https://github.com/yashab-cyber" target="_blank" class="btn btn-secondary">🧑‍💻 GitHub Profile</a>
+          <a href="https://discord.gg/Q4ym5cxTe" target="_blank" class="btn btn-secondary">💬 Join Discord</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Want to Contribute?</h2>
+        <p>OpenDroid thrives on community contributions. Whether it's code, documentation, translations, or bug reports — every contribution matters.</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="btn btn-primary">⭐ Star & Contribute</a>
+          <a href="https://github.com/yashab-cyber/opendroid/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-secondary">📖 Contributing Guide</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

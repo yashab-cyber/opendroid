@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features — OpenDroid</title>
+  <meta name="description" content="Explore OpenDroid's powerful features: autonomous planning, accessibility automation, vision engine, multi-tier memory, voice interface, and full device control.">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="features.html" class="active">Features</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Capabilities</span>
+    <h1>Powerful Features</h1>
+    <p>Every capability OpenDroid brings to your Android device — built for autonomy, designed for reliability.</p>
+  </div>
+</header>
+
+<main>
+  <!-- Feature Showcase -->
+  <section class="section" id="feature-list">
+    <div class="container">
+      <div class="feature-showcase">
+
+        <div class="glass-card showcase-card reveal" id="showcase-planning">
+          <div class="showcase-icon">🧠</div>
+          <div>
+            <h3>Autonomous Planning & Re-evaluation</h3>
+            <p>Give OpenDroid a complex, multi-step goal like <em>"Check if it's going to rain, text my wife I'll be late, and set an alarm for 6 PM"</em> — and it handles everything. The agent decomposes commands into logical sub-tasks, executes each in sequence, verifies the outcome, and dynamically adjusts the remaining steps if something fails or conditions change.</p>
+            <div class="tag-row">
+              <span class="tag">PlanManager</span>
+              <span class="tag">ReEvaluationEngine</span>
+              <span class="tag">IntentClassifier</span>
+              <span class="tag">Compound Intent Guard</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-device">
+          <div class="showcase-icon">📱</div>
+          <div>
+            <h3>Full Device & System Control</h3>
+            <p>OpenDroid provides deep integration with Android system APIs, enabling it to control brightness, toggle Wi-Fi and Bluetooth, manage the flashlight, lock the screen, set alarms and timers, create calendar events, translate languages, convert currencies, and much more — all without opening a single app.</p>
+            <div class="tag-row">
+              <span class="tag">SystemActions</span>
+              <span class="tag">WRITE_SETTINGS</span>
+              <span class="tag">AlarmManager</span>
+              <span class="tag">CalendarProvider</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-accessibility">
+          <div class="showcase-icon">🤖</div>
+          <div>
+            <h3>Accessibility Automation</h3>
+            <p>When API controls aren't available, OpenDroid leverages Android's Accessibility Service to interact with any app directly. It can click buttons, scroll lists, read screen content, type text, and navigate complex UIs — enabling tasks like sending WhatsApp messages, finding locations in Maps, or posting on social media.</p>
+            <div class="tag-row">
+              <span class="tag">AccessibilityService</span>
+              <span class="tag">UI Automation</span>
+              <span class="tag">WhatsApp Automator</span>
+              <span class="tag">Screen Reader</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-vision">
+          <div class="showcase-icon">📸</div>
+          <div>
+            <h3>Vision Engine (Screenshot Analysis)</h3>
+            <p>Fully integrated multimodal vision. OpenDroid captures the screen buffer via the Accessibility API (Android 11+) and sends it to the LLM for visual understanding. On older devices or when permissions are limited, it automatically falls back to an accessibility text-scraping mode — ensuring seamless operation across all Android versions.</p>
+            <div class="tag-row">
+              <span class="tag">Multimodal LLM</span>
+              <span class="tag">Screen Capture</span>
+              <span class="tag">Auto Fallback</span>
+              <span class="tag">Android 11+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-memory">
+          <div class="showcase-icon">🗄️</div>
+          <div>
+            <h3>Multi-Tier Persistent Memory</h3>
+            <p>OpenDroid doesn't forget. Its four-tier memory system includes: <strong>Working Memory</strong> for current task context, <strong>Episodic Memory</strong> for past action logs, <strong>Semantic Memory</strong> for long-term personal facts extracted via LLM-powered fact mining, and <strong>Procedural Memory</strong> for custom user-defined macro workflows.</p>
+            <div class="tag-row">
+              <span class="tag">Working Memory</span>
+              <span class="tag">Episodic Memory</span>
+              <span class="tag">Semantic Memory</span>
+              <span class="tag">Procedural Memory</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-voice">
+          <div class="showcase-icon">🎙️</div>
+          <div>
+            <h3>Wake Word & Voice Interface</h3>
+            <p>Go completely hands-free with offline wake word detection, Android's native speech recognition engine, and high-fidelity text-to-speech output. OpenDroid also supports premium ElevenLabs voices as a TTS fallback for a more natural conversational experience.</p>
+            <div class="tag-row">
+              <span class="tag">Wake Word</span>
+              <span class="tag">Speech-to-Text</span>
+              <span class="tag">Text-to-Speech</span>
+              <span class="tag">ElevenLabs</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-comms">
+          <div class="showcase-icon">📞</div>
+          <div>
+            <h3>Robust Calls & SMS</h3>
+            <p>Zero-refusal communication with intelligent fallback chains. OpenDroid resolves contacts by name, makes calls via TelephonyManager, and sends SMS programmatically. If permissions are missing, it gracefully falls back to system dialer and SMS composer intents — ensuring the task always gets done.</p>
+            <div class="tag-row">
+              <span class="tag">ContactResolver</span>
+              <span class="tag">TelephonyManager</span>
+              <span class="tag">SmsManager</span>
+              <span class="tag">Intent Fallback</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-llm">
+          <div class="showcase-icon">🔗</div>
+          <div>
+            <h3>10+ LLM Provider Support</h3>
+            <p>Bring your own AI brain. OpenDroid supports Anthropic Claude, OpenAI GPT, Google Gemini, Groq, Mistral, OpenRouter, Together AI, Cohere, DeepSeek — and fully offline operation via Ollama with a custom server URL. Switch providers instantly from the settings screen.</p>
+            <div class="tag-row">
+              <span class="tag">Anthropic</span>
+              <span class="tag">OpenAI</span>
+              <span class="tag">Gemini</span>
+              <span class="tag">Ollama (Offline)</span>
+              <span class="tag">+6 More</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card showcase-card reveal" id="showcase-ui">
+          <div class="showcase-icon">🎨</div>
+          <div>
+            <h3>Premium Glassmorphic Design</h3>
+            <p>Built with Jetpack Compose featuring a futuristic deep navy and neon green design system. Enjoy custom pulsing audio orb indicators, live latency benchmarks, animated plan visualizations, and a polished chat interface that makes AI interaction feel premium.</p>
+            <div class="tag-row">
+              <span class="tag">Jetpack Compose</span>
+              <span class="tag">Dark Theme</span>
+              <span class="tag">Glassmorphism</span>
+              <span class="tag">Animations</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Experience Every Feature</h2>
+        <p>Download OpenDroid and explore its full capabilities on your own Android device.</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="btn btn-primary">⬇ Download APK</a>
+          <a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="btn btn-secondary">📂 View Source Code</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

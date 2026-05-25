@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — OpenDroid</title>
+  <meta name="description" content="OpenDroid Privacy Policy. Learn how we handle your data, what information is collected, and how we protect your privacy.">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li><a href="privacy.html" class="active">Privacy</a></li>
+      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Legal</span>
+    <h1>Privacy Policy</h1>
+    <p>Last updated: May 25, 2026</p>
+  </div>
+</header>
+
+<main class="container">
+  <div class="prose">
+
+    <div class="info-box">
+      <strong>Summary:</strong> OpenDroid is an open-source, on-device application. We are committed to transparency and privacy. 
+      Your data stays on your device — we do not operate servers that collect or store your personal information.
+    </div>
+
+    <h2>1. Introduction</h2>
+    <p>OpenDroid ("the App," "we," "our," or "us") is an open-source autonomous Android AI agent developed and maintained by the OpenDroid Contributors. This Privacy Policy explains how the App handles information when you install and use it on your Android device.</p>
+    <p>By downloading, installing, or using OpenDroid, you agree to the practices described in this Privacy Policy. If you do not agree, please do not use the App.</p>
+
+    <h2>2. Information We Do NOT Collect</h2>
+    <p>OpenDroid does <strong>not</strong> operate backend servers for data collection. The following data is <strong>never</strong> transmitted to us:</p>
+    <ul>
+      <li>Your name, email address, phone number, or any personal identifiers</li>
+      <li>Your contacts, call history, or SMS messages</li>
+      <li>Your location data or GPS coordinates</li>
+      <li>Photos, files, or media stored on your device</li>
+      <li>Your browsing history or app usage patterns</li>
+      <li>Device identifiers (IMEI, advertising ID, etc.)</li>
+    </ul>
+
+    <h2>3. Information Processed Locally</h2>
+    <p>OpenDroid processes certain data <strong>entirely on your device</strong> to provide its autonomous agent capabilities:</p>
+
+    <h3>3.1 Accessibility Service Data</h3>
+    <p>OpenDroid uses Android Accessibility Services to read screen content, perform clicks, scroll actions, and navigate apps on your behalf. This data is processed in real-time and in memory only — it is <strong>not stored persistently</strong> nor transmitted off your device by the App itself.</p>
+
+    <h3>3.2 Voice and Audio Data</h3>
+    <p>If you enable the voice interface, OpenDroid accesses your microphone for wake word detection and speech-to-text conversion. Audio is processed locally using Android's built-in speech recognition engine. Audio recordings are <strong>not stored or transmitted</strong> by OpenDroid.</p>
+
+    <h3>3.3 Memory System</h3>
+    <p>OpenDroid maintains a multi-tier memory system (working, episodic, semantic, and procedural memory) stored locally on your device using Room Database. This memory includes:</p>
+    <ul>
+      <li>Summaries of past interactions and task outcomes</li>
+      <li>User preferences and personal facts you share conversationally</li>
+      <li>Custom macro workflows you create</li>
+    </ul>
+    <p>This data remains on your device and can be viewed and deleted through the App's settings at any time.</p>
+
+    <h2>4. Third-Party API Services</h2>
+    <p>OpenDroid supports integration with third-party Large Language Model (LLM) providers. When you configure an API key and use a cloud-based LLM provider, your queries and context are sent to that provider's servers. This includes:</p>
+    <ul>
+      <li><strong>Anthropic</strong> (Claude)</li>
+      <li><strong>OpenAI</strong> (GPT models)</li>
+      <li><strong>Google</strong> (Gemini)</li>
+      <li><strong>Groq, Mistral, OpenRouter, Together AI, Cohere, DeepSeek</strong></li>
+      <li><strong>ElevenLabs</strong> (text-to-speech synthesis)</li>
+    </ul>
+    <p>Each provider has its own privacy policy governing how they handle your data. <strong>We strongly recommend reviewing the privacy policy of any LLM provider you choose to use.</strong> OpenDroid does not control how these third parties process your data.</p>
+
+    <h3>4.1 API Keys</h3>
+    <p>API keys you enter are stored locally on your device using Android DataStore Preferences. They are <strong>never</strong> transmitted to OpenDroid servers (we operate none). Keys are sent only to the respective API provider's endpoint when making LLM requests.</p>
+
+    <h3>4.2 Local / Offline Mode</h3>
+    <p>OpenDroid supports fully offline operation via Ollama. When using a local model server, no data leaves your device or local network.</p>
+
+    <h2>5. Permissions</h2>
+    <p>OpenDroid requests certain Android permissions to function. Here is a complete breakdown:</p>
+    <ul>
+      <li><strong>Accessibility Service:</strong> Required for UI automation, screen reading, and app control. Data is processed in real-time only.</li>
+      <li><strong>WRITE_SETTINGS:</strong> Required to toggle system settings (brightness, Wi-Fi, Bluetooth).</li>
+      <li><strong>RECORD_AUDIO:</strong> Required for wake word detection and speech-to-text input.</li>
+      <li><strong>POST_NOTIFICATIONS:</strong> Used for foreground service status and planning notifications.</li>
+      <li><strong>CALL_PHONE / SEND_SMS:</strong> Used only when you explicitly request calling or messaging actions.</li>
+      <li><strong>READ_CONTACTS:</strong> Used for contact name resolution when you request communication actions.</li>
+      <li><strong>SET_ALARM:</strong> Used to create alarms and timers on your behalf.</li>
+      <li><strong>SCHEDULE_EXACT_ALARM:</strong> Used for precise alarm scheduling.</li>
+      <li><strong>CAMERA:</strong> Not used. OpenDroid does not access your camera.</li>
+    </ul>
+
+    <h2>6. Data Retention and Deletion</h2>
+    <p>Since all data is stored locally on your device:</p>
+    <ul>
+      <li>You can clear all memory data through the App's Memory settings screen</li>
+      <li>You can delete all App data through Android Settings → Apps → OpenDroid → Clear Data</li>
+      <li>Uninstalling the App removes all locally stored data</li>
+    </ul>
+
+    <h2>7. Children's Privacy</h2>
+    <p>OpenDroid is not directed at children under the age of 13. We do not knowingly collect personal information from children. Since the App does not collect personal data from any user, there is no children's data to manage. However, parental guidance is recommended for minors using AI-powered tools.</p>
+
+    <h2>8. Security</h2>
+    <p>We take security seriously. Since data is stored locally, its security depends on your device's own security measures (screen lock, encryption, etc.). We recommend:</p>
+    <ul>
+      <li>Keeping your device software up to date</li>
+      <li>Using a strong screen lock</li>
+      <li>Being cautious about which LLM API providers you share data with</li>
+      <li>Reviewing our <a href="security.html">Security Policy</a> for vulnerability reporting</li>
+    </ul>
+
+    <h2>9. Open Source Transparency</h2>
+    <p>OpenDroid is fully open source under the Apache License 2.0. You can audit the complete source code at any time:</p>
+    <p><a href="https://github.com/yashab-cyber/opendroid" target="_blank">https://github.com/yashab-cyber/opendroid</a></p>
+    <p>This means you can verify every claim made in this Privacy Policy by examining the code yourself.</p>
+
+    <h2>10. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be reflected in the "Last updated" date at the top of this page and committed to the project's GitHub repository. We encourage you to review this policy periodically.</p>
+
+    <h2>11. Contact Us</h2>
+    <p>If you have questions or concerns about this Privacy Policy, please contact us:</p>
+    <ul>
+      <li><strong>GitHub:</strong> <a href="https://github.com/yashab-cyber/opendroid/issues" target="_blank">Open an issue</a></li>
+      <li><strong>Discord:</strong> <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Join our server</a></li>
+      <li><strong>Email:</strong> security@opendroid.ai</li>
+    </ul>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
