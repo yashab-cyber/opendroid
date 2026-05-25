@@ -74,6 +74,15 @@ fun OpenDroidNavigation(
                 onNavigateToPrivacyPolicy = {
                     navController.navigate("privacy_policy")
                 },
+                onNavigateToTermsOfUse = {
+                    navController.navigate("terms_of_use")
+                },
+                onNavigateToHelpCenter = {
+                    navController.navigate("help_center")
+                },
+                onNavigateToLicense = {
+                    navController.navigate("license")
+                },
                 onNavigateToAbout = {
                     navController.navigate("about")
                 }
@@ -105,6 +114,30 @@ fun OpenDroidNavigation(
                 }
             )
         }
+
+        composable("terms_of_use") {
+            TermsOfUseScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("help_center") {
+            HelpCenterScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("license") {
+            LicenseScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
 
@@ -121,6 +154,9 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 fun MainDashboard(
     onNavigateToBenchmark: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToTermsOfUse: () -> Unit,
+    onNavigateToHelpCenter: () -> Unit,
+    onNavigateToLicense: () -> Unit,
     onNavigateToAbout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -202,6 +238,9 @@ fun MainDashboard(
                     viewModel = settingsViewModel,
                     onNavigateToBenchmark = onNavigateToBenchmark,
                     onNavigateToPrivacyPolicy = onNavigateToPrivacyPolicy,
+                    onNavigateToTermsOfUse = onNavigateToTermsOfUse,
+                    onNavigateToHelpCenter = onNavigateToHelpCenter,
+                    onNavigateToLicense = onNavigateToLicense,
                     onNavigateToAbout = onNavigateToAbout
                 )
             }

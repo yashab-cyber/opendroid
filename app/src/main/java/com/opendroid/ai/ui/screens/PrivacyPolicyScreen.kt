@@ -233,7 +233,7 @@ fun PrivacyPolicyScreen(
 }
 
 @Composable
-private fun PolicySection(
+internal fun PolicySection(
     title: String,
     content: String
 ) {
