@@ -54,7 +54,7 @@ fun SplashScreen(onNavigateNext: () -> Unit) {
             modifier = Modifier.alpha(alpha.value)
         ) {
             androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.opendroid.ai.R.drawable.opendroid),
+                painter = androidx.compose.ui.res.painterResource(id = com.opendroid.ai.R.drawable.bot),
                 contentDescription = "OpenDroid Logo",
                 modifier = Modifier.size(120.dp)
             )

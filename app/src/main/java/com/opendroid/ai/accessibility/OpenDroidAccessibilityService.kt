@@ -253,7 +253,7 @@ class OpenDroidAccessibilityService : AccessibilityService() {
         }
 
         init {
-            setImageResource(R.drawable.opendroid)
+            setImageResource(R.drawable.bot)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             val padding = dpToPx(12)
             setPadding(padding, padding, padding, padding)
