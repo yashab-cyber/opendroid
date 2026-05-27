@@ -36,7 +36,7 @@
   <div class="container">
     <span class="label">Legal</span>
     <h1>Privacy Policy</h1>
-    <p>Last updated: May 25, 2026</p>
+    <p>Last updated: May 27, 2026</p>
   </div>
 </header>
 
@@ -99,17 +99,21 @@
     <p>OpenDroid supports fully offline operation via Ollama. When using a local model server, no data leaves your device or local network.</p>
 
     <h2>5. Permissions</h2>
-    <p>OpenDroid requests certain Android permissions to function. Here is a complete breakdown:</p>
+    <p>OpenDroid requests certain Android permissions to function. All requested permissions are used to execute actions locally on your device at your direction:</p>
     <ul>
-      <li><strong>Accessibility Service:</strong> Required for UI automation, screen reading, and app control. Data is processed in real-time only.</li>
-      <li><strong>WRITE_SETTINGS:</strong> Required to toggle system settings (brightness, Wi-Fi, Bluetooth).</li>
-      <li><strong>RECORD_AUDIO:</strong> Required for wake word detection and speech-to-text input.</li>
-      <li><strong>POST_NOTIFICATIONS:</strong> Used for foreground service status and planning notifications.</li>
-      <li><strong>CALL_PHONE / SEND_SMS:</strong> Used only when you explicitly request calling or messaging actions.</li>
-      <li><strong>READ_CONTACTS:</strong> Used for contact name resolution when you request communication actions.</li>
-      <li><strong>SET_ALARM:</strong> Used to create alarms and timers on your behalf.</li>
-      <li><strong>SCHEDULE_EXACT_ALARM:</strong> Used for precise alarm scheduling.</li>
-      <li><strong>CAMERA:</strong> Not used. OpenDroid does not access your camera.</li>
+      <li><strong>Accessibility Service:</strong> Required for UI automation, screen reading, and app control. Data is processed in real-time in memory only.</li>
+      <li><strong>Location (ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION):</strong> Used to fetch local weather updates and execute location-based commands.</li>
+      <li><strong>Calendar (READ_CALENDAR, WRITE_CALENDAR):</strong> Used to view, add, or edit events in your device calendar on your request.</li>
+      <li><strong>Storage (READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE):</strong> Used to save local database records, save system screenshots for planning, and manage local assets.</li>
+      <li><strong>Biometrics (USE_BIOMETRIC):</strong> Used to authenticate the user prior to performing sensitive or high-risk autonomous actions.</li>
+      <li><strong>Call Log & SMS (READ_CALL_LOG, READ_SMS, RECEIVE_SMS, SEND_SMS, CALL_PHONE):</strong> Used to view call history, read incoming notifications/SMS, and send messages or make calls upon your explicit command.</li>
+      <li><strong>Contacts (READ_CONTACTS, WRITE_CONTACTS):</strong> Used for contact name resolution and matching to execute communication actions.</li>
+      <li><strong>System Settings (WRITE_SETTINGS, MODIFY_AUDIO_SETTINGS):</strong> Required to toggle system settings (brightness, volume, Wi-Fi, Bluetooth).</li>
+      <li><strong>Bluetooth & Wifi (BLUETOOTH, BLUETOOTH_CONNECT, BLUETOOTH_SCAN, CHANGE_WIFI_STATE, ACCESS_WIFI_STATE):</strong> Used to toggle network states and scan/connect to local hardware.</li>
+      <li><strong>Package Stats & Queries (PACKAGE_USAGE_STATS, QUERY_ALL_PACKAGES):</strong> Used to detect installed applications on the device to launch them or perform automated tasks within them.</li>
+      <li><strong>POST_NOTIFICATIONS:</strong> Used for foreground service status, planning, and task execution progress.</li>
+      <li><strong>Alarms (SET_ALARM, SCHEDULE_EXACT_ALARM, USE_EXACT_ALARM):</strong> Used to set timers, alarms, and reminders on your behalf.</li>
+      <li><strong>Camera (CAMERA):</strong> Declared in manifest but not currently active. OpenDroid does not access or store camera feed without explicit intent.</li>
     </ul>
 
     <h2>6. Data Retention and Deletion</h2>
