@@ -839,3 +839,52 @@ img { max-width: 100%; height: auto; display: block; }
   background: linear-gradient(90deg, transparent, var(--surface-border), transparent);
   margin: 80px 0;
 }
+
+/* ============================================
+   Indus Appstore Badge & QR
+   ============================================ */
+.indus-badge-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform var(--transition);
+}
+.indus-badge-link:hover {
+  transform: translateY(-2px);
+}
+.indus-badge-img {
+  height: 52px;
+  width: auto;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: box-shadow var(--transition);
+}
+.indus-badge-link:hover .indus-badge-img {
+  box-shadow: 0 8px 24px rgba(0,255,136,0.15);
+}
+
+/* Specific alignments for hero & CTA buttons */
+.hero-buttons .indus-badge-link,
+.cta-buttons .indus-badge-link {
+  align-self: center;
+}
+
+/* support page indus card qr styles */
+.contact-card .qr-wrapper {
+  margin: 16px auto;
+  width: 140px;
+  height: 140px;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.contact-card .qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
