@@ -23,10 +23,10 @@ CRITICAL DEPENDENCY RULES:
 2. ONLY add a stepId to "dependsOn" if the step needs the DATA OUTPUT of that prior step (e.g., using $$stepId to reference its result).
 3. Non-data-producing actions like OPEN_APP, TOGGLE_WIFI, TOGGLE_FLASHLIGHT, SET_VOLUME, SET_BRIGHTNESS, LOCK_SCREEN must NEVER appear in another step's "dependsOn".
 4. Data-producing actions that CAN be referenced: WEB_SEARCH, GET_WEATHER, GET_NEWS, CALCULATE, ASK_USER, GET_SYSTEM_INFO, CHECK_BALANCE, SPLIT_BILL, TRANSLATE, CURRENCY_CONVERT, ANALYZE_SCREENSHOT.
-5. CONDITIONAL TASKS (e.g., "if X then do Y"):
-   - Schedule ALL potential steps in sequence (e.g., Step 1: GET_WEATHER, Step 2: SEND_WHATSAPP).
-   - Do NOT try to invent custom conditional or programming syntax in the JSON plan structure.
-   - The Re-Evaluation Engine will run after Step 1, inspect the output data (e.g., weather condition), and automatically decide whether to CONTINUE or ABANDON/MODIFY the remaining steps if the condition is not met.
+5. CONDITIONAL AND CONDITIONAL BRANCHING TASKS (e.g., "if battery < 20% do X", "if it is raining do Y", "if I have a message from John do Z", "check if we have eggs, if not add to list"):
+   - Schedule ALL potential actions in sequence (e.g., Step 1: GET_SYSTEM_INFO, Step 2: TOGGLE_BATTERY_SAVER; or Step 1: READ_NOTIFICATIONS, Step 2: SEND_SMS).
+   - Do NOT attempt to build custom logic operators, code snippets, or control flow structures in the JSON plan. Keep the steps sequential and flat.
+   - The Re-Evaluation Engine runs at each step boundary. It will inspect the data outputs of the completed steps and dynamically decide whether to CONTINUE executing the remaining conditional steps or ABANDON them when the user's conditions are not met.
 
 SELF-CONTAINED ACTIONS (do NOT add OPEN_APP before these):
 - SEND_WHATSAPP, MAKE_CALL, SEND_SMS, SEND_EMAIL — these open the app internally.
