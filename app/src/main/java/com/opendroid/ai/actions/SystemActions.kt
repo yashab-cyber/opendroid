@@ -263,19 +263,41 @@ class SystemActions @Inject constructor(
         override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
             val appName = params["appName"] ?: return ActionResult(false, null, "appName parameter missing")
             val pm = context.packageManager
-            val packages = pm.getInstalledApplications(0)
-            val appPackage = packages.find {
-                val label = pm.getApplicationLabel(it).toString()
-                label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)
-            }?.packageName
-            return if (appPackage != null) {
-                val intent = pm.getLaunchIntentForPackage(appPackage)
+            val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+            }
+            val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
+            
+            // 1. Try to find a match among launcher apps first
+            var matchedPackage = resolveInfos.find {
+                val label = it.loadLabel(pm).toString()
+                val pkgName = it.activityInfo.packageName
+                label.contains(appName, ignoreCase = true) || pkgName.contains(appName, ignoreCase = true)
+            }?.activityInfo?.packageName
+
+            // 2. If not found in launcher apps, try matching installed applications as a fallback
+            if (matchedPackage == null) {
+                try {
+                    val packages = pm.getInstalledApplications(0)
+                    matchedPackage = packages.find {
+                        val label = pm.getApplicationLabel(it).toString()
+                        label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)
+                    }?.packageName
+                } catch (e: Exception) {
+                    // Ignore installed applications check exceptions
+                }
+            }
+
+            return if (matchedPackage != null) {
+                val intent = pm.getLaunchIntentForPackage(matchedPackage)
                 if (intent != null) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
+                    // Wait 2 seconds for app transition to prevent race conditions in subsequent steps
+                    kotlinx.coroutines.delay(2000)
                     ActionResult(true, "$appName is open!", null)
                 } else {
-                    ActionResult(false, null, "Launcher intent not found for $appPackage")
+                    ActionResult(false, null, "Launcher intent not found for $matchedPackage")
                 }
             } else {
                 ActionResult(false, null, "App '$appName' not installed.")
@@ -466,13 +488,31 @@ class SystemActions @Inject constructor(
         override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
             val appName = params["appName"] ?: return ActionResult(false, null, "appName parameter missing")
             val pm = context.packageManager
-            val packages = pm.getInstalledApplications(0)
-            val appPackage = packages.find {
-                val label = pm.getApplicationLabel(it).toString()
-                label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)
-            }?.packageName
-            return if (appPackage != null) {
-                ActionResult(true, "App '$appName' ($appPackage) is installed and functional.", null)
+            val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+            }
+            val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
+            
+            var matchedPackage = resolveInfos.find {
+                val label = it.loadLabel(pm).toString()
+                val pkgName = it.activityInfo.packageName
+                label.contains(appName, ignoreCase = true) || pkgName.contains(appName, ignoreCase = true)
+            }?.activityInfo?.packageName
+
+            if (matchedPackage == null) {
+                try {
+                    val packages = pm.getInstalledApplications(0)
+                    matchedPackage = packages.find {
+                        val label = pm.getApplicationLabel(it).toString()
+                        label.contains(appName, ignoreCase = true) || it.packageName.contains(appName, ignoreCase = true)
+                    }?.packageName
+                } catch (e: Exception) {
+                    // Ignore installed applications check exceptions
+                }
+            }
+
+            return if (matchedPackage != null) {
+                ActionResult(true, "App '$appName' ($matchedPackage) is installed and functional.", null)
             } else {
                 ActionResult(false, null, "App '$appName' is not installed.")
             }

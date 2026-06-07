@@ -399,12 +399,18 @@ class AgentLoop @Inject constructor(
             }
 
             // Execute the action dispatcher
-            var actionResult = actionDispatcher.execute(nextStep.action, resolvedParams, context)
-
-            // ── Handle contact disambiguation picker ──
-            if (actionResult is ActionResult.NeedsInput && 
-                actionResult.metadata["type"] == "contact_picker") {
-                actionResult = handleContactPicker(actionResult, nextStep.action, resolvedParams, context)
+            var actionResult = try {
+                var result = actionDispatcher.execute(nextStep.action, resolvedParams, context)
+                
+                // ── Handle contact disambiguation picker ──
+                if (result is ActionResult.NeedsInput && 
+                    result.metadata["type"] == "contact_picker") {
+                    result = handleContactPicker(result, nextStep.action, resolvedParams, context)
+                }
+                result
+            } catch (e: Exception) {
+                android.util.Log.e("AgentLoop", "Exception executing action ${nextStep.action}: ${e.localizedMessage}", e)
+                ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
             }
 
             if (actionResult.success) {
@@ -470,7 +476,11 @@ class AgentLoop @Inject constructor(
             } else {
                 // Try fallback action
                 if (nextStep.fallback.isNotEmpty() && actionDispatcher.hasAction(nextStep.fallback)) {
-                    val fallbackResult = actionDispatcher.execute(nextStep.fallback, resolvedParams, context)
+                    val fallbackResult = try {
+                        actionDispatcher.execute(nextStep.fallback, resolvedParams, context)
+                    } catch (e: Exception) {
+                        ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
+                    }
                     if (fallbackResult.success) {
                         planManager.updateStepStatus(
                             nextStep.stepId,
