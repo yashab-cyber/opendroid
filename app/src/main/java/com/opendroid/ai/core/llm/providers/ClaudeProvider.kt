@@ -4,9 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.opendroid.ai.core.llm.*
 import com.opendroid.ai.data.repository.SettingsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -86,6 +88,7 @@ class ClaudeProvider @Inject constructor(
             .post(bodyJson.toRequestBody(mediaType))
             .build()
 
+        return withContext(Dispatchers.IO) {
         client.newCall(httpRequest).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Claude request failed: Code ${response.code} - ${response.body?.string()}")
@@ -99,7 +102,7 @@ class ClaudeProvider @Inject constructor(
             val inputTokens = usage?.get("input_tokens")?.asInt ?: 0
             val outputTokens = usage?.get("output_tokens")?.asInt ?: 0
 
-            return LLMResponse(
+            LLMResponse(
                 content = content,
                 tokensUsed = inputTokens + outputTokens,
                 model = selectedModel,
@@ -107,6 +110,7 @@ class ClaudeProvider @Inject constructor(
                 latencyMs = System.currentTimeMillis() - startTime
             )
         }
+        } // withContext
     }
 
     override fun streamComplete(request: LLMRequest): Flow<String> = flow {

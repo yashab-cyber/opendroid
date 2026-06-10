@@ -93,9 +93,26 @@ class AdvancedControlActions @Inject constructor() {
                 val availMem = memInfo.availMem / (1024 * 1024)
 
                 val connManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
-                val activeNetwork = connManager.activeNetworkInfo
-                val isConnected = activeNetwork?.isConnectedOrConnecting == true
-                val networkType = activeNetwork?.typeName ?: "UNKNOWN"
+                val isConnected: Boolean
+                val networkType: String
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val network = connManager.activeNetwork
+                    val capabilities = connManager.getNetworkCapabilities(network)
+                    isConnected = capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                    networkType = when {
+                        capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true -> "WIFI"
+                        capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "MOBILE"
+                        capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET) == true -> "ETHERNET"
+                        capabilities != null -> "OTHER"
+                        else -> "NONE"
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val activeNetwork = connManager.activeNetworkInfo
+                    isConnected = activeNetwork?.isConnectedOrConnecting == true
+                    @Suppress("DEPRECATION")
+                    networkType = activeNetwork?.typeName ?: "UNKNOWN"
+                }
 
                 val info = """
                     Battery: $batteryPct% (Charging: $isCharging)
@@ -638,6 +655,12 @@ class AdvancedControlActions @Inject constructor() {
                     var entry = zis.nextEntry
                     while (entry != null) {
                         val file = File(destDir, entry.name)
+                        // ZipSlip protection: ensure the resolved path is within the destination directory
+                        val canonicalDest = destDir.canonicalPath
+                        val canonicalFile = file.canonicalPath
+                        if (!canonicalFile.startsWith(canonicalDest + File.separator) && canonicalFile != canonicalDest) {
+                            throw SecurityException("ZipSlip: entry '${entry.name}' is outside of target dir")
+                        }
                         if (entry.isDirectory) {
                             file.mkdirs()
                         } else {

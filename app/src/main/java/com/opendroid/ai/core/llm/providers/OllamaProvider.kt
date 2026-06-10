@@ -4,9 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.opendroid.ai.core.llm.*
 import com.opendroid.ai.data.repository.SettingsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -58,6 +60,7 @@ class OllamaProvider @Inject constructor(
             requestBuilder.header("Authorization", "Bearer $apiKey")
         }
 
+        return withContext(Dispatchers.IO) {
         client.newCall(requestBuilder.build()).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Ollama request failed: Code ${response.code} - ${response.body?.string()}")
@@ -70,7 +73,7 @@ class OllamaProvider @Inject constructor(
             val promptEvalCount = jsonResponse.get("prompt_eval_count")?.asInt ?: 0
             val evalCount = jsonResponse.get("eval_count")?.asInt ?: 0
 
-            return LLMResponse(
+            LLMResponse(
                 content = content,
                 tokensUsed = promptEvalCount + evalCount,
                 model = config.activeModel,
@@ -78,6 +81,7 @@ class OllamaProvider @Inject constructor(
                 latencyMs = System.currentTimeMillis() - startTime
             )
         }
+        } // withContext
     }
 
     override fun streamComplete(request: LLMRequest): Flow<String> = flow {
