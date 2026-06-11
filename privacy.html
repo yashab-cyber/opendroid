@@ -4,15 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy — OpenDroid</title>
-  <meta name="description" content="OpenDroid Privacy Policy. Learn how we handle your data, what information is collected, and how we protect your privacy.">
+  <meta name="description" content="OpenDroid privacy policy. Learn how your data is handled.">
   <link rel="icon" type="image/png" href="assets/bot.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<canvas id="particles-canvas"></canvas>
-
-<nav class="navbar">
+<nav class="navbar" id="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-brand">
       <img src="assets/bot.png" alt="OpenDroid">
@@ -22,15 +20,39 @@
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links" id="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="features.html">Features</a></li>
+      <li class="nav-dropdown">
+        <a href="features.html">Products</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download APK</a></li>
+          <li><a href="https://indusapp.store/wphbqhzu" target="_blank">Indus Appstore</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <a href="features.html">Use Cases</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html#feat-planning">Autonomous Planning</a></li>
+          <li><a href="features.html#feat-device">Device Control</a></li>
+          <li><a href="features.html#feat-accessibility">App Automation</a></li>
+          <li><a href="features.html#feat-vision">Vision Engine</a></li>
+        </ul>
+      </li>
       <li><a href="about.html">About</a></li>
       <li><a href="support.html">Support</a></li>
-      <li><a href="privacy.html" class="active">Privacy</a></li>
-      <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="nav-cta">★ GitHub</a></li>
+      <li class="nav-dropdown">
+        <a href="#">Resources</a>
+        <ul class="dropdown-menu">
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+          <li><a href="https://discord.gg/Q4ym5cxTe" target="_blank">Discord</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank" class="nav-cta">Download ↓</a></li>
     </ul>
   </div>
 </nav>
+
 
 <header class="page-header">
   <div class="container">
@@ -155,12 +177,12 @@
   </div>
 </main>
 
-<footer class="footer">
+<footer class="footer" id="footer">
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="index.html" class="nav-brand">
-          <img src="assets/bot.png" alt="OpenDroid" style="width:32px;height:32px;">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:28px;height:28px;">
           <span>OpenDroid</span>
         </a>
         <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
@@ -200,6 +222,7 @@
     </div>
   </div>
 </footer>
+
 
 <script src="js/main.js"></script>
 </body>
