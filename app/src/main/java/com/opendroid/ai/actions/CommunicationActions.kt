@@ -184,7 +184,7 @@ class CommunicationActions @Inject constructor(
                         return ActionResult(true, "Calling $contactLabel now!", null)
                     }
                 }
-                ActionResult(true, "I've opened the dialer for $contactLabel — just tap call!", null, true)
+                ActionResult(false, null, "I've opened the dialer for $contactLabel — please tap call.", true)
             }
         } catch (e: SecurityException) {
             try {
@@ -200,7 +200,7 @@ class CommunicationActions @Inject constructor(
                         return ActionResult(true, "Calling $contactLabel now!", null)
                     }
                 }
-                ActionResult(true, "Dialer is open — tap call to connect!", null, true)
+                ActionResult(false, null, "Dialer is open for $contactLabel — please tap call to connect.", true)
             } catch (e2: Exception) {
                 Log.e("MakeCall", "Call failed: ${e2.localizedMessage}")
                 ActionResult(false, null, "Couldn't make that call. Want to try again?")
@@ -231,19 +231,51 @@ class CommunicationActions @Inject constructor(
                 if (autoSent) {
                     return ActionResult(true, "Sent your message to $contactLabel!", null)
                 }
+                // First attempt failed — try one more time with a longer wait
                 kotlinx.coroutines.delay(2000)
-                val clicked = service.findAndClick("Send") ||
-                              service.findAndClick("send") ||
-                              service.findAndClick("SEND")
-                if (clicked) {
-                    return ActionResult(true, "Message sent to $contactLabel!", null)
+                val retryClicked = service.findAndClickById("com.whatsapp:id/send") ||
+                                   service.findAndClick("Send") ||
+                                   service.findAndClick("send")
+                if (retryClicked) {
+                    // Verify send: wait briefly and check if the input field is now empty
+                    kotlinx.coroutines.delay(500)
+                    val verified = verifySendCompleted(service)
+                    if (verified) {
+                        return ActionResult(true, "Message sent to $contactLabel!", null)
+                    }
                 }
             }
 
-            ActionResult(true, "I've opened the chat with $contactLabel — just hit send!", null)
+            // Automation couldn't confirm the message was sent — report honestly
+            ActionResult(false, null, "I've opened the chat with $contactLabel on WhatsApp, but couldn't confirm the message was sent. Please check and tap send if needed.", true)
         } catch (e: Exception) {
             Log.e("SendWhatsApp", "WhatsApp failed: ${e.localizedMessage}")
-            ActionResult(false, "WhatsApp didn't work, let me try SMS instead.", e.localizedMessage, true)
+            ActionResult(false, null, "WhatsApp didn't work. ${e.localizedMessage ?: "Please try again."}", true)
+        }
+    }
+
+    /**
+     * After clicking send, verify the message was actually dispatched by checking
+     * if the WhatsApp input field is now empty or shows the placeholder text.
+     */
+    private fun verifySendCompleted(service: OpenDroidAccessibilityService): Boolean {
+        try {
+            val rootNode = service.rootInActiveWindow ?: return false
+            val inputNodes = rootNode.findAccessibilityNodeInfosByViewId("com.whatsapp:id/entry")
+            for (node in inputNodes) {
+                val text = node.text?.toString() ?: ""
+                node.recycle()
+                // If input field is empty or shows placeholder, message was likely sent
+                if (text.isBlank() || text == "Type a message") {
+                    return true
+                }
+                // If the input field still has content, message wasn't sent
+                return false
+            }
+            // No input field found — could mean we left the chat screen (unlikely but possible)
+            return false
+        } catch (e: Exception) {
+            return false
         }
     }
 
@@ -275,7 +307,8 @@ class CommunicationActions @Inject constructor(
                 }
             }
 
-            ActionResult(true, "I've opened your message to $contactLabel — just hit send!", null)
+            // Couldn't auto-send — be honest
+            ActionResult(false, null, "I've opened your message to $contactLabel but couldn't tap send automatically. Please tap send.", true)
         } catch (e: Exception) {
             try {
                 val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
@@ -293,7 +326,7 @@ class CommunicationActions @Inject constructor(
                     }
                 }
 
-                ActionResult(true, "Messaging app is open for $contactLabel.", null, true)
+                ActionResult(false, null, "Messaging app is open for $contactLabel but needs you to tap send.", true)
             } catch (e2: Exception) {
                 Log.e("SendSMS", "SMS failed: ${e2.localizedMessage}")
                 ActionResult(false, null, "Couldn't open messaging. Try again?")

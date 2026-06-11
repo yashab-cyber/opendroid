@@ -693,8 +693,21 @@ class AgentLoop @Inject constructor(
                 android.util.Log.e("AgentLoop",
                     "Step '${step.action}' failed: ${step.error ?: "unknown"}")
             }
-            // Show a short, friendly message instead
-            humanizeFailure(plan.goal)
+            
+            // Check if any failed step has a user-friendly error message
+            // (e.g. "I've opened the chat... please tap send")
+            val userFacingError = failedSteps.firstNotNullOfOrNull { step ->
+                step.error?.takeIf { error ->
+                    // Include errors that contain actionable guidance for the user
+                    error.contains("opened", ignoreCase = true) ||
+                    error.contains("please", ignoreCase = true) ||
+                    error.contains("check", ignoreCase = true) ||
+                    error.contains("tap", ignoreCase = true) ||
+                    error.contains("couldn't confirm", ignoreCase = true)
+                }
+            }
+            
+            userFacingError ?: humanizeFailure(plan.goal)
         }
 
         val assistantMsg = ChatMessage(
