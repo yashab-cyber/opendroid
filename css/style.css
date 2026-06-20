@@ -734,6 +734,71 @@ img { max-width: 100%; height: auto; display: block; }
 .indus-badge-link:hover { transform: translateY(-2px); }
 .indus-badge-img { height: 44px; width: auto; }
 
+/* ── Screenshots Showcase ── */
+.screenshots-section {
+  padding: 80px 0;
+  background: var(--bg-primary);
+}
+
+.screenshots-scroll {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 24px;
+}
+
+.screenshot-item {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition);
+  max-width: 240px;
+  flex-shrink: 0;
+}
+
+.screenshot-item:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.screenshot-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.screenshot-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .screenshots-scroll {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 12px;
+  }
+  .screenshot-item {
+    scroll-snap-align: center;
+    min-width: 200px;
+  }
+}
+
 /* ── Reveal animation ── */
 .reveal {
   opacity: 0;
