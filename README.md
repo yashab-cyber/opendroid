@@ -91,6 +91,18 @@ Built with **Jetpack Compose** featuring a futuristic glassmorphic design:
 - Live latency benchmarks for each provider
 - Dark mode by default
 
+### 🎬 Meet OpenDroid in 3D
+
+<p align="center">
+  <img src="assets/gemini_generated_video_90af62cc.mp4" alt="OpenDroid 3D Greeting" width="400px">
+</p>
+
+<p align="center">
+  <em>OpenDroid saying hi — rendered in 3D!</em>
+</p>
+
+> **Note:** If the video doesn't play inline on GitHub, [click here to download and watch it](assets/gemini_generated_video_90af62cc.mp4).
+
 ### 📸 Screenshots
 
 <p align="center">
