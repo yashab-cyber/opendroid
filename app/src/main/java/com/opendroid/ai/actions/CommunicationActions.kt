@@ -105,7 +105,8 @@ class CommunicationActions @Inject constructor(
                 is ContactResolution.Found -> executeCall(resolved.contact.phoneNumber, contact, context)
                 is ContactResolution.Ambiguous -> buildContactPickerResult(contact, resolved.matches, "MAKE_CALL")
                 is ContactResolution.NotFound -> ActionResult.NeedsInput(
-                    question = "I couldn't find '$contact' in your contacts. What's their number?"
+                    question = "I couldn't find '$contact' in your contacts. What's their number?",
+                    metadata = mapOf("param" to "contact")
                 )
             }
         }
@@ -126,7 +127,8 @@ class CommunicationActions @Inject constructor(
                     mapOf("message" to message)
                 )
                 is ContactResolution.NotFound -> ActionResult.NeedsInput(
-                    question = "I couldn't find '$contact'. What's their WhatsApp number?"
+                    question = "I couldn't find '$contact'. What's their WhatsApp number?",
+                    metadata = mapOf("param" to "contact")
                 )
             }
         }
@@ -153,7 +155,8 @@ class CommunicationActions @Inject constructor(
                     mapOf("message" to message)
                 )
                 is ContactResolution.NotFound -> ActionResult.NeedsInput(
-                    question = "I couldn't find '$contact'. What's their phone number?"
+                    question = "I couldn't find '$contact'. What's their phone number?",
+                    metadata = mapOf("param" to "contact")
                 )
             }
         }

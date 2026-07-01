@@ -100,7 +100,7 @@ class SettingsViewModel @Inject constructor(
         val defaultModel = when (provider) {
             "Google Gemini" -> "gemini-2.0-flash"
             "OpenAI" -> "gpt-4o"
-            "Anthropic Claude" -> "claude-sonnet-4"
+            "Anthropic Claude" -> "claude-sonnet-4-6"
             "OpenRouter" -> "google/gemini-2.0-flash-exp:free"
             "Groq" -> "llama-3.3-70b-specdec"
             "Together AI" -> "meta-llama/Llama-3-70b-chat-hf"

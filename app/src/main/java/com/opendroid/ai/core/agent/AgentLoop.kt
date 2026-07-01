@@ -30,6 +30,21 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val MAX_NEEDS_INPUT_PROMPTS = 5
+private val CONTACT_NUMBER_PROMPT_ACTIONS = setOf("MAKE_CALL", "SEND_SMS", "SEND_WHATSAPP")
+
+internal fun paramKeyForNeedsInput(needsInput: ActionResult.NeedsInput, actionName: String): String {
+    needsInput.metadata["param"]?.let { return it }
+
+    val asksForNumber = needsInput.question.contains("number", ignoreCase = true) ||
+            needsInput.question.contains("phone", ignoreCase = true)
+    return if (actionName.uppercase() in CONTACT_NUMBER_PROMPT_ACTIONS && asksForNumber) {
+        "contact"
+    } else {
+        "value"
+    }
+}
+
 sealed interface AgentState {
     object Idle : AgentState
     object Listening : AgentState
@@ -348,7 +363,31 @@ class AgentLoop @Inject constructor(
                 _agentState.value = AgentState.PlanProposed(plan)
             }
         } catch (e: Exception) {
-            // Fallback: If planning fails, process as simple query
+            fallbackOrError(userMsg, e)
+        }
+    }
+
+    /**
+     * Treat malformed plan JSON as an actionable planning failure. Other provider
+     * failures can still degrade to a normal chat response.
+     */
+    private suspend fun fallbackOrError(userMsg: ChatMessage, cause: Throwable) {
+        android.util.Log.e("AgentLoop", "Plan generation failed: ${cause.localizedMessage}", cause)
+        val isMalformedPlan = cause is kotlinx.serialization.SerializationException ||
+                cause is IllegalArgumentException
+        if (isMalformedPlan) {
+            val msg = "I understood the request but couldn't build a reliable plan for it. Mind rephrasing, or try a simpler version?"
+            val errMsg = ChatMessage(
+                id = UUID.randomUUID().toString(),
+                text = msg,
+                sender = ChatMessage.Sender.AGENT,
+                modelBadge = "System"
+            )
+            conversationRepository.insertMessage(errMsg)
+            memoryManager.storeMessage(errMsg)
+            _agentState.value = AgentState.Speaking(msg)
+            onSpeakCallback?.invoke(msg)
+        } else {
             executeSimpleQuery(userMsg)
         }
     }
@@ -409,12 +448,7 @@ class AgentLoop @Inject constructor(
             var actionResult = try {
                 var result = actionDispatcher.execute(nextStep.action, resolvedParams, context)
                 
-                // ── Handle contact disambiguation picker ──
-                if (result is ActionResult.NeedsInput && 
-                    result.metadata["type"] == "contact_picker") {
-                    result = handleContactPicker(result, nextStep.action, resolvedParams, context)
-                }
-                result
+                resolveNeedsInput(result, nextStep.action, resolvedParams, context)
             } catch (e: Exception) {
                 android.util.Log.e("AgentLoop", "Exception executing action ${nextStep.action}: ${e.localizedMessage}", e)
                 ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
@@ -557,6 +591,37 @@ class AgentLoop @Inject constructor(
         }
     }
 
+    private data class NeedsInputRetry(
+        val result: ActionResult,
+        val params: Map<String, String>
+    )
+
+    private suspend fun resolveNeedsInput(
+        initialResult: ActionResult,
+        actionName: String,
+        initialParams: Map<String, String>,
+        context: Context
+    ): ActionResult {
+        var result = initialResult
+        var params = initialParams
+
+        repeat(MAX_NEEDS_INPUT_PROMPTS) {
+            val needsInput = result as? ActionResult.NeedsInput ?: return result
+            val retry = if (needsInput.metadata["type"] == "contact_picker") {
+                handleContactPicker(needsInput, actionName, params, context)
+            } else {
+                handleNeedsInput(needsInput, actionName, params, context)
+            }
+            result = retry.result
+            params = retry.params
+        }
+
+        return ActionResult.Failure(
+            errorMsg = "Too many input prompts for $actionName",
+            fallback = "Try the command again with all required details."
+        )
+    }
+
     /**
      * Handle contact disambiguation when an action returns NeedsInput with contact_picker metadata.
      * Shows options to user, waits for selection, stores preference, re-executes action.
@@ -566,9 +631,9 @@ class AgentLoop @Inject constructor(
         actionName: String,
         originalParams: Map<String, String>,
         context: Context
-    ): ActionResult {
+    ): NeedsInputRetry {
         val meta = pickerResult.metadata
-        val matchesJson = meta["matches"] ?: return pickerResult
+        val matchesJson = meta["matches"] ?: return NeedsInputRetry(pickerResult, originalParams)
         val query = meta["query"] ?: ""
 
         // Parse the matches back from JSON
@@ -577,10 +642,10 @@ class AgentLoop @Inject constructor(
                 .decodeFromString<List<Map<String, String>>>(matchesJson)
         } catch (e: Exception) {
             android.util.Log.e("AgentLoop", "Failed to parse contact matches: ${e.message}")
-            return pickerResult
+            return NeedsInputRetry(pickerResult, originalParams)
         }
 
-        if (matches.isEmpty()) return pickerResult
+        if (matches.isEmpty()) return NeedsInputRetry(pickerResult, originalParams)
 
         // Show picker question to user via chat
         val optionsText = pickerResult.options.joinToString("\n")
@@ -639,15 +704,21 @@ class AgentLoop @Inject constructor(
                 modelBadge = "System"
             )
             conversationRepository.insertMessage(failMsg)
-            return ActionResult.Failure(
-                errorMsg = "Contact selection not understood",
-                fallback = "Please try the command again"
+            return NeedsInputRetry(
+                ActionResult.Failure(
+                    errorMsg = "Contact selection not understood",
+                    fallback = "Please try the command again"
+                ),
+                originalParams
             )
         }
 
-        val phone = selectedContact["phone"] ?: return ActionResult.Failure(
-            errorMsg = "No phone number for selected contact",
-            fallback = "Try again"
+        val phone = selectedContact["phone"] ?: return NeedsInputRetry(
+            ActionResult.Failure(
+                errorMsg = "No phone number for selected contact",
+                fallback = "Try again"
+            ),
+            originalParams
         )
         val name = selectedContact["name"] ?: "Contact"
 
@@ -673,7 +744,60 @@ class AgentLoop @Inject constructor(
             resolvedParams["message"] = meta["message"]!!
         }
 
-        return actionDispatcher.execute(actionName, resolvedParams, context)
+        return NeedsInputRetry(
+            actionDispatcher.execute(actionName, resolvedParams, context),
+            resolvedParams
+        )
+    }
+
+    /**
+     * Generic missing-parameter prompt. Shows the question, waits for the user's
+     * reply, and re-executes the action with the answer injected.
+     */
+    private suspend fun handleNeedsInput(
+        needsInput: ActionResult.NeedsInput,
+        actionName: String,
+        originalParams: Map<String, String>,
+        context: Context
+    ): NeedsInputRetry {
+        val optionsText = if (needsInput.options.isNotEmpty()) {
+            "\n\n" + needsInput.options.joinToString("\n") { "- $it" }
+        } else {
+            ""
+        }
+        val promptMsg = ChatMessage(
+            id = UUID.randomUUID().toString(),
+            text = needsInput.question + optionsText,
+            sender = ChatMessage.Sender.AGENT,
+            modelBadge = "System"
+        )
+        conversationRepository.insertMessage(promptMsg)
+        onSpeakCallback?.invoke(needsInput.question)
+
+        val answer = awaitUserResponse().trim()
+        if (answer.isEmpty()) {
+            return NeedsInputRetry(
+                ActionResult.Failure(
+                    errorMsg = "No value provided for $actionName",
+                    fallback = "Try the command again with the missing detail."
+                ),
+                originalParams
+            )
+        }
+
+        val userEcho = ChatMessage(
+            id = UUID.randomUUID().toString(),
+            text = answer,
+            sender = ChatMessage.Sender.USER
+        )
+        conversationRepository.insertMessage(userEcho)
+
+        val paramKey = paramKeyForNeedsInput(needsInput, actionName)
+        val newParams = originalParams.toMutableMap().apply { put(paramKey, answer) }
+        return NeedsInputRetry(
+            actionDispatcher.execute(actionName, newParams, context),
+            newParams
+        )
     }
 
     private suspend fun speakAndSaveSummary(plan: Plan, isSuccess: Boolean) {

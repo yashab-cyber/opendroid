@@ -240,7 +240,8 @@ class ActionDispatcher @Inject constructor(
                     Log.d(TAG, "║ Missing:      $firstMissing for $actionName")
                     ActionResult.NeedsInput(
                         question = "I need the $firstMissing to complete this. ${paramDef?.description ?: ""}",
-                        options = paramDef?.enumValues ?: emptyList()
+                        options = paramDef?.enumValues ?: emptyList(),
+                        metadata = mapOf("param" to firstMissing)
                     )
                 }
             }

@@ -411,9 +411,9 @@ class ModelFetcher @Inject constructor(
     }
 
     private fun getAnthropicFallback() = listOf(
-        AIModel("claude-sonnet-4", "Claude Sonnet 4", "Anthropic Claude", isRecommended = true),
-        AIModel("claude-haiku-4", "Claude Haiku 4", "Anthropic Claude", isFree = true),
-        AIModel("claude-opus-4", "Claude Opus 4", "Anthropic Claude", isPremium = true)
+        AIModel("claude-sonnet-4-6", "Claude Sonnet 4.6", "Anthropic Claude", isRecommended = true),
+        AIModel("claude-haiku-4-5", "Claude Haiku 4.5", "Anthropic Claude", isFree = true),
+        AIModel("claude-opus-4-8", "Claude Opus 4.8", "Anthropic Claude", isPremium = true)
     )
 
     private fun getOpenAIFallback() = listOf(
