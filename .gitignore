@@ -19,3 +19,7 @@ local.properties
 *.keystore
 *.jks
 gradle.properties
+
+# Local AI assistant guidance — not tracked
+CLAUDE.md
+docs/superpowers/
