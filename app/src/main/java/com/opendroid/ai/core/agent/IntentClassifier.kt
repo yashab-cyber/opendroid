@@ -85,6 +85,26 @@ class IntentClassifier @Inject constructor(
     fun classifyComplexity(query: String): QueryComplexity {
         val lowercaseQuery = query.lowercase()
 
+        // ── Fast-path: known single-intent patterns that happen to contain
+        //    multiple action keywords (e.g. "set" + "brightness").
+        //    These must be classified as SIMPLE so the AliasResolver handles them.
+        val singleIntentPatterns = listOf(
+            "set brightness", "set volume", "set alarm", "set timer", "set reminder",
+            "turn on flashlight", "turn off flashlight", "turn on wifi", "turn off wifi",
+            "turn on bluetooth", "turn off bluetooth", "turn on hotspot", "turn off hotspot",
+            "turn on dnd", "turn off dnd", "turn on torch", "turn off torch",
+            "take screenshot", "take a screenshot", "take ss",
+            "enable wifi", "disable wifi", "enable bluetooth", "disable bluetooth",
+            "enable hotspot", "disable hotspot", "enable dnd", "disable dnd",
+            "toggle flashlight", "toggle wifi", "toggle bluetooth", "toggle hotspot", "toggle dnd",
+            "open settings", "open camera", "lock screen", "lock phone",
+            "play music", "pause music", "resume music", "next song", "previous song",
+            "mute phone", "unmute phone", "set wallpaper"
+        )
+        if (singleIntentPatterns.any { lowercaseQuery.startsWith(it) || lowercaseQuery == it }) {
+            return QueryComplexity.SIMPLE
+        }
+
         // Check for compound indicators FIRST — these always indicate multi-step tasks
         val compoundIndicators = listOf(
             " and then ", " then ", " after that ", " after ",
