@@ -156,6 +156,9 @@ class ModelDownloadWorker(
         val isResume = tempFile.exists() && tempFile.length() > 0
         val startBytes = if (isResume) tempFile.length() else 0L
 
+        Log.i(tag, "[DOWNLOAD FLOW] Requesting HTTP Download from model URL: $downloadUrl")
+        Log.i(tag, "[DOWNLOAD FLOW] Resume status: $isResume, starting from $startBytes bytes")
+
         val requestBuilder = Request.Builder().url(downloadUrl)
         if (isResume) {
             requestBuilder.header("Range", "bytes=$startBytes-")
@@ -165,7 +168,9 @@ class ModelDownloadWorker(
         modelDao.updateModelStatus(modelId, ModelStatus.DOWNLOADING)
 
         val response = okHttpClient.newCall(request).execute()
+        Log.i(tag, "[DOWNLOAD FLOW] Received Response. Code: ${response.code}, Msg: ${response.message}")
         if (!response.isSuccessful && response.code != 206) {
+            Log.e(tag, "[FAILURE] HTTP request failed with code ${response.code}")
             response.close()
             modelDao.updateModelStatus(modelId, ModelStatus.FAILED)
             return Result.failure()
@@ -174,6 +179,7 @@ class ModelDownloadWorker(
         val append = isResume && response.code == 206
         val responseBody = response.body ?: throw Exception("Response body is null")
         val totalBytes = (if (append) startBytes else 0L) + responseBody.contentLength()
+        Log.i(tag, "[DOWNLOAD FLOW] Content-Length of this response chunk: ${responseBody.contentLength()} bytes. Total expected model file size: $totalBytes bytes")
 
         val outputStream = FileOutputStream(tempFile, append)
         val inputStream: InputStream = responseBody.byteStream()
@@ -188,6 +194,7 @@ class ModelDownloadWorker(
                 if (isStopped) {
                     outputStream.close()
                     responseBody.close()
+                    Log.i(tag, "[DOWNLOAD FLOW] Worker stopped. Saving progress at $totalRead bytes.")
                     modelDao.updateModelStatus(modelId, ModelStatus.PAUSED)
                     return Result.retry()
                 }
@@ -203,6 +210,8 @@ class ModelDownloadWorker(
                     val speedString = formatSpeed(speedBytesPerSec)
                     val etaSeconds = if (speedBytesPerSec > 0) (totalBytes - totalRead) / speedBytesPerSec else 0L
                     val etaString = formatEta(etaSeconds)
+
+                    Log.i(tag, "[DOWNLOAD FLOW] Progress Update: downloaded $totalRead/$totalBytes bytes ($progress%). Speed: $speedString. ETA: $etaString")
 
                     modelDao.updateDownloadProgressDetails(
                         modelId,
@@ -224,19 +233,22 @@ class ModelDownloadWorker(
         }
 
         if (expectedSha.isNotEmpty()) {
+            Log.i(tag, "[DOWNLOAD FLOW] Verifying SHA-256 checksum...")
             val actualSha = calculateSha256(tempFile)
             if (actualSha.lowercase() != expectedSha.lowercase()) {
-                Log.e(tag, "SHA-256 verification failed for $modelId. Expected $expectedSha, got $actualSha")
+                Log.e(tag, "[FAILURE] SHA-256 verification failed for $modelId. Expected $expectedSha, got $actualSha")
                 tempFile.delete()
                 modelDao.updateModelStatus(modelId, ModelStatus.FAILED)
                 return Result.failure()
             }
+            Log.i(tag, "[DOWNLOAD FLOW] SHA-256 checksum verified successfully.")
         }
 
         // Extract files
         val targetDir = File(targetPath)
         if (!targetDir.exists()) targetDir.mkdirs()
 
+        Log.i(tag, "[DOWNLOAD FLOW] Extracting model payload to target directory: $targetPath")
         try {
             if (downloadUrl.endsWith(".zip") || isZipFile(tempFile)) {
                 extractZip(tempFile, targetDir)
@@ -255,7 +267,22 @@ class ModelDownloadWorker(
                 manifestFile.writeText(manifest.toString())
             }
         } catch (e: Exception) {
-            Log.e(tag, "Extraction failed", e)
+            Log.e(tag, "[FAILURE] Extraction failed", e)
+            modelDao.updateModelStatus(modelId, ModelStatus.FAILED)
+            return Result.failure()
+        }
+
+        // Verify final file size and existence
+        val finalModelFile = File(targetDir, "model.task")
+        if (!finalModelFile.exists()) {
+            Log.e(tag, "[FAILURE] Download failed: final model.task file does not exist after copy/extraction at ${finalModelFile.absolutePath}")
+            modelDao.updateModelStatus(modelId, ModelStatus.FAILED)
+            return Result.failure()
+        }
+        val finalSize = finalModelFile.length()
+        Log.i(tag, "[DOWNLOAD FLOW] Final model file verified. Path: ${finalModelFile.absolutePath}, Size: $finalSize bytes")
+        if (finalSize <= 0) {
+            Log.e(tag, "[FAILURE] Download failed: final model file is empty (0 bytes)")
             modelDao.updateModelStatus(modelId, ModelStatus.FAILED)
             return Result.failure()
         }
@@ -276,6 +303,7 @@ class ModelDownloadWorker(
         )
 
         tempFile.delete()
+        Log.i(tag, "[DOWNLOAD FLOW] Model task completed successfully.")
         return Result.success()
     }
 

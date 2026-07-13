@@ -108,7 +108,7 @@ class ModelRepository @Inject constructor(
     }
 
     override suspend fun download(model: OnDeviceModel) {
-        startDownload(model, simulate = true)
+        startDownload(model, simulate = false)
     }
 
     suspend fun startDownload(model: OnDeviceModel, simulate: Boolean) {
@@ -167,8 +167,7 @@ class ModelRepository @Inject constructor(
 
     suspend fun resumeDownload(model: OnDeviceModel) {
         val entity = modelDao.getModelById(model.id) ?: return
-        val simulate = entity.downloadUrl.contains("huggingface.co").not() || true
-        startDownload(model, simulate = simulate)
+        startDownload(model, simulate = false)
     }
 
     override suspend fun delete(model: OnDeviceModel) {
