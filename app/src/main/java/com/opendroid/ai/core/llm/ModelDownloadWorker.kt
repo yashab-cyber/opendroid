@@ -54,6 +54,24 @@ class ModelDownloadWorker(
 
         Log.i(tag, "Starting download task for model: $modelId, url=$downloadUrl, size=$size, simulate=$simulate")
 
+        val spec = OnDeviceModelRegistry.findById(modelId)
+        if (spec != null) {
+            try {
+                OnDeviceModelRegistry.checkDeviceMemoryCompatibility(applicationContext, spec)
+            } catch (e: IllegalStateException) {
+                Log.e(tag, "RAM check failed for model $modelId: ${e.message}")
+                modelDao.updateDownloadProgressDetails(
+                    modelId,
+                    0,
+                    0L,
+                    "",
+                    e.localizedMessage ?: "Insufficient device memory.",
+                    ModelStatus.FAILED
+                )
+                return Result.failure()
+            }
+        }
+
         try {
             if (simulate) {
                 return performSimulation(modelId, targetPath, size)

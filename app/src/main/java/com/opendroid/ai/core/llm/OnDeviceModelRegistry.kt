@@ -1,5 +1,6 @@
 package com.opendroid.ai.core.llm
 
+import android.content.Context
 import kotlinx.serialization.Serializable
 
 /**
@@ -147,7 +148,7 @@ object OnDeviceModelRegistry {
             modelPath = "litert-community/Qwen2.5-0.5B-Instruct",
             modelFilename = "Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
             expectedSize = 546660344L,
-            sha256 = "8e1642f8eeed48b840e83851a5cb1a536a23253fe6b000aa532efcd146911eef",
+            sha256 = "e608953f169aeb1bd7b9155fec2559825e08453fc209b84eda3a781ed0452fd2",
             licenseUrl = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
             authRequired = false,
             minSdk = 26
@@ -181,5 +182,34 @@ object OnDeviceModelRegistry {
             isFree = true,
             isRecommended = spec.isRecommended
         )
+    }
+
+    /**
+     * Checks if the device has enough system RAM to load the model.
+     * Throws IllegalStateException if the device memory is insufficient.
+     */
+    fun checkDeviceMemoryCompatibility(context: Context, spec: OnDeviceModelSpec) {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+        if (activityManager != null) {
+            val memoryInfo = android.app.ActivityManager.MemoryInfo()
+            activityManager.getMemoryInfo(memoryInfo)
+            val totalRam = memoryInfo.totalMem
+            val totalRamGb = totalRam.toDouble() / (1024 * 1024 * 1024)
+            
+            val requiredRamGb = when {
+                spec.expectedSize >= 3.0 * 1024 * 1024 * 1024L -> 8.0  // e.g. Gemma 4 E4B (~3.66 GB)
+                spec.expectedSize >= 2.0 * 1024 * 1024 * 1024L -> 6.0  // e.g. Gemma 4 E2B (~2.58 GB)
+                spec.expectedSize >= 1.0 * 1024 * 1024 * 1024L -> 4.0
+                else -> 0.0
+            }
+            
+            if (requiredRamGb > 0.0 && totalRamGb < requiredRamGb) {
+                val modelName = spec.displayName
+                throw IllegalStateException(
+                    "Insufficient device memory: $modelName requires at least ${String.format("%.1f", requiredRamGb)} GB of system RAM, but your device only has ${String.format("%.1f", totalRamGb)} GB RAM. " +
+                    "Running this model will cause the system to crash. Please use a smaller model like Qwen 2.5."
+                )
+            }
+        }
     }
 }

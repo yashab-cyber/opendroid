@@ -368,6 +368,7 @@ class LiteRTLMProvider @Inject constructor(
      * Verifies the model file exists and is valid.
      */
     private fun checkModelReady(modelPath: String, spec: OnDeviceModelSpec) {
+        OnDeviceModelRegistry.checkDeviceMemoryCompatibility(context, spec)
         val file = File(modelPath)
         if (!file.exists() || file.length() < 100 * 1024 * 1024) {
             throw IllegalStateException(

@@ -140,6 +140,20 @@ class ModelRepository @Inject constructor(
 
     suspend fun importLocalModel(modelId: String, uri: android.net.Uri): Boolean {
         val spec = OnDeviceModelRegistry.findById(modelId) ?: return false
+        try {
+            OnDeviceModelRegistry.checkDeviceMemoryCompatibility(context, spec)
+        } catch (e: IllegalStateException) {
+            Log.e(tag, "RAM check failed for import: ${e.message}")
+            modelDao.updateDownloadProgressDetails(
+                modelId,
+                0,
+                0L,
+                "",
+                e.localizedMessage ?: "Insufficient device memory.",
+                ModelStatus.FAILED
+            )
+            return false
+        }
         val dir = getModelDir(modelId)
         if (!dir.exists()) dir.mkdirs()
         val targetFile = File(dir, "model.task")

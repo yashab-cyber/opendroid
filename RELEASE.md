@@ -6,6 +6,11 @@ This document tracks release updates, changelogs, and binary verification checks
 
 ## v1.0.1 — On-Device Model Management & Theme Update (Re-release)
 
+### 🔄 Qwen 2.5 & Gemma 4 RAM Stability Update (July 14, 2026)
+*   **Qwen 2.5 Verification Hash Fix**: Corrected the SHA-256 hash of the LiteRT-LM Qwen 2.5 0.5B-it model specification in the registry to prevent the download manager from reporting it as corrupt.
+*   **On-Device RAM Compatibility Guard**: Implemented dynamic device RAM checks using `ActivityManager` to check total system RAM before downloading, importing, or initializing large models (like Gemma 4 E2B and E4B). Large models are safely blocked with a clear warning if the device has insufficient memory, preventing silent OS OOM crashes.
+*   **Application Heap Optimization**: Enabled `android:largeHeap="true"` in the manifest to request a larger system memory budget.
+
 ### 🔄 Model Management & Secure Authentication Update (July 13, 2026)
 *   **On-Demand Model Downloader & Manager**: Created a complete lifecycle manager (`ModelManager` / `ModelRepository`) that supports downloading on-device LiteRT-LM models in the background via WorkManager, pausing, resuming, or canceling downloads, and verifying integrity.
 *   **Hugging Face Access Token Authentication**: Added secure token entry (masked password field with toggle, paste, and clear buttons) in Settings. Token is verified against HF `whoami-v2` API and stored securely using AES-256 via `EncryptedSharedPreferences`.
