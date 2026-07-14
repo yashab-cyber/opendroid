@@ -187,8 +187,8 @@ OpenDroid supports **12 LLM providers** with automatic failover:
 ## ⚡️ Getting Started
 
 ### Prerequisites
-- **JDK 17+**
-- **Android SDK 34** (Android 14)
+- **JDK 21+**
+- **Android SDK 35** (Android 15)
 
 ### Build & Install
 

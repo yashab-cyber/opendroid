@@ -126,7 +126,7 @@ The onboarding screen must implement a vertical scroll container that handles ro
 * **Network Client:** OkHttp3 & Retrofit2
 * **Voice Engine:** Android native SpeechRecognizer, offline WakeWord engines, and ElevenLabs API
 * **Minimum SDK:** Android 26 (Android 8.0 Oreo)
-* **Target SDK:** Android 34 (Android 14)
+* **Target SDK:** Android 35 (Android 15)
 
 ---
 

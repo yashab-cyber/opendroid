@@ -1,6 +1,6 @@
 #!/bin/bash
 # install_packages.sh
-# This script installs JDK 17, Android SDK Command-line tools, and the necessary Android SDK packages
+# This script installs JDK 21, Android SDK Command-line tools, and the necessary Android SDK packages
 # to build OpenDroid on Debian/Ubuntu systems.
 
 set -e
@@ -9,26 +9,26 @@ echo "================================================"
 echo "  OpenDroid Build Dependency Installer for Debian"
 echo "================================================"
 
-# 1. Update and install JDK 17 & essential tools
-echo "[1/5] Installing OpenJDK 17 and dependencies..."
+# 1. Update and install JDK 21 & essential tools
+echo "[1/5] Installing OpenJDK 21 and dependencies..."
 sudo apt-get update
-sudo apt-get install -y openjdk-17-jdk wget unzip curl git
+sudo apt-get install -y openjdk-21-jdk wget unzip curl git
 
-# Detect JDK 17 installation path to prevent unsupported class version errors if default Java is newer
-JDK_17_PATH=""
-for path in /usr/lib/jvm/java-17-openjdk-* /usr/lib/jvm/java-17-openjdk /usr/lib/jvm/java-1.17.0-openjdk-*; do
+# Detect JDK 21 installation path to prevent unsupported class version errors if default Java is newer
+JDK_21_PATH=""
+for path in /usr/lib/jvm/java-21-openjdk-* /usr/lib/jvm/java-21-openjdk /usr/lib/jvm/java-1.21.0-openjdk-*; do
     if [ -d "$path/bin" ]; then
-        JDK_17_PATH="$path"
+        JDK_21_PATH="$path"
         break
     fi
 done
 
-if [ -n "$JDK_17_PATH" ]; then
-    echo "Using JDK 17 at: $JDK_17_PATH"
-    export JAVA_HOME="$JDK_17_PATH"
+if [ -n "$JDK_21_PATH" ]; then
+    echo "Using JDK 21 at: $JDK_21_PATH"
+    export JAVA_HOME="$JDK_21_PATH"
     export PATH="$JAVA_HOME/bin:$PATH"
 else
-    echo "Warning: JDK 17 path could not be auto-detected."
+    echo "Warning: JDK 21 path could not be auto-detected."
 fi
 
 # 2. Define Android SDK installation path
@@ -55,12 +55,12 @@ export ANDROID_HOME
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 # 3. Accept Licenses & install target SDK platforms
-echo "[3/5] Installing Android SDK platforms & build-tools (API 34)..."
+echo "[3/5] Installing Android SDK platforms & build-tools (API 35)..."
 # Accept all SDK licenses automatically
 yes | sdkmanager --licenses
 
 # Install platforms, build-tools, and platform-tools
-sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
 # 4. Configure environment variables in .bashrc if not already present
 echo "[4/5] Configuring environment variables..."
@@ -69,18 +69,18 @@ BASHRC="$HOME/.bashrc"
 # Configure JAVA_HOME
 if ! grep -q "JAVA_HOME" "$BASHRC"; then
     echo "" >> "$BASHRC"
-    echo "# Java 17 environment variables" >> "$BASHRC"
-    if [ -n "$JDK_17_PATH" ]; then
-        echo "export JAVA_HOME=\"$JDK_17_PATH\"" >> "$BASHRC"
+    echo "# Java 21 environment variables" >> "$BASHRC"
+    if [ -n "$JDK_21_PATH" ]; then
+        echo "export JAVA_HOME=\"$JDK_21_PATH\"" >> "$BASHRC"
     else
-        echo "export JAVA_HOME=\"/usr/lib/jvm/java-17-openjdk-amd64\"" >> "$BASHRC"
+        echo "export JAVA_HOME=\"/usr/lib/jvm/java-21-openjdk-amd64\"" >> "$BASHRC"
     fi
     echo "export PATH=\"\$JAVA_HOME/bin:\$PATH\"" >> "$BASHRC"
-    echo "Java 17 environment variables added to $BASHRC."
+    echo "Java 21 environment variables added to $BASHRC."
 else
     echo "Java environment variables already present in $BASHRC."
-    echo "⚠️  WARNING: If your existing JAVA_HOME in $BASHRC does not point to JDK 17, Gradle builds may fail."
-    echo "             Please ensure it points to: ${JDK_17_PATH:-/usr/lib/jvm/java-17-openjdk-amd64}"
+    echo "⚠️  WARNING: If your existing JAVA_HOME in $BASHRC does not point to JDK 21, Gradle builds may fail."
+    echo "             Please ensure it points to: ${JDK_21_PATH:-/usr/lib/jvm/java-21-openjdk-amd64}"
 fi
 
 # Configure ANDROID_HOME
@@ -96,7 +96,7 @@ fi
 
 # 5. Bootstrap Gradle Wrapper
 echo "[5/5] Bootstrapping Gradle Wrapper..."
-GRADLE_VERSION="8.4"
+GRADLE_VERSION="8.10.2"
 if [ ! -f "gradlew" ]; then
     echo "Gradle wrapper not found in project root. Downloading temporary Gradle distribution to bootstrap..."
     TEMP_DIR=$(mktemp -d)
@@ -117,10 +117,10 @@ echo "================================================"
 echo "Installation complete!"
 echo "Please restart your terminal or run: source ~/.bashrc"
 echo "You can then build the app by running: ./gradlew assembleDebug"
-if [ -n "$JDK_17_PATH" ]; then
+if [ -n "$JDK_21_PATH" ]; then
     echo ""
     echo "If you run into 'Unsupported class file major version' errors, run:"
-    echo "  export JAVA_HOME=$JDK_17_PATH"
+    echo "  export JAVA_HOME=$JDK_21_PATH"
     echo "before running ./gradlew"
 fi
 echo "================================================"

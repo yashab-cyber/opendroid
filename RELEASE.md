@@ -26,7 +26,7 @@ This document tracks release updates, changelogs, and binary verification checks
 ### 🔄 Re-release Updates (July 12, 2026)
 *   **Gemma 3n Multimodal Support**: Added support for the Google on-device Gemma 3n Multimodal model alongside Gemma 4, utilizing the upgraded ML Kit GenAI Prompt API.
 *   **Dual Model Status Check**: Upgraded the on-device AI card in Settings to display individual status indicators (Available, Download Needed, Downloading, or Unsupported) and separate download triggers for both Gemma 4 and Gemma 3n Multimodal.
-*   **Toolchain Upgrades**: Upgraded Kotlin compiler to `2.1.10`, Hilt compiler/plugin to `2.55`, and Room compiler to `2.7.0` to support modern Kotlin 2.1 metadata compilation.
+*   **Toolchain Upgrades**: Upgraded Kotlin compiler to `2.4.0`, Hilt compiler/plugin to `2.58`, and Room compiler to `2.8.4` to support modern Kotlin 2.4 metadata compilation.
 *   **Settings Provider Restored**: Resolved a bug introduced during Gemma 4 integration where cloud providers (such as OpenRouter, Copilot API, DeepSeek, and Together AI) were incorrectly omitted from the active provider selection dropdown.
 
 ### 🤖 On-Device Gemma 4 Integration
@@ -84,7 +84,7 @@ This document tracks release updates, changelogs, and binary verification checks
 *   **Version Code**: 2
 *   **Version Name**: 1.0.1
 *   **Min SDK**: 26 (Android 8.0)
-*   **Target SDK**: 34 (Android 14)
+*   **Target SDK**: 35 (Android 15)
 
 ---
 
