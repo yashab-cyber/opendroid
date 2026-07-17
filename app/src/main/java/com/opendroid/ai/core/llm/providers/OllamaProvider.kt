@@ -31,8 +31,7 @@ class OllamaProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val customUrl = config.customEndpoints[name]?.trim()
-        val baseUrl = if (!customUrl.isNullOrBlank()) customUrl else "http://10.0.2.2:11434"
+        val baseUrl = formatBaseUrl(config.ollamaUrl, "http://10.0.2.2:11434")
         val endpoint = "$baseUrl/api/chat"
 
         val startTime = System.currentTimeMillis()
@@ -101,5 +100,16 @@ class OllamaProvider @Inject constructor(
         // Ollama runs locally, so it doesn't strict check API keys unless users want.
         // It is considered always available if active or setup.
         return true
+    }
+
+    private fun formatBaseUrl(url: String, defaultUrl: String): String {
+        val trimmed = url.trim()
+        val target = if (trimmed.isEmpty()) defaultUrl else trimmed
+        val withScheme = if (!target.startsWith("http://") && !target.startsWith("https://")) {
+            "http://$target"
+        } else {
+            target
+        }
+        return if (withScheme.endsWith("/")) withScheme.dropLast(1) else withScheme
     }
 }

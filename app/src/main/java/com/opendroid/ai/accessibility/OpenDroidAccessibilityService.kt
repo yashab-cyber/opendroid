@@ -3,8 +3,11 @@ package com.opendroid.ai.accessibility
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.animation.ValueAnimator
+import android.app.KeyguardManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -52,16 +55,58 @@ class OpenDroidAccessibilityService : AccessibilityService() {
     private var windowManager: WindowManager? = null
     private var floatingView: FloatingWidgetView? = null
     private var isButtonAdded = false
+    private var isDeviceLocked = false
+    private var showFloatingButtonSetting = false
+
+    /**
+     * BroadcastReceiver that tracks device lock/unlock state.
+     * Hides the floating button when the device is locked to prevent
+     * unintended interaction from the lock screen.
+     */
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    isDeviceLocked = true
+                    refreshFloatingButtonVisibility()
+                }
+                Intent.ACTION_USER_PRESENT -> {
+                    // ACTION_USER_PRESENT is broadcast when the user unlocks the device
+                    isDeviceLocked = false
+                    refreshFloatingButtonVisibility()
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    // Screen turned on but may still be locked; check KeyguardManager
+                    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                    isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+                    refreshFloatingButtonVisibility()
+                }
+            }
+        }
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
 
+        // Initialize lock state
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+
+        // Register receiver for screen on/off/unlock events
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        registerReceiver(screenStateReceiver, filter)
+
         serviceScope.launch {
             settingsRepository.llmConfig
                 .map { it.showFloatingButton }
                 .collectLatest { show ->
-                    updateFloatingButtonVisibility(show)
+                    showFloatingButtonSetting = show
+                    refreshFloatingButtonVisibility()
                 }
         }
 
@@ -82,13 +127,23 @@ class OpenDroidAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            unregisterReceiver(screenStateReceiver)
+        } catch (e: Exception) {
+            // Receiver may not have been registered
+        }
         serviceScope.cancel()
         removeFloatingButton()
         instance = null
     }
 
-    private fun updateFloatingButtonVisibility(show: Boolean) {
-        if (show) {
+    /**
+     * Refreshes the floating button visibility based on both the user setting
+     * and the device lock state. The button is only shown when the setting is
+     * enabled AND the device is unlocked.
+     */
+    private fun refreshFloatingButtonVisibility() {
+        if (showFloatingButtonSetting && !isDeviceLocked) {
             addFloatingButton()
         } else {
             removeFloatingButton()

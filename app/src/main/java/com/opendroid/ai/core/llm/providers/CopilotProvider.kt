@@ -31,8 +31,7 @@ class CopilotProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val rawUrl = config.copilotUrl.trim()
-        val baseUrl = if (rawUrl.isNotEmpty()) rawUrl else "http://10.0.2.2:4141"
+        val baseUrl = formatBaseUrl(config.copilotUrl, "http://10.0.2.2:4141")
         val endpoint = when {
             baseUrl.endsWith("/v1/chat/completions") || baseUrl.endsWith("/chat/completions") -> baseUrl
             baseUrl.endsWith("/v1") -> "$baseUrl/chat/completions"
@@ -110,5 +109,16 @@ class CopilotProvider @Inject constructor(
 
     override suspend fun isAvailable(): Boolean {
         return true
+    }
+
+    private fun formatBaseUrl(url: String, defaultUrl: String): String {
+        val trimmed = url.trim()
+        val target = if (trimmed.isEmpty()) defaultUrl else trimmed
+        val withScheme = if (!target.startsWith("http://") && !target.startsWith("https://")) {
+            "http://$target"
+        } else {
+            target
+        }
+        return if (withScheme.endsWith("/")) withScheme.dropLast(1) else withScheme
     }
 }

@@ -50,6 +50,14 @@ OpenDroid will **plan** this as 3 steps, **execute** each one, **verify** the re
 | **Compound Intent Guard** | Smart detection of multi-action commands (e.g. "open WhatsApp *and* send message") |
 | **Contact Disambiguation** | 4-tier contact resolution with fuzzy matching and relationship aliases ("call dad") |
 
+### 🛠️ On-Device Model Manager (LiteRT-LM)
+| Capability | Description |
+|------------|-------------|
+| **Background Downloader** | Real network downloads (via WorkManager) with Pause/Resume, speed tracking, and ETA |
+| **Secure Authentication** | Encrypted token storage (EncryptedSharedPreferences) to securely fetch gated Hugging Face models |
+| **Integrity Verification** | Computes SHA-256 hashes and verifies LiteRT engine loading compatibility before marking READY |
+| **Local Model Import** | Direct offline importing of custom `.task` or `.litertlm` files with JNI verification checks |
+
 ### 📱 Full Device Control
 | Action | Examples |
 |--------|----------|
@@ -179,8 +187,8 @@ OpenDroid supports **12 LLM providers** with automatic failover:
 ## ⚡️ Getting Started
 
 ### Prerequisites
-- **JDK 17+**
-- **Android SDK 34** (Android 14)
+- **JDK 21+**
+- **Android SDK 35** (Android 15)
 
 ### Build & Install
 

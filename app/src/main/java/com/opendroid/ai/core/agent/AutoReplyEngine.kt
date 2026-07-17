@@ -15,6 +15,7 @@ import com.opendroid.ai.data.models.AutoReplyConfig
 import com.opendroid.ai.data.repository.SettingsRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,12 +39,37 @@ class AutoReplyEngine @Inject constructor(
 ) {
     companion object {
         private const val TAG = "AutoReplyEngine"
+        // Cooldown period after sending an auto-reply. Any notification from the same
+        // contact within this window is treated as the messaging app echoing our own
+        // sent reply back as a notification — skip it to prevent infinite loops.
+        private const val REPLY_BOUNCEBACK_COOLDOWN_MS = 60_000L
     }
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     // Track pending auto-replies so we can cancel them if user replies manually
     private val pendingReplies = mutableMapOf<String, Job>()
+
+    // Track when we last sent an auto-reply per contact key to detect bouncebacks
+    private val recentlySentTimestamps = ConcurrentHashMap<String, Long>()
+
+    /**
+     * Returns true if a notification from this package/contact is likely our own
+     * auto-reply bouncing back as a notification (e.g. WhatsApp showing "You: ...")
+     * within the cooldown window.
+     */
+    fun isOwnReplyBounceback(packageName: String, contactName: String?): Boolean {
+        val contactKey = "$packageName:${contactName ?: ""}"
+        val lastSentTime = recentlySentTimestamps[contactKey] ?: return false
+        val elapsed = System.currentTimeMillis() - lastSentTime
+        if (elapsed < REPLY_BOUNCEBACK_COOLDOWN_MS) {
+            Log.d(TAG, "Suppressing bounceback for $contactKey (sent ${elapsed}ms ago)")
+            return true
+        }
+        // Cooldown expired — clean up
+        recentlySentTimestamps.remove(contactKey)
+        return false
+    }
 
     /**
      * Called when a message notification is received.
@@ -100,6 +126,9 @@ class AutoReplyEngine @Inject constructor(
 
                 val sent = dispatchReply(notification, sbn, replyText, context)
                 if (sent) {
+                    // Record the send timestamp BEFORE marking in DB so the
+                    // bounceback check is ready when the echo notification fires
+                    recentlySentTimestamps[contactKey] = System.currentTimeMillis()
                     notificationDao.markAsAutoReplied(notification.id, replyText)
                     Log.d(TAG, "Auto-reply sent to ${notification.contactName}: ${replyText.take(50)}...")
                 }

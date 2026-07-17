@@ -48,6 +48,24 @@ class AdvancedControlActions @Inject constructor() {
             }
             return null
         }
+
+        private fun resolvePath(pathStr: String): File {
+            val trimmed = pathStr.trim()
+            if (trimmed.startsWith("/") || trimmed.startsWith("content://")) {
+                val externalStoragePath = Environment.getExternalStorageDirectory().absolutePath
+                if (trimmed.startsWith(externalStoragePath) ||
+                    trimmed.startsWith("/sdcard") ||
+                    trimmed.startsWith("/storage") ||
+                    trimmed.startsWith("/data")
+                ) {
+                    return File(trimmed)
+                }
+                val relativePath = trimmed.removePrefix("/")
+                return File(Environment.getExternalStorageDirectory(), relativePath)
+            } else {
+                return File(Environment.getExternalStorageDirectory(), trimmed)
+            }
+        }
     }
 
     fun getActions(): List<Action> = listOf(
@@ -159,12 +177,12 @@ class AdvancedControlActions @Inject constructor() {
             checkStoragePermission(context)?.let { return it }
             val pathStr = params["path"] ?: Environment.getExternalStorageDirectory().absolutePath
             return try {
-                val dir = File(pathStr)
+                val dir = resolvePath(pathStr)
                 if (!dir.exists()) {
-                    return ActionResult(false, null, "Directory does not exist: $pathStr")
+                    return ActionResult(false, null, "Directory does not exist: ${dir.absolutePath}")
                 }
                 if (!dir.isDirectory) {
-                    return ActionResult(false, null, "Path is not a directory: $pathStr")
+                    return ActionResult(false, null, "Path is not a directory: ${dir.absolutePath}")
                 }
                 val files = dir.listFiles() ?: emptyArray()
                 val fileList = files.joinToString("\n") { file ->
@@ -173,7 +191,7 @@ class AdvancedControlActions @Inject constructor() {
                 }
                 ActionResult(true, if (fileList.isEmpty()) "Directory is empty." else fileList, null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't list those files.")
+                ActionResult(false, null, "Couldn't list files: ${e.localizedMessage}")
             }
         }
     }
@@ -184,20 +202,20 @@ class AdvancedControlActions @Inject constructor() {
             checkStoragePermission(context)?.let { return it }
             val filePath = params["filePath"] ?: return ActionResult(false, null, "filePath parameter is missing")
             return try {
-                val file = File(filePath)
+                val file = resolvePath(filePath)
                 if (!file.exists()) {
-                    return ActionResult(false, null, "File does not exist: $filePath")
+                    return ActionResult(false, null, "File does not exist: ${file.absolutePath}")
                 }
                 if (file.isDirectory) {
-                    return ActionResult(false, null, "Path is a directory, not a file: $filePath")
+                    return ActionResult(false, null, "Path is a directory, not a file: ${file.absolutePath}")
                 }
                 if (file.length() > 100 * 1024) {
-                    return ActionResult(false, null, "File exceeds size limit of 100KB: $filePath")
+                    return ActionResult(false, null, "File exceeds size limit of 100KB: ${file.absolutePath}")
                 }
                 val text = file.readText()
                 ActionResult(true, text, null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't read that file.")
+                ActionResult(false, null, "Couldn't read file: ${e.localizedMessage}")
             }
         }
     }
@@ -209,12 +227,12 @@ class AdvancedControlActions @Inject constructor() {
             val filePath = params["filePath"] ?: return ActionResult(false, null, "filePath parameter is missing")
             val content = params["content"] ?: ""
             return try {
-                val file = File(filePath)
+                val file = resolvePath(filePath)
                 file.parentFile?.mkdirs()
                 file.writeText(content)
-                ActionResult(true, "File saved!", null)
+                ActionResult(true, "File saved at ${file.absolutePath}", null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't write to that file.")
+                ActionResult(false, null, "Couldn't write to file: ${e.localizedMessage}")
             }
         }
     }
@@ -225,18 +243,18 @@ class AdvancedControlActions @Inject constructor() {
             checkStoragePermission(context)?.let { return it }
             val filePath = params["filePath"] ?: return ActionResult(false, null, "filePath parameter is missing")
             return try {
-                val file = File(filePath)
+                val file = resolvePath(filePath)
                 if (!file.exists()) {
-                    return ActionResult(false, null, "File does not exist: $filePath")
+                    return ActionResult(false, null, "File/directory does not exist: ${file.absolutePath}")
                 }
                 val deleted = file.deleteRecursively()
                 if (deleted) {
-                    ActionResult(true, "Deleted!", null)
+                    ActionResult(true, "Deleted ${file.absolutePath}!", null)
                 } else {
-                    ActionResult(false, null, "Failed to delete path (unknown reason)")
+                    ActionResult(false, null, "Failed to delete path: ${file.absolutePath}")
                 }
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't delete that.")
+                ActionResult(false, null, "Couldn't delete: ${e.localizedMessage}")
             }
         }
     }
@@ -486,23 +504,23 @@ class AdvancedControlActions @Inject constructor() {
             checkStoragePermission(context)?.let { return it }
             val pathStr = params["path"] ?: return ActionResult(false, null, "path parameter is missing")
             return try {
-                val dir = File(pathStr)
+                val dir = resolvePath(pathStr)
                 if (dir.exists()) {
                     if (dir.isDirectory) {
-                        ActionResult(true, "That folder already exists.", null)
+                        ActionResult(true, "That folder already exists at ${dir.absolutePath}.", null)
                     } else {
-                        ActionResult(false, null, "Path exists but is a file, not a directory: $pathStr")
+                        ActionResult(false, null, "Path exists but is a file, not a directory: ${dir.absolutePath}")
                     }
                 } else {
                     val created = dir.mkdirs()
                     if (created) {
-                        ActionResult(true, "Folder created!", null)
+                        ActionResult(true, "Folder created at ${dir.absolutePath}!", null)
                     } else {
-                        ActionResult(false, null, "Failed to create directory: $pathStr")
+                        ActionResult(false, null, "Failed to create directory: ${dir.absolutePath}")
                     }
                 }
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't create that folder.")
+                ActionResult(false, null, "Couldn't create folder: ${e.localizedMessage}")
             }
         }
     }
@@ -514,15 +532,15 @@ class AdvancedControlActions @Inject constructor() {
             val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
             val destPath = params["destPath"] ?: return ActionResult(false, null, "destPath parameter is missing")
             return try {
-                val src = File(srcPath)
-                val dest = File(destPath)
+                val src = resolvePath(srcPath)
+                val dest = resolvePath(destPath)
                 if (!src.exists()) {
-                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                    return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
                 }
                 copyRecursively(src, dest)
-                ActionResult(true, "Copied!", null)
+                ActionResult(true, "Copied from ${src.absolutePath} to ${dest.absolutePath}!", null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't copy that file.")
+                ActionResult(false, null, "Couldn't copy file: ${e.localizedMessage}")
             }
         }
 
@@ -552,22 +570,22 @@ class AdvancedControlActions @Inject constructor() {
             val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
             val destPath = params["destPath"] ?: return ActionResult(false, null, "destPath parameter is missing")
             return try {
-                val src = File(srcPath)
-                val dest = File(destPath)
+                val src = resolvePath(srcPath)
+                val dest = resolvePath(destPath)
                 if (!src.exists()) {
-                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                    return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
                 }
                 dest.parentFile?.mkdirs()
                 val renamed = src.renameTo(dest)
                 if (renamed) {
-                    ActionResult(true, "Moved!", null)
+                    ActionResult(true, "Moved from ${src.absolutePath} to ${dest.absolutePath}!", null)
                 } else {
                     copyRecursively(src, dest)
                     deleteRecursively(src)
-                    ActionResult(true, "Moved!", null)
+                    ActionResult(true, "Moved from ${src.absolutePath} to ${dest.absolutePath}!", null)
                 }
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't move that file.")
+                ActionResult(false, null, "Couldn't move file: ${e.localizedMessage}")
             }
         }
 
@@ -604,18 +622,18 @@ class AdvancedControlActions @Inject constructor() {
             val srcPath = params["sourcePath"] ?: return ActionResult(false, null, "sourcePath parameter is missing")
             val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")
             return try {
-                val src = File(srcPath)
-                val zipFile = File(zipFilePath)
+                val src = resolvePath(srcPath)
+                val zipFile = resolvePath(zipFilePath)
                 if (!src.exists()) {
-                    return ActionResult(false, null, "Source path does not exist: $srcPath")
+                    return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
                 }
                 zipFile.parentFile?.mkdirs()
                 java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(zipFile.outputStream())).use { zos ->
                     zipRecursively(src, src, zos)
                 }
-                ActionResult(true, "Zipped!", null)
+                ActionResult(true, "Zipped ${src.absolutePath} into ${zipFile.absolutePath}!", null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't zip those files.")
+                ActionResult(false, null, "Couldn't zip files: ${e.localizedMessage}")
             }
         }
 
@@ -645,17 +663,16 @@ class AdvancedControlActions @Inject constructor() {
             val zipFilePath = params["zipFilePath"] ?: return ActionResult(false, null, "zipFilePath parameter is missing")
             val destDirPath = params["destDirPath"] ?: return ActionResult(false, null, "destDirPath parameter is missing")
             return try {
-                val zipFile = File(zipFilePath)
-                val destDir = File(destDirPath)
+                val zipFile = resolvePath(zipFilePath)
+                val destDir = resolvePath(destDirPath)
                 if (!zipFile.exists()) {
-                    return ActionResult(false, null, "Zip file does not exist: $zipFilePath")
+                    return ActionResult(false, null, "Zip file does not exist: ${zipFile.absolutePath}")
                 }
                 destDir.mkdirs()
                 java.util.zip.ZipInputStream(java.io.BufferedInputStream(zipFile.inputStream())).use { zis ->
                     var entry = zis.nextEntry
                     while (entry != null) {
                         val file = File(destDir, entry.name)
-                        // ZipSlip protection: ensure the resolved path is within the destination directory
                         val canonicalDest = destDir.canonicalPath
                         val canonicalFile = file.canonicalPath
                         if (!canonicalFile.startsWith(canonicalDest + File.separator) && canonicalFile != canonicalDest) {
@@ -673,9 +690,9 @@ class AdvancedControlActions @Inject constructor() {
                         entry = zis.nextEntry
                     }
                 }
-                ActionResult(true, "Unzipped!", null)
+                ActionResult(true, "Unzipped ${zipFile.absolutePath} to ${destDir.absolutePath}!", null)
             } catch (e: Exception) {
-                ActionResult(false, null, "Couldn't unzip that file.")
+                ActionResult(false, null, "Couldn't unzip file: ${e.localizedMessage}")
             }
         }
     }

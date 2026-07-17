@@ -394,8 +394,14 @@ fun ChatBubble(message: ChatMessage, viewModel: ChatViewModel? = null, context: 
                     .padding(14.dp)
             ) {
                 if (isAgent && message.modelBadge != null) {
+                    val displayName = when (message.modelBadge) {
+                        "Gemma 4 (On-device)" -> "ON-DEVICE (AI CORE)"
+                        "On-Device AI" -> "ON-DEVICE AI"
+                        "LiteRT-LM (On-device)" -> "ON-DEVICE (LITERT)"
+                        else -> message.modelBadge.uppercase(Locale.getDefault())
+                    }
                     Text(
-                        text = message.modelBadge.uppercase(Locale.getDefault()),
+                        text = displayName,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = AccentCyan,

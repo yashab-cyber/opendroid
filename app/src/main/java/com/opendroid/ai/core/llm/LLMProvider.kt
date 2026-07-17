@@ -4,12 +4,51 @@ import com.opendroid.ai.data.models.ChatMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 
-interface LLMProvider {
+@Serializable
+data class ToolDefinition(
+    val name: String,
+    val description: String,
+    val parameters: String // JSON Schema string representing parameters
+)
+
+@Serializable
+sealed class StreamChunk {
+    @Serializable
+    data class Content(val text: String) : StreamChunk()
+    @Serializable
+    data class ToolCall(val name: String, val arguments: String) : StreamChunk()
+}
+
+interface AIProvider {
+    suspend fun generate(
+        messages: List<ChatMessage>,
+        tools: List<ToolDefinition> = emptyList()
+    ): Flow<StreamChunk>
+}
+
+interface LLMProvider : AIProvider {
     val name: String
     val availableModels: List<String>
     suspend fun complete(request: LLMRequest): LLMResponse
     fun streamComplete(request: LLMRequest): Flow<String>
     suspend fun isAvailable(): Boolean
+
+    override suspend fun generate(
+        messages: List<ChatMessage>,
+        tools: List<ToolDefinition>
+    ): Flow<StreamChunk> {
+        val systemPrompt = "You are an autonomous AI agent for Android."
+        val request = LLMRequest(
+            systemPrompt = systemPrompt,
+            messages = messages,
+            tools = tools.map { Tool(it.name, it.description, it.parameters) }
+        )
+        return kotlinx.coroutines.flow.flow {
+            streamComplete(request).collect { text ->
+                emit(StreamChunk.Content(text))
+            }
+        }
+    }
 }
 
 @Serializable

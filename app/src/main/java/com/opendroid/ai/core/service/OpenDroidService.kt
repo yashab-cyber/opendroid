@@ -134,7 +134,6 @@ class OpenDroidService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_TRIGGER_RECORD) {
-            textToSpeechEngine.speak("OpenDroid online.")
             startListeningForQuery()
         }
         return START_STICKY

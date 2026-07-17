@@ -7,6 +7,8 @@ import com.opendroid.ai.core.agent.IntentClassifier
 import com.opendroid.ai.core.agent.QueryComplexity
 import com.opendroid.ai.core.llm.prompts.SystemPrompts
 import com.opendroid.ai.core.llm.providers.*
+import com.opendroid.ai.core.llm.providers.HybridOnDeviceProvider
+import com.opendroid.ai.core.llm.providers.LiteRTLMProvider
 import com.opendroid.ai.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -28,6 +30,9 @@ class LLMProviderFactory @Inject constructor(
     private val deepSeekProvider: Provider<DeepSeekProvider>,
     private val copilotProvider: Provider<CopilotProvider>,
     private val customOpenAIProvider: Provider<CustomOpenAIProvider>,
+    private val gemmaProvider: Provider<GemmaProvider>,
+    private val liteRTLMProvider: Provider<LiteRTLMProvider>,
+    private val hybridOnDeviceProvider: Provider<HybridOnDeviceProvider>,
     private val settingsRepository: SettingsRepository,
     private val actionDispatcher: dagger.Lazy<ActionDispatcher>,
     private val intentClassifier: dagger.Lazy<IntentClassifier>,
@@ -48,6 +53,11 @@ class LLMProviderFactory @Inject constructor(
             "DeepSeek" -> deepSeekProvider.get()
             "Copilot API" -> copilotProvider.get()
             "Custom OpenAI Compatible" -> customOpenAIProvider.get()
+            // Hybrid on-device: both old and new names map here
+            "On-Device AI",
+            "Gemma 4 (On-device)" -> hybridOnDeviceProvider.get()
+            // Direct backend access (for advanced users / testing)
+            "LiteRT-LM (On-device)" -> liteRTLMProvider.get()
             else -> geminiProvider.get()
         }
         return WrappedLLMProvider(rawProvider, actionDispatcher, intentClassifier, deviceStateProvider)
@@ -66,12 +76,15 @@ class LLMProviderFactory @Inject constructor(
             "DeepSeek",
             "Copilot API",
             "Custom OpenAI Compatible",
-            "Ollama"
+            "Ollama",
+            "On-Device AI"
         )
+        // Normalize legacy name
+        val normalizedPrimary = if (primaryName == "Gemma 4 (On-device)") "On-Device AI" else primaryName
         val orderedNames = mutableListOf<String>()
-        orderedNames.add(primaryName)
+        orderedNames.add(normalizedPrimary)
         providersList.forEach { name ->
-            if (name != primaryName) orderedNames.add(name)
+            if (name != normalizedPrimary) orderedNames.add(name)
         }
         return orderedNames.map { getProviderByName(it) }
     }
