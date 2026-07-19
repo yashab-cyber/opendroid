@@ -50,8 +50,29 @@ android {
         release {
             minifyEnabled true
             shrinkResources false
-            signingConfig hasSigningConfig ? signingConfigs.release : signingConfigs.debug
+            // Never fall back to the (publicly known) debug key for release builds.
+            // Without a signing config the build produces an unsigned APK, and the
+            // taskGraph guard below fails release builds explicitly.
+            if (hasSigningConfig) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // Fail release builds loudly when release signing is not configured,
+    // instead of silently producing a debug-signed or unsigned artifact.
+    gradle.taskGraph.whenReady { graph ->
+        def releaseBuildRequested = graph.allTasks.any { t ->
+            t.project == project && t.name ==~ /(assemble|bundle|package)Release.*/
+        }
+        if (releaseBuildRequested && !hasSigningConfig) {
+            throw new GradleException(
+                "Release signing is not configured. Set RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS " +
+                "and RELEASE_KEY_PASSWORD in gradle.properties and place opendroid-release.keystore " +
+                "at the project root (see gradle.properties.example). Refusing to sign a release " +
+                "build with the debug key."
+            )
         }
     }
     compileOptions {

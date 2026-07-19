@@ -95,8 +95,14 @@ class AgentLoop @Inject constructor(
     fun processQuery(query: String, context: Context) {
         scope.launch {
             try {
-                // Capture screenshot of the active screen if accessibility service is active
-                val screenshotBase64 = com.opendroid.ai.accessibility.OpenDroidAccessibilityService.getInstance()?.takeScreenshotAndEncode()
+                // Only capture the screen when the query actually asks about it.
+                // Attaching a screenshot to every request would silently send
+                // whatever is on screen (messages, banking apps, ...) to the LLM.
+                val screenshotBase64 = if (needsScreenContext(query)) {
+                    com.opendroid.ai.accessibility.OpenDroidAccessibilityService.getInstance()?.takeScreenshotAndEncode()
+                } else {
+                    null
+                }
 
                 // Save user message
                 val userMsg = ChatMessage(
@@ -589,6 +595,20 @@ class AgentLoop @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * True only when the user's query refers to what is currently on screen,
+     * so a screenshot is genuinely needed as context.
+     */
+    private fun needsScreenContext(query: String): Boolean {
+        val lower = query.lowercase()
+        val screenPhrases = listOf(
+            "screen", "screenshot", "looking at", "this page", "this app",
+            "what am i", "what's this", "what is this", "read this",
+            "displayed", "showing", "what do you see"
+        )
+        return screenPhrases.any { lower.contains(it) }
     }
 
     private data class NeedsInputRetry(
