@@ -92,7 +92,7 @@ class OpenRouterProvider @Inject constructor(
                 kotlinx.coroutines.delay(50)
             }
         } catch (e: Exception) {
-            emit("Error streaming OpenRouter: ${e.localizedMessage}")
+            emit("Error streaming OpenRouter: ${com.opendroid.ai.core.util.NetworkErrorFormatter.toUserMessage(e)}")
         }
     }
 

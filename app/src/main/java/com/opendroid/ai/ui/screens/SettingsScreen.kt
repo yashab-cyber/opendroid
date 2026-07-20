@@ -24,8 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.opendroid.ai.data.models.LLMConfig
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.opendroid.ai.ui.theme.*
 import com.opendroid.ai.ui.viewmodel.SettingsViewModel
 
@@ -522,18 +524,10 @@ fun SettingsScreen(
                                 val inputProviders = providers.filter { it != "Ollama" }
                                 inputProviders.forEach { providerName ->
                                     val keyVal = config.apiKeys[providerName] ?: ""
-                                    OutlinedTextField(
+                                    SecureApiKeyField(
                                         value = keyVal,
                                         onValueChange = { viewModel.updateApiKey(providerName, it) },
-                                        label = { Text("$providerName API Key", fontSize = 12.sp) },
-                                        singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = AccentNeonGreen,
-                                            unfocusedBorderColor = BorderColor,
-                                            focusedTextColor = TextPrimary,
-                                            unfocusedTextColor = TextPrimary
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
+                                        label = "$providerName API Key"
                                     )
                                 }
                             }
@@ -577,18 +571,10 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(top = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                OutlinedTextField(
+                                SecureApiKeyField(
                                     value = config.elevenLabsApiKey,
                                     onValueChange = { viewModel.updateElevenLabsApiKey(it) },
-                                    label = { Text("ElevenLabs API Key", fontSize = 12.sp) },
-                                    singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = AccentNeonGreen,
-                                        unfocusedBorderColor = BorderColor,
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
+                                    label = "ElevenLabs API Key"
                                 )
                                 OutlinedTextField(
                                     value = config.elevenLabsVoiceId,
@@ -1113,4 +1099,37 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+@Composable
+private fun SecureApiKeyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var visible by remember { mutableStateOf(false) }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, fontSize = 12.sp) },
+        singleLine = true,
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (visible) "Hide API key" else "Show API key",
+                    tint = TextSecondary
+                )
+            }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = AccentNeonGreen,
+            unfocusedBorderColor = BorderColor,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
 }

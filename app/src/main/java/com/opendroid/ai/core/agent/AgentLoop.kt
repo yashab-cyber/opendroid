@@ -26,6 +26,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import com.opendroid.ai.core.util.NetworkErrorFormatter
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,7 +70,10 @@ class AgentLoop @Inject constructor(
     private val reEvalEngine: dagger.Lazy<ReEvaluationEngine>
 ) {
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
+
+    private var lastExecutedAction: String? = null
+    private var lastExecutedParams: Map<String, String> = emptyMap()
 
     private val _agentState = MutableStateFlow<AgentState>(AgentState.Idle)
     val agentState: StateFlow<AgentState> = _agentState.asStateFlow()
@@ -123,6 +129,12 @@ class AgentLoop @Inject constructor(
 
                 // 1. Alias resolution — bypass LLM for simple, single-action commands ONLY
                 if (!isMultiStep) {
+                    val contextual = AliasResolver.resolveContextual(query, lastExecutedAction, lastExecutedParams)
+                    if (contextual != null) {
+                        executeAliasDirect(contextual, query, context)
+                        return@launch
+                    }
+
                     val alias = AliasResolver.resolve(query)
                     if (alias != null) {
                         executeAliasDirect(alias, query, context)
@@ -138,6 +150,19 @@ class AgentLoop @Inject constructor(
                                 mapOf("time" to timeStr, "label" to "Alarm")
                             )
                             executeAliasDirect(alarmHint, query, context)
+                            return@launch
+                        }
+                    }
+
+                    // 1c. Timer shortcut — bypass LLM for simple timer requests ONLY
+                    if (AliasResolver.isTimerRequest(query)) {
+                        val durationSecs = AliasResolver.extractTimerDuration(query)
+                        if (durationSecs != null) {
+                            val timerHint = AliasResolver.ActionHint(
+                                "SET_TIMER",
+                                mapOf("duration" to durationSecs.toString(), "label" to "Timer")
+                            )
+                            executeAliasDirect(timerHint, query, context)
                             return@launch
                         }
                     }
@@ -269,12 +294,12 @@ class AgentLoop @Inject constructor(
                 }
             }
 
-            val finalReplyMsg = replyMsg.copy(text = currentReplyText)
+            val finalReplyMsg = replyMsg.copy(text = formatStreamedReply(currentReplyText))
             memoryManager.storeMessage(finalReplyMsg)
-            _agentState.value = AgentState.Speaking(currentReplyText)
-            onSpeakCallback?.invoke(currentReplyText)
+            _agentState.value = AgentState.Speaking(finalReplyMsg.text)
+            onSpeakCallback?.invoke(finalReplyMsg.text)
         } catch (e: Exception) {
-            _agentState.value = AgentState.Error("Simple execution failed: ${e.localizedMessage}")
+            _agentState.value = AgentState.Error(NetworkErrorFormatter.toUserMessage(e))
         }
     }
 
@@ -339,8 +364,7 @@ class AgentLoop @Inject constructor(
                         )
                     )
 
-                    val cleaned = cleanPlanJson(mergeResponse.content)
-                    json.decodeFromString<Plan>(cleaned)
+                    parsePlanFromLlmResponse(mergeResponse.content, userMsg.text)
                 }
             } else {
                 val response = provider.complete(
@@ -352,8 +376,7 @@ class AgentLoop @Inject constructor(
                         responseFormat = ResponseFormat.JSON
                     )
                 )
-                val cleaned = cleanPlanJson(response.content)
-                json.decodeFromString<Plan>(cleaned)
+                parsePlanFromLlmResponse(response.content, userMsg.text)
             }
 
             planManager.startNewPlan(plan, context)
@@ -363,7 +386,7 @@ class AgentLoop @Inject constructor(
                 _agentState.value = AgentState.PlanProposed(plan)
             }
         } catch (e: Exception) {
-            fallbackOrError(userMsg, e)
+            fallbackOrError(userMsg, context, e)
         }
     }
 
@@ -371,25 +394,27 @@ class AgentLoop @Inject constructor(
      * Treat malformed plan JSON as an actionable planning failure. Other provider
      * failures can still degrade to a normal chat response.
      */
-    private suspend fun fallbackOrError(userMsg: ChatMessage, cause: Throwable) {
+    private suspend fun fallbackOrError(userMsg: ChatMessage, context: Context, cause: Throwable) {
         android.util.Log.e("AgentLoop", "Plan generation failed: ${cause.localizedMessage}", cause)
-        val isMalformedPlan = cause is kotlinx.serialization.SerializationException ||
-                cause is IllegalArgumentException
-        if (isMalformedPlan) {
-            val msg = "I understood the request but couldn't build a reliable plan for it. Mind rephrasing, or try a simpler version?"
-            val errMsg = ChatMessage(
-                id = UUID.randomUUID().toString(),
-                text = msg,
-                sender = ChatMessage.Sender.AGENT,
-                modelBadge = "System"
-            )
-            conversationRepository.insertMessage(errMsg)
-            memoryManager.storeMessage(errMsg)
-            _agentState.value = AgentState.Speaking(msg)
-            onSpeakCallback?.invoke(msg)
-        } else {
-            executeSimpleQuery(userMsg)
+
+        val alias = AliasResolver.resolve(userMsg.text)
+            ?: AliasResolver.resolveContextual(userMsg.text, lastExecutedAction, lastExecutedParams)
+        if (alias != null) {
+            executeAliasDirect(alias, userMsg.text, context)
+            return
         }
+
+        memoryManager.logTaskExecution(
+            stepId = "plan-gen",
+            planId = "n/a",
+            description = userMsg.text,
+            actionType = "PLAN_GENERATION",
+            params = emptyMap(),
+            success = false,
+            resultData = null,
+            errorMessage = cause.localizedMessage
+        )
+        executeSimpleQuery(userMsg)
     }
 
     fun approveProposedPlan(context: Context) {
@@ -454,7 +479,20 @@ class AgentLoop @Inject constructor(
                 ActionResult(false, null, e.localizedMessage ?: "Unknown execution error")
             }
 
+            memoryManager.logTaskExecution(
+                stepId = nextStep.stepId,
+                planId = currentPlanState.planId,
+                description = nextStep.description,
+                actionType = nextStep.action,
+                params = resolvedParams,
+                success = actionResult.success,
+                resultData = actionResult.data,
+                errorMessage = actionResult.error
+            )
+
             if (actionResult.success) {
+                lastExecutedAction = nextStep.action
+                lastExecutedParams = resolvedParams
                 planManager.updateStepStatus(
                     nextStep.stepId,
                     StepStatus.COMPLETED,
@@ -852,6 +890,80 @@ class AgentLoop @Inject constructor(
 
         _agentState.value = AgentState.Speaking(summaryText)
         onSpeakCallback?.invoke(summaryText)
+    }
+
+    private fun formatStreamedReply(text: String): String {
+        if (!text.startsWith("Error streaming")) return text
+        val technical = text.substringAfter(": ", text)
+        return NetworkErrorFormatter.toUserMessage(technical)
+    }
+
+    private fun parsePlanFromLlmResponse(raw: String, userGoal: String): Plan {
+        val cleaned = cleanPlanJson(raw)
+        try {
+            return normalizePlan(json.decodeFromString<Plan>(cleaned))
+        } catch (_: Exception) {
+            // Continue with wrapper/single-action parsing below
+        }
+
+        val root = json.parseToJsonElement(cleaned)
+        if (root is JsonObject) {
+            root["plan"]?.let { planElement ->
+                try {
+                    return normalizePlan(json.decodeFromString<Plan>(planElement.toString()))
+                } catch (_: Exception) {
+                    // fall through
+                }
+            }
+
+            val action = root["action"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
+            if (action != null) {
+                val params = jsonObjectToStringMap(root["params"]?.jsonObject)
+                return buildSingleStepPlan(userGoal, action, params)
+            }
+        }
+
+        throw IllegalArgumentException("Could not parse a valid plan from LLM response")
+    }
+
+    private fun normalizePlan(plan: Plan): Plan {
+        return plan.copy(
+            planId = plan.planId.ifBlank { UUID.randomUUID().toString() },
+            goal = plan.goal.ifBlank { "User request" },
+            estimatedSteps = if (plan.estimatedSteps > 0) plan.estimatedSteps else plan.steps.size.coerceAtLeast(1),
+            steps = plan.steps.map { step ->
+                step.copy(
+                    stepId = step.stepId.ifBlank { "s${step.order}" },
+                    fallback = step.fallback
+                )
+            }
+        )
+    }
+
+    private fun buildSingleStepPlan(goal: String, action: String, params: Map<String, String>): Plan {
+        return Plan(
+            planId = UUID.randomUUID().toString(),
+            goal = goal,
+            estimatedDuration = "instant",
+            estimatedSteps = 1,
+            steps = listOf(
+                PlanStep(
+                    stepId = "s1",
+                    order = 1,
+                    description = "Execute $action",
+                    action = action,
+                    params = params,
+                    fallback = ""
+                )
+            )
+        )
+    }
+
+    private fun jsonObjectToStringMap(obj: JsonObject?): Map<String, String> {
+        if (obj == null) return emptyMap()
+        return obj.mapValues { (_, value) ->
+            value.jsonPrimitive.contentOrNull ?: value.toString().trim('"')
+        }
     }
 
     private fun cleanPlanJson(raw: String): String {

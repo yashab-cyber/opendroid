@@ -275,9 +275,9 @@ class ModelFetcher @Inject constructor(
                 }
                 "Ollama" -> {
                     val rawUrl = config.ollamaUrl.trim()
-                    val baseUrl = if (rawUrl.isNotEmpty()) rawUrl else "http://10.0.2.2:11434"
+                    if (rawUrl.isEmpty()) return@withContext Result.success(getOllamaFallback())
                     val request = Request.Builder()
-                        .url("$baseUrl/api/tags")
+                        .url("$rawUrl/api/tags")
                         .get()
                         .build()
 
@@ -307,7 +307,8 @@ class ModelFetcher @Inject constructor(
                 }
                 "Copilot API" -> {
                     val rawUrl = config.copilotUrl.trim()
-                    val baseUrl = if (rawUrl.isNotEmpty()) rawUrl else "http://10.0.2.2:4141"
+                    if (rawUrl.isEmpty()) return@withContext Result.success(getCopilotFallback())
+                    val baseUrl = rawUrl
                     val requestBuilder = Request.Builder()
                         .url(if (baseUrl.endsWith("/v1")) "$baseUrl/models" else "$baseUrl/v1/models")
                         .get()
@@ -465,5 +466,11 @@ class ModelFetcher @Inject constructor(
         AIModel("gpt-4o", "GPT-4o", "Copilot API", isRecommended = true),
         AIModel("gpt-4-turbo", "GPT-4 Turbo", "Copilot API"),
         AIModel("gpt-3.5-turbo", "GPT-3.5 Turbo", "Copilot API")
+    )
+
+    private fun getOllamaFallback() = listOf(
+        AIModel("llama3", "Llama 3", "Ollama", isRecommended = true, isFree = true),
+        AIModel("mistral", "Mistral", "Ollama", isFree = true),
+        AIModel("phi3", "Phi 3", "Ollama", isFree = true)
     )
 }

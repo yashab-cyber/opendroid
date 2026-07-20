@@ -1,5 +1,7 @@
 package com.opendroid.ai.actions
 
+import com.opendroid.ai.core.util.DurationParser
+
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -250,7 +252,7 @@ class CalendarActions @Inject constructor() {
     private class SetTimerAction : Action {
         override val name: String = "SET_TIMER"
         override suspend fun execute(params: Map<String, String>, context: Context): ActionResult {
-            val durationSecs = params["duration"]?.toIntOrNull() ?: 60
+            val durationSecs = params["duration"]?.let { DurationParser.parseToSeconds(it) } ?: 60
             val label = params["label"] ?: "OpenDroid Timer"
             return try {
                 val intent = Intent(AlarmClock.ACTION_SET_TIMER).apply {

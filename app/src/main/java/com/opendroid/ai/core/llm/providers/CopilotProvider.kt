@@ -13,6 +13,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.opendroid.ai.core.util.NetworkErrorFormatter
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,8 +32,10 @@ class CopilotProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val rawUrl = config.copilotUrl.trim()
-        val baseUrl = if (rawUrl.isNotEmpty()) rawUrl else "http://10.0.2.2:4141"
+        val baseUrl = config.copilotUrl.trim()
+        if (baseUrl.isEmpty()) {
+            throw IllegalStateException("Copilot server URL is not configured. Set it in Settings.")
+        }
         val endpoint = when {
             baseUrl.endsWith("/v1/chat/completions") || baseUrl.endsWith("/chat/completions") -> baseUrl
             baseUrl.endsWith("/v1") -> "$baseUrl/chat/completions"
@@ -104,11 +107,12 @@ class CopilotProvider @Inject constructor(
                 kotlinx.coroutines.delay(50)
             }
         } catch (e: Exception) {
-            emit("Error streaming Copilot API: ${e.localizedMessage}")
+            emit("Error streaming Copilot API: ${NetworkErrorFormatter.toUserMessage(e)}")
         }
     }
 
     override suspend fun isAvailable(): Boolean {
-        return true
+        val config = settingsRepository.llmConfig.first()
+        return config.copilotUrl.trim().isNotEmpty()
     }
 }

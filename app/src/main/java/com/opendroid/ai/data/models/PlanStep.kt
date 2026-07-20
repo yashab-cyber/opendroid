@@ -11,7 +11,7 @@ data class PlanStep(
     val params: Map<String, String> = emptyMap(),
     val dependsOn: List<String> = emptyList(),
     val canParallelize: Boolean = false,
-    val fallback: String,
+    val fallback: String = "",
     var status: StepStatus = StepStatus.PENDING,
     var result: String? = null,
     var error: String? = null

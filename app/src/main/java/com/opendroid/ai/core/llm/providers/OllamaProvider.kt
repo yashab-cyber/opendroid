@@ -13,6 +13,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.opendroid.ai.core.util.NetworkErrorFormatter
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,8 +32,10 @@ class OllamaProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val customUrl = config.customEndpoints[name]?.trim()
-        val baseUrl = if (!customUrl.isNullOrBlank()) customUrl else "http://10.0.2.2:11434"
+        val baseUrl = config.ollamaUrl.trim()
+        if (baseUrl.isEmpty()) {
+            throw IllegalStateException("Ollama server URL is not configured. Set it in Settings.")
+        }
         val endpoint = "$baseUrl/api/chat"
 
         val startTime = System.currentTimeMillis()
@@ -93,13 +96,12 @@ class OllamaProvider @Inject constructor(
                 kotlinx.coroutines.delay(50)
             }
         } catch (e: Exception) {
-            emit("Error streaming Ollama: ${e.localizedMessage}")
+            emit("Error streaming Ollama: ${NetworkErrorFormatter.toUserMessage(e)}")
         }
     }
 
     override suspend fun isAvailable(): Boolean {
-        // Ollama runs locally, so it doesn't strict check API keys unless users want.
-        // It is considered always available if active or setup.
-        return true
+        val config = settingsRepository.llmConfig.first()
+        return config.ollamaUrl.trim().isNotEmpty()
     }
 }

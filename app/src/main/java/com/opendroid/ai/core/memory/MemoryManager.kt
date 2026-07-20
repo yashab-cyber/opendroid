@@ -181,6 +181,28 @@ class MemoryManager @Inject constructor(
         memoryRepository.deleteExpiredMemories()
     }
 
+    suspend fun logTaskExecution(
+        stepId: String,
+        planId: String,
+        description: String,
+        actionType: String,
+        params: Map<String, String>,
+        success: Boolean,
+        resultData: String?,
+        errorMessage: String?
+    ) {
+        memoryRepository.logTaskExecution(
+            stepId = stepId,
+            planId = planId,
+            description = description,
+            actionType = actionType,
+            params = params,
+            success = success,
+            resultData = resultData,
+            errorMessage = errorMessage
+        )
+    }
+
     // ── Contact preference methods ──────────────────────────
 
     /**

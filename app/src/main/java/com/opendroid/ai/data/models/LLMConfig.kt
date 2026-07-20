@@ -13,8 +13,8 @@ data class LLMConfig(
     val latencyBenchmarks: Map<String, Long> = emptyMap(), // Provider -> latency Ms
     val elevenLabsApiKey: String = "",
     val elevenLabsVoiceId: String = "",
-    val ollamaUrl: String = "http://10.0.2.2:11434", // Default to Android emulator host loopback
-    val copilotUrl: String = "http://10.0.2.2:4141",
+    val ollamaUrl: String = "",
+    val copilotUrl: String = "",
     val multiAgentModeEnabled: Boolean = false,
     val showFloatingButton: Boolean = true,
     val isDarkMode: Boolean = true,

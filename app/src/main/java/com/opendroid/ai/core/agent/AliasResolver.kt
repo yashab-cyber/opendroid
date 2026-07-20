@@ -1,5 +1,7 @@
 package com.opendroid.ai.core.agent
 
+import com.opendroid.ai.core.util.DurationParser
+
 /**
  * Alias resolver that maps common natural language phrases
  * directly to action hints. When a match is found, the AgentLoop
@@ -192,7 +194,29 @@ object AliasResolver {
         "clear browser data" to ActionHint("CLEAR_BROWSER_DATA", emptyMap()),
         "clear browsing data" to ActionHint("CLEAR_BROWSER_DATA", emptyMap()),
         "clear cache"       to ActionHint("CLEAR_BROWSER_DATA", emptyMap()),
-        "delete browser data" to ActionHint("CLEAR_BROWSER_DATA", emptyMap())
+        "delete browser data" to ActionHint("CLEAR_BROWSER_DATA", emptyMap()),
+
+        // ── WEATHER ─────────────────────────────────────
+        "weather"                   to ActionHint("GET_WEATHER", emptyMap()),
+        "weather today"             to ActionHint("GET_WEATHER", emptyMap()),
+        "what's the weather"        to ActionHint("GET_WEATHER", emptyMap()),
+        "whats the weather"         to ActionHint("GET_WEATHER", emptyMap()),
+        "what is the weather"       to ActionHint("GET_WEATHER", emptyMap())
+    )
+
+    private val contextualOffPhrases = listOf(
+        "turn it off", "switch it off", "turn that off", "switch that off",
+        "disable it", "stop it", "shut it off", "turn this off"
+    )
+
+    private val contextualOnPhrases = listOf(
+        "turn it on", "switch it on", "turn that on", "switch that on",
+        "enable it", "start it", "turn this on"
+    )
+
+    private val toggleActions = setOf(
+        "TOGGLE_FLASHLIGHT", "TOGGLE_WIFI", "TOGGLE_BLUETOOTH", "TOGGLE_DND",
+        "TOGGLE_HOTSPOT", "TOGGLE_MOBILE_DATA"
     )
 
     /**
@@ -311,5 +335,50 @@ object AliasResolver {
             .trim()
 
         return if (cleaned.isNotEmpty()) cleaned else null
+    }
+
+    /**
+     * Resolve pronoun-based follow-ups like "turn it off" using the last executed action.
+     */
+    fun resolveContextual(input: String, lastAction: String?, lastParams: Map<String, String>?): ActionHint? {
+        if (lastAction.isNullOrBlank()) return null
+        val lower = input.lowercase().trim()
+        val wantsOff = contextualOffPhrases.any { lower == it || lower.contains(it) }
+        val wantsOn = contextualOnPhrases.any { lower == it || lower.contains(it) }
+        if (!wantsOff && !wantsOn) return null
+
+        val state = if (wantsOff) "off" else "on"
+        if (lastAction in toggleActions) {
+            return ActionHint(lastAction, mapOf("state" to state))
+        }
+
+        if (lastAction == "SET_VOLUME" && wantsOff) {
+            return ActionHint("SET_VOLUME", mapOf("type" to (lastParams?.get("type") ?: "ring"), "level" to "0"))
+        }
+        if (lastAction == "SET_VOLUME" && wantsOn) {
+            return ActionHint("SET_VOLUME", mapOf("type" to (lastParams?.get("type") ?: "ring"), "level" to "50"))
+        }
+
+        return null
+    }
+
+    private val timerPhrases = listOf(
+        "set timer", "set a timer", "set an timer", "start timer", "start a timer",
+        "timer for", "countdown", "count down"
+    )
+
+    fun isTimerRequest(input: String): Boolean {
+        val lower = input.lowercase().trim()
+        return timerPhrases.any { lower.contains(it) } || Regex("""\btimer\b""").containsMatchIn(lower)
+    }
+
+    fun extractTimerDuration(input: String): Int? {
+        var cleaned = input.lowercase().trim()
+        val sortedPhrases = timerPhrases.sortedByDescending { it.length }
+        for (phrase in sortedPhrases) {
+            cleaned = cleaned.replace(phrase, " ")
+        }
+        cleaned = cleaned.replace("set a", " ").replace("set", " ").trim()
+        return DurationParser.parseToSeconds(cleaned)
     }
 }

@@ -131,4 +131,27 @@ class AliasResolverTest {
     fun `extractAlarmTime returns null when no time remains`() {
         assertNull(AliasResolver.extractAlarmTime("set alarm"))
     }
+
+    @Test
+    fun `extracts timer duration from natural language`() {
+        assertEquals(5, AliasResolver.extractTimerDuration("set a 5s timer"))
+        assertEquals(5, AliasResolver.extractTimerDuration("set a 5 seconds timer"))
+        assertEquals(120, AliasResolver.extractTimerDuration("set a 2 minute timer"))
+    }
+
+    @Test
+    fun `resolves contextual turn it off after flashlight`() {
+        val hint = AliasResolver.resolveContextual(
+            "turn it off",
+            "TOGGLE_FLASHLIGHT",
+            mapOf("state" to "on")
+        )
+        assertEquals("TOGGLE_FLASHLIGHT", hint?.action)
+        assertEquals("off", hint?.baseParams?.get("state"))
+    }
+
+    @Test
+    fun `contextual resolver returns null without prior action`() {
+        assertNull(AliasResolver.resolveContextual("turn it off", null, null))
+    }
 }
