@@ -7,11 +7,11 @@ Welcome to the OpenDroid development guide. This document serves as the technica
 ## 1. Prerequisites & Environment Setup
 
 To build and compile OpenDroid, ensure your workstation meets the following requirements:
-* **JDK:** Version 17+ (Java SE Development Kit)
-* **Android SDK:** API Level 34 (Android 14) installed
-* **Gradle Tooling:** Gradle 8.4 (wrapped in project)
-* **Kotlin Compiler:** Version 1.9.22
-* **Dagger-Hilt:** Version 2.50
+* **JDK:** Version 21+ (Java SE Development Kit)
+* **Android SDK:** API Level 35 (Android 15) installed
+* **Gradle Tooling:** Gradle 8.10.2 (wrapped in project)
+* **Kotlin Compiler:** Version 2.4.0
+* **Dagger-Hilt:** Version 2.58
 
 ### Import to Android Studio
 1. Open Android Studio (Iguana / Jellyfish or newer).

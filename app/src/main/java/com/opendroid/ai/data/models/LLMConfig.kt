@@ -9,7 +9,9 @@ data class LLMConfig(
     val activeModel: String = "gemini-2.0-flash",
     val apiKeys: Map<String, String> = emptyMap(), // Provider -> API Key
     val customEndpoints: Map<String, String> = emptyMap(), // Provider -> URL
-    val autoConfirmPlans: Boolean = true,
+    // Off by default: LLM-generated plans must be confirmed by the user before
+    // executing device actions (calls, messages, settings changes).
+    val autoConfirmPlans: Boolean = false,
     val latencyBenchmarks: Map<String, Long> = emptyMap(), // Provider -> latency Ms
     val elevenLabsApiKey: String = "",
     val elevenLabsVoiceId: String = "",

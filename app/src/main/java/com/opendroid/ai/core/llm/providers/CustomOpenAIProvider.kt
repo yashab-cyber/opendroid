@@ -32,15 +32,7 @@ class CustomOpenAIProvider @Inject constructor(
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
         val apiKey = config.apiKeys[name] ?: ""
-        
-        var baseUrl = config.customEndpoints[name] ?: ""
-        if (baseUrl.isBlank()) {
-            baseUrl = "https://api.openai.com/v1"
-        }
-        // Normalize trailing slash
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length - 1)
-        }
+        val baseUrl = formatBaseUrl(config.customEndpoints[name] ?: "", "https://api.openai.com/v1")
 
         val startTime = System.currentTimeMillis()
         val selectedModel = config.activeModel.ifBlank { "gpt-4o" }
@@ -110,5 +102,16 @@ class CustomOpenAIProvider @Inject constructor(
     override suspend fun isAvailable(): Boolean {
         // Available if the user configured it, or fallback checks pass
         return true
+    }
+
+    private fun formatBaseUrl(url: String, defaultUrl: String): String {
+        val trimmed = url.trim()
+        val target = if (trimmed.isEmpty()) defaultUrl else trimmed
+        val withScheme = if (!target.startsWith("http://") && !target.startsWith("https://")) {
+            "http://$target"
+        } else {
+            target
+        }
+        return if (withScheme.endsWith("/")) withScheme.dropLast(1) else withScheme
     }
 }

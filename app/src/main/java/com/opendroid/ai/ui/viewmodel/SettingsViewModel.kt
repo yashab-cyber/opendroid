@@ -8,6 +8,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -15,16 +17,35 @@ import javax.inject.Inject
 
 import com.opendroid.ai.core.llm.LLMRequest
 import com.opendroid.ai.core.llm.ResponseFormat
-import com.opendroid.ai.data.models.ChatMessage
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import dagger.Lazy
+import com.opendroid.ai.data.models.ChatMessage
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     val settingsRepository: SettingsRepository,
     val notificationDao: com.opendroid.ai.data.db.dao.NotificationDao,
     private val llmProviderFactory: Lazy<com.opendroid.ai.core.llm.LLMProviderFactory>,
-    private val modelFetcher: Lazy<com.opendroid.ai.core.llm.ModelFetcher>
+    private val modelFetcher: Lazy<com.opendroid.ai.core.llm.ModelFetcher>,
+    val modelRepository: com.opendroid.ai.data.repository.ModelRepository,
+    private val okHttpClient: OkHttpClient
 ) : ViewModel() {
+
+    private val _huggingFaceToken = MutableStateFlow("")
+    val huggingFaceToken: StateFlow<String> = _huggingFaceToken
+
+    private val _huggingFaceValidationStatus = MutableStateFlow("Token Required")
+    val huggingFaceValidationStatus: StateFlow<String> = _huggingFaceValidationStatus
+
+    private val _huggingFaceLastVerified = MutableStateFlow("Never")
+    val huggingFaceLastVerified: StateFlow<String> = _huggingFaceLastVerified
+
+    private val _localImportStatus = MutableStateFlow<String?>(null)
+    val localImportStatus: StateFlow<String?> = _localImportStatus
 
     private val _llmConfig = MutableStateFlow(LLMConfig())
     val llmConfig: StateFlow<LLMConfig> = _llmConfig
@@ -40,10 +61,30 @@ class SettingsViewModel @Inject constructor(
     private var copilotUrlJob: Job? = null
     private var customEndpointJob: Job? = null
 
+    private var isLoaded = false
+
     init {
+        val prefs = com.opendroid.ai.core.security.SecurePrefs.get(context)
+        _huggingFaceToken.value = prefs.getString("huggingface_token", "") ?: ""
+        _huggingFaceLastVerified.value = prefs.getString("huggingface_last_verified", "Never") ?: "Never"
+        if (_huggingFaceToken.value.isNotBlank()) {
+            _huggingFaceValidationStatus.value = "Token Required"
+        }
         viewModelScope.launch {
             settingsRepository.llmConfig.collect { config ->
-                _llmConfig.value = config
+                if (!isLoaded) {
+                    _llmConfig.value = config
+                    isLoaded = true
+                } else {
+                    _llmConfig.value = config.copy(
+                        apiKeys = _llmConfig.value.apiKeys,
+                        customEndpoints = _llmConfig.value.customEndpoints,
+                        elevenLabsApiKey = _llmConfig.value.elevenLabsApiKey,
+                        elevenLabsVoiceId = _llmConfig.value.elevenLabsVoiceId,
+                        ollamaUrl = _llmConfig.value.ollamaUrl,
+                        copilotUrl = _llmConfig.value.copilotUrl
+                    )
+                }
             }
         }
         viewModelScope.launch {
@@ -51,6 +92,75 @@ class SettingsViewModel @Inject constructor(
             settingsRepository.llmConfig.first()
             refreshModels(force = false)
         }
+    }
+
+    fun updateHuggingFaceToken(token: String) {
+        _huggingFaceToken.value = token
+        _huggingFaceValidationStatus.value = "Token Required"
+        com.opendroid.ai.core.security.SecurePrefs.get(context)
+            .edit()
+            .putString("huggingface_token", token)
+            .apply()
+    }
+
+    fun removeHuggingFaceToken() {
+        _huggingFaceToken.value = ""
+        _huggingFaceValidationStatus.value = "Token Required"
+        _huggingFaceLastVerified.value = "Never"
+        com.opendroid.ai.core.security.SecurePrefs.get(context)
+            .edit()
+            .remove("huggingface_token")
+            .remove("huggingface_last_verified")
+            .apply()
+    }
+
+    fun validateHuggingFaceToken() {
+        val token = _huggingFaceToken.value
+        if (token.isBlank()) {
+            _huggingFaceValidationStatus.value = "Token Required"
+            return
+        }
+
+        _huggingFaceValidationStatus.value = "Verifying..."
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val request = Request.Builder()
+                .url("https://huggingface.co/api/whoami-v2")
+                .header("Authorization", "Bearer $token")
+                .build()
+
+            try {
+                okHttpClient.newCall(request).execute().use { response ->
+                    if (response.code == 200) {
+                        _huggingFaceValidationStatus.value = "Valid"
+                        val sdf = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+                        val dateStr = "Today " + sdf.format(java.util.Date())
+                        _huggingFaceLastVerified.value = dateStr
+                        com.opendroid.ai.core.security.SecurePrefs.get(context)
+                            .edit()
+                            .putString("huggingface_last_verified", dateStr)
+                            .apply()
+                    } else if (response.code == 401) {
+                        _huggingFaceValidationStatus.value = "Invalid"
+                    } else {
+                        _huggingFaceValidationStatus.value = "Unable to verify"
+                    }
+                }
+            } catch (e: Exception) {
+                _huggingFaceValidationStatus.value = "Unable to verify"
+            }
+        }
+    }
+
+    fun importLocalModel(modelId: String, uri: android.net.Uri) {
+        _localImportStatus.value = "Importing..."
+        viewModelScope.launch {
+            val success = modelRepository.importLocalModel(modelId, uri)
+            _localImportStatus.value = if (success) "Success" else "Failed"
+        }
+    }
+
+    fun clearImportStatus() {
+        _localImportStatus.value = null
     }
 
     fun refreshModels(force: Boolean = false) {
@@ -109,14 +219,18 @@ class SettingsViewModel @Inject constructor(
             "Ollama" -> "llama3"
             "Copilot API" -> "gpt-4o"
             "Custom OpenAI Compatible" -> "gpt-4o"
+            "On-Device AI",
+            "Gemma 4 (On-device)" -> "gemma-4-on-device"
             "Mistral AI" -> "mistral-large-latest"
             else -> "gemini-2.0-flash"
         }
-        _llmConfig.value = _llmConfig.value.copy(activeProvider = provider, activeModel = defaultModel)
+        // Normalize legacy name to the new unified name
+        val normalizedProvider = if (provider == "Gemma 4 (On-device)") "On-Device AI" else provider
+        _llmConfig.value = _llmConfig.value.copy(activeProvider = normalizedProvider, activeModel = defaultModel)
         viewModelScope.launch {
             try {
                 settingsRepository.updateConfig { current ->
-                    current.copy(activeProvider = provider, activeModel = defaultModel)
+                    current.copy(activeProvider = normalizedProvider, activeModel = defaultModel)
                 }
                 refreshModels(force = false)
             } catch (e: Exception) {
@@ -130,7 +244,7 @@ class SettingsViewModel @Inject constructor(
         activeModelJob?.cancel()
         activeModelJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     current.copy(activeModel = model)
                 }
@@ -150,7 +264,7 @@ class SettingsViewModel @Inject constructor(
         apiKeyUpdateJobs[providerName]?.cancel()
         apiKeyUpdateJobs[providerName] = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     val currentKeys = current.apiKeys.toMutableMap()
                     currentKeys[providerName] = key
@@ -172,7 +286,7 @@ class SettingsViewModel @Inject constructor(
         elevenLabsApiKeyJob?.cancel()
         elevenLabsApiKeyJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     current.copy(elevenLabsApiKey = key)
                 }
@@ -189,7 +303,7 @@ class SettingsViewModel @Inject constructor(
         elevenLabsVoiceIdJob?.cancel()
         elevenLabsVoiceIdJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     current.copy(elevenLabsVoiceId = voiceId)
                 }
@@ -206,7 +320,7 @@ class SettingsViewModel @Inject constructor(
         ollamaUrlJob?.cancel()
         ollamaUrlJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     current.copy(ollamaUrl = url)
                 }
@@ -223,7 +337,7 @@ class SettingsViewModel @Inject constructor(
         copilotUrlJob?.cancel()
         copilotUrlJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     current.copy(copilotUrl = url)
                 }
@@ -243,7 +357,7 @@ class SettingsViewModel @Inject constructor(
         customEndpointJob?.cancel()
         customEndpointJob = viewModelScope.launch {
             try {
-                delay(1000)
+                delay(500)
                 settingsRepository.updateConfig { current ->
                     val currentEndpoints = current.customEndpoints.toMutableMap()
                     currentEndpoints[providerName] = url
@@ -325,6 +439,81 @@ class SettingsViewModel @Inject constructor(
             settingsRepository.updateConfig { current ->
                 current.copy(isDarkMode = enabled)
             }
+        }
+    }
+
+    // ── On-Device Model Lifecycle Management ──
+
+    val allModels = modelRepository.allModelsFlow.stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val storageInfo = modelRepository.getStorageInfoFlow().stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = com.opendroid.ai.data.repository.ModelRepository.StorageInfo(0L, 0L, 0L)
+    )
+
+    fun downloadModel(modelId: String, simulate: Boolean = false) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.startDownload(it, simulate)
+            }
+        }
+    }
+
+    fun pauseDownload(modelId: String) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.pauseDownload(it)
+            }
+        }
+    }
+
+    fun resumeDownload(modelId: String) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.resumeDownload(it)
+            }
+        }
+    }
+
+    fun cancelDownload(modelId: String) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.cancelDownload(it)
+            }
+        }
+    }
+
+    fun deleteModel(modelId: String) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.delete(it)
+            }
+        }
+    }
+
+    fun loadModel(modelId: String) {
+        viewModelScope.launch {
+            val spec = com.opendroid.ai.core.llm.OnDeviceModelRegistry.findById(modelId)
+            spec?.let {
+                modelRepository.load(it)
+                updateActiveModel(it.id)
+            }
+        }
+    }
+
+    fun deleteUnusedModels() {
+        viewModelScope.launch {
+            modelRepository.deleteUnusedModels()
         }
     }
 }

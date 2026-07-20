@@ -89,9 +89,24 @@ class OpenDroidNotificationListener : NotificationListenerService() {
                     // Trigger pattern analysis periodically
                     notificationIntelligence.analyzeIfNeeded()
 
-                    // Schedule auto-reply if it's a message
+                    // Schedule auto-reply if it's a message, but NOT if it's
+                    // our own reply echoing back as a notification (loop prevention)
                     if (isMessageNotification(sbn)) {
-                        autoReplyEngine.scheduleAutoReply(savedEntity, sbn, applicationContext)
+                        val contactName = entity.contactName ?: entity.title
+                        val isBounceback = autoReplyEngine.isOwnReplyBounceback(
+                            sbn.packageName, contactName
+                        )
+                        // WhatsApp shows your own sent messages as "You: <text>"
+                        val isSelfMessage = entity.text.startsWith("You: ") ||
+                            entity.title.equals("You", ignoreCase = true)
+
+                        if (isBounceback) {
+                            Log.d(TAG, "Skipping auto-reply: bounceback from own reply to $contactName")
+                        } else if (isSelfMessage) {
+                            Log.d(TAG, "Skipping auto-reply: self-message detected for $contactName")
+                        } else {
+                            autoReplyEngine.scheduleAutoReply(savedEntity, sbn, applicationContext)
+                        }
                     }
                 }
             } catch (e: Exception) {

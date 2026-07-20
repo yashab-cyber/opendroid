@@ -5,10 +5,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
-        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.50'
-        classpath 'org.jetbrains.kotlin:kotlin-serialization:1.9.22'
+        classpath 'com.android.tools:r8:9.1.31'
+        classpath 'com.android.tools.build:gradle:8.8.2'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0'
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.58'
+        classpath 'org.jetbrains.kotlin:kotlin-serialization:2.4.0'
+        classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.0'
     }
 }
 

@@ -10,8 +10,10 @@ import androidx.security.crypto.MasterKey
  * Centralized secure preferences using Android Keystore + EncryptedSharedPreferences.
  * All API keys and sensitive user data are AES-256 encrypted at rest.
  *
- * Falls back to standard SharedPreferences only if the device doesn't support
- * hardware-backed keystore (extremely rare on API 26+).
+ * There is deliberately NO plaintext fallback: if the encrypted store cannot be
+ * initialized (e.g. the keystore entry was invalidated), the corrupt store is
+ * discarded and recreated; if that also fails, a SecurityException is thrown
+ * rather than silently downgrading secrets to plaintext storage.
  */
 object SecurePrefs {
 
@@ -29,22 +31,37 @@ object SecurePrefs {
 
     private fun createEncryptedPrefs(context: Context): SharedPreferences {
         return try {
-            val masterKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            EncryptedSharedPreferences.create(
-                context,
-                PREFS_NAME,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "EncryptedSharedPreferences failed, falling back to standard prefs: ${e.localizedMessage}")
-            // Graceful degradation — still better than crashing
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            buildEncryptedPrefs(context)
+        } catch (first: Exception) {
+            // Most common cause: the master key was invalidated (device credential
+            // reset, backup restore onto a new device). The stored ciphertext is
+            // unrecoverable, so discard it and start a fresh encrypted store.
+            Log.e(TAG, "EncryptedSharedPreferences init failed, recreating store: ${first.localizedMessage}")
+            context.deleteSharedPreferences(PREFS_NAME)
+            try {
+                buildEncryptedPrefs(context)
+            } catch (second: Exception) {
+                // Never fall back to plaintext storage for secrets.
+                throw SecurityException(
+                    "Unable to initialize encrypted preferences; refusing plaintext fallback",
+                    second
+                )
+            }
         }
+    }
+
+    private fun buildEncryptedPrefs(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     /**

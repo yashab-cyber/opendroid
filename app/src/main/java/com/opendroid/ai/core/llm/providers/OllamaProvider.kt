@@ -32,7 +32,7 @@ class OllamaProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val baseUrl = config.ollamaUrl.trim()
+        val baseUrl = formatBaseUrl(config.ollamaUrl, "")
         if (baseUrl.isEmpty()) {
             throw IllegalStateException("Ollama server URL is not configured. Set it in Settings.")
         }
@@ -103,5 +103,16 @@ class OllamaProvider @Inject constructor(
     override suspend fun isAvailable(): Boolean {
         val config = settingsRepository.llmConfig.first()
         return config.ollamaUrl.trim().isNotEmpty()
+    }
+
+    private fun formatBaseUrl(url: String, defaultUrl: String): String {
+        val trimmed = url.trim()
+        val target = if (trimmed.isEmpty()) defaultUrl else trimmed
+        val withScheme = if (target.isNotEmpty() && !target.startsWith("http://") && !target.startsWith("https://")) {
+            "http://$target"
+        } else {
+            target
+        }
+        return if (withScheme.endsWith("/")) withScheme.dropLast(1) else withScheme
     }
 }

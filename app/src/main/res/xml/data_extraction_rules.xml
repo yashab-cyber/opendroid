@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backups are disabled entirely (android:allowBackup="false").
+    These rules are defense-in-depth: conversations, memories, notifications
+    and settings (incl. API keys) must never leave the device via cloud
+    backup or device-to-device transfer.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="sharedpref" path="."/>
-        <include domain="database" path="."/>
-        <!-- Exclude encrypted API key storage from cloud backup -->
-        <exclude domain="sharedpref" path="encrypted_api_keys.xml"/>
-        <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml"/>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="datastore/"/>
     </cloud-backup>
     <device-transfer>
-        <include domain="sharedpref" path="."/>
-        <include domain="database" path="."/>
-        <!-- Exclude encrypted API key storage from device transfer -->
-        <exclude domain="sharedpref" path="encrypted_api_keys.xml"/>
-        <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml"/>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="datastore/"/>
     </device-transfer>
 </data-extraction-rules>

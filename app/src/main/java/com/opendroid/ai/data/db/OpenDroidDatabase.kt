@@ -17,8 +17,11 @@ import com.opendroid.ai.data.db.entities.TaskHistoryEntity
 
 import com.opendroid.ai.data.db.dao.NotificationDao
 import com.opendroid.ai.data.db.dao.UnknownActionDao
+import com.opendroid.ai.data.db.dao.ModelDao
 import com.opendroid.ai.data.db.entities.NotificationEntity
 import com.opendroid.ai.data.db.entities.UnknownActionEntity
+import com.opendroid.ai.data.db.entities.ModelEntity
+import androidx.room.TypeConverters
 
 @Database(
     entities = [
@@ -28,11 +31,13 @@ import com.opendroid.ai.data.db.entities.UnknownActionEntity
         TaskHistoryEntity::class,
         MacroEntity::class,
         UnknownActionEntity::class,
-        NotificationEntity::class
+        NotificationEntity::class,
+        ModelEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class OpenDroidDatabase : RoomDatabase() {
     abstract fun conversationDao(): ConversationDao
     abstract fun planDao(): PlanDao
@@ -41,6 +46,7 @@ abstract class OpenDroidDatabase : RoomDatabase() {
     abstract fun macroDao(): MacroDao
     abstract fun unknownActionDao(): UnknownActionDao
     abstract fun notificationDao(): NotificationDao
+    abstract fun modelDao(): ModelDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -72,6 +78,28 @@ abstract class OpenDroidDatabase : RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE notifications ADD COLUMN senderEmail TEXT DEFAULT NULL")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS models (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        name TEXT NOT NULL,
+                        version TEXT NOT NULL,
+                        size INTEGER NOT NULL,
+                        downloadUrl TEXT NOT NULL,
+                        localPath TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        downloadProgress INTEGER NOT NULL,
+                        lastUsed INTEGER NOT NULL,
+                        installedAt INTEGER NOT NULL,
+                        downloadedSize INTEGER NOT NULL DEFAULT 0,
+                        downloadSpeed TEXT NOT NULL DEFAULT '',
+                        etaString TEXT NOT NULL DEFAULT ''
+                    )
+                """)
             }
         }
     }

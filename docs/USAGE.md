@@ -150,3 +150,28 @@ To run all features, ensure the following settings are enabled:
     *   Ensure permissions are allowed. If denied, the app will run the interactive fallback intents (Dialer / SMS composer).
 4.  **DND Policy**:
     *   Required for `SET_RINGER_MODE`. The app will redirect you to permission settings if not yet authorized.
+
+---
+
+## 9. On-Device Model Manager & Hugging Face Authentication
+
+OpenDroid includes an integrated manager for local LiteRT-LM models.
+
+### 🔑 Hugging Face Authentication Setup
+To download gated models (such as Google's Gemma 3n or Gemma 4 variants):
+1. Generate an **Access Token** (Read permission) on your Hugging Face account settings page.
+2. Open OpenDroid's **Settings** screen and scroll down to the **Hugging Face Authentication** card.
+3. Paste your token (masked by default, with toggle to show) and click **Validate Token**.
+4. The system will query the HF api and display `✓ Token Valid`. The token is stored securely via Android's local KeyStore.
+
+### 📥 Downloading Models
+* Tap **Download** on any registered model in the LiteRT-LM models list.
+* If a model is gated and you haven't configured a Hugging Face token, the app will display a prompt to guide you to settings.
+* Live status checks display download speed (MB/s), downloaded bytes, and remaining time (ETA). Tap **Pause** to suspend or **Cancel** to abort.
+
+### 📋 Offline Local Model Importing
+If you already have a model file locally (such as a custom `.task` or `.litertlm` file):
+1. Tap **Import** on the model card in Settings.
+2. Select your file from the system file picker.
+3. The app will copy it to secure sandboxed storage and execute an automated LiteRT load verification check.
+4. Once verified, the status changes to `Ready` and it is registered for offline inference.

@@ -32,7 +32,7 @@ class CopilotProvider @Inject constructor(
 
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val config = settingsRepository.llmConfig.first()
-        val baseUrl = config.copilotUrl.trim()
+        val baseUrl = formatBaseUrl(config.copilotUrl, "")
         if (baseUrl.isEmpty()) {
             throw IllegalStateException("Copilot server URL is not configured. Set it in Settings.")
         }
@@ -114,5 +114,16 @@ class CopilotProvider @Inject constructor(
     override suspend fun isAvailable(): Boolean {
         val config = settingsRepository.llmConfig.first()
         return config.copilotUrl.trim().isNotEmpty()
+    }
+
+    private fun formatBaseUrl(url: String, defaultUrl: String): String {
+        val trimmed = url.trim()
+        val target = if (trimmed.isEmpty()) defaultUrl else trimmed
+        val withScheme = if (target.isNotEmpty() && !target.startsWith("http://") && !target.startsWith("https://")) {
+            "http://$target"
+        } else {
+            target
+        }
+        return if (withScheme.endsWith("/")) withScheme.dropLast(1) else withScheme
     }
 }
