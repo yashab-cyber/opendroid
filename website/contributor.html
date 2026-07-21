@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contributors &amp; Testers — OpenDroid</title>
+  <meta name="description" content="Meet the builders, researchers, and testers shaping the future of autonomous Android automation with OpenDroid.">
+  <meta property="og:title" content="Contributors &amp; Testers — OpenDroid">
+  <meta property="og:description" content="Meet the builders, researchers, and testers shaping the future of autonomous Android automation with OpenDroid.">
+  <meta property="og:image" content="https://yashab-cyber.github.io/opendroid/assets/bot.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashab-cyber.github.io/opendroid/contributor.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://yashab-cyber.github.io/opendroid/contributor.html">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Profile styling specific to contributor page */
+    .profile-section {
+      padding: 60px 0;
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+    @media (max-width: 992px) {
+      .profile-grid {
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      }
+    }
+    .profile-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-xl);
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 6px;
+      background: linear-gradient(90deg, var(--accent) 0%, #3b82f6 100%);
+      opacity: 0.8;
+    }
+    .profile-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .avatar-wrapper {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      padding: 3px;
+      background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%);
+      flex-shrink: 0;
+    }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--surface);
+      transition: transform var(--transition);
+    }
+    .profile-card:hover .avatar-img {
+      transform: scale(1.04);
+    }
+    .status-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--accent-dark);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 100px;
+      border: 2px solid var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-titles h3 {
+      font-size: 1.2rem;
+      margin-bottom: 2px;
+      font-family: var(--font-heading);
+      color: var(--text-primary);
+    }
+    .profile-username {
+      font-size: 0.85rem;
+      color: var(--accent-dark);
+      font-weight: 600;
+      transition: color var(--transition);
+    }
+    .profile-username:hover {
+      color: var(--accent);
+    }
+    .profile-body {
+      flex-grow: 1;
+    }
+    .profile-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .role-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .role-badge.contributor-badge {
+      background: var(--accent-light);
+      color: var(--accent-dark);
+    }
+    .role-badge.tester-badge {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .role-badge.maintainer-badge {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .profile-bio {
+      font-size: 0.9rem;
+      color: var(--text-body);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .profile-achievements {
+      margin-bottom: 20px;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 16px;
+    }
+    .ach-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .ach-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ach-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--surface-border);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-body);
+      transition: all var(--transition);
+    }
+    .ach-badge:hover {
+      background: var(--bg-tertiary);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+    .ach-badge img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+    }
+    .profile-stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 16px;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .profile-footer {
+      border-top: 1px solid var(--surface-border);
+      padding-top: 20px;
+      margin-top: auto;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-sm {
+      padding: 8px 18px;
+      font-size: 0.8rem;
+    }
+    
+    /* Call to Action Grid Card */
+    .join-card {
+      border: 2px dashed var(--surface-border);
+      background: transparent;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 300px;
+    }
+    .join-card::before {
+      display: none;
+    }
+    .join-card:hover {
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.02);
+      transform: translateY(-4px);
+    }
+    .join-icon {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .join-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+    .join-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      max-width: 250px;
+      margin: 0 auto 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links">
+      <li class="nav-dropdown">
+        <a href="features.html">Products</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download APK</a></li>
+          <li><a href="https://indusapp.store/wphbqhzu" target="_blank">Indus Appstore</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <a href="features.html">Use Cases</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html#feat-planning">Autonomous Planning</a></li>
+          <li><a href="features.html#feat-device">Device Control</a></li>
+          <li><a href="features.html#feat-accessibility">App Automation</a></li>
+          <li><a href="features.html#feat-vision">Vision Engine</a></li>
+        </ul>
+      </li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li class="nav-dropdown">
+        <a href="#">Resources</a>
+        <ul class="dropdown-menu">
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+          <li><a href="https://discord.gg/knRMyFmvpp" target="_blank">Discord</a></li>
+          <li><a href="contributor.html">Contributors</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank" class="nav-cta">Download ↓</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <span class="label">Our Community</span>
+    <h1>Contributors &amp; Testers</h1>
+    <p>Meet the developers, engineers, and testers who build, polish, and verify the OpenDroid ecosystem.</p>
+  </div>
+</header>
+
+<main>
+  <!-- Contributors Section -->
+  <section class="section profile-section" id="contributors">
+    <div class="container">
+      <div class="section-header reveal text-center">
+        <span class="label">Development</span>
+        <h2>Code &amp; Docs Contributors</h2>
+        <p>The minds writing the algorithms, designing the architectures, and building features.</p>
+      </div>
+      
+      <div class="profile-grid">
+        
+        <!-- Yashab Cyber -->
+        <div class="profile-card reveal">
+          <div class="profile-header">
+            <div class="avatar-wrapper">
+              <img src="https://avatars.githubusercontent.com/u/77148571?v=4" alt="Yashab Cyber" class="avatar-img">
+              <span class="status-badge">Creator</span>
+            </div>
+            <div class="profile-titles">
+              <h3>yashab-cyber</h3>
+              <a href="https://github.com/yashab-cyber" target="_blank" class="profile-username">@yashab-cyber</a>
+            </div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-badges">
+              <span class="role-badge maintainer-badge">Creator</span>
+              <span class="role-badge contributor-badge">Lead Maintainer</span>
+            </div>
+            <p class="profile-bio">
+              Cybersecurity expert, AI researcher, and entrepreneur. Created and drives the architecture of OpenDroid, pushing the envelope for open-source AI agent automation.
+            </p>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-num">GitHub</span>
+                <span class="stat-label">Platform</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-num">Kotlin / Python</span>
+                <span class="stat-label">Focus</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-footer">
+            <a href="https://github.com/yashab-cyber" target="_blank" class="btn btn-secondary btn-sm">🧑‍💻 GitHub Profile</a>
+          </div>
+        </div>
+
+        <!-- Jonas Berman (JMAN730) - First Contributor -->
+        <div class="profile-card reveal">
+          <div class="profile-header">
+            <div class="avatar-wrapper">
+              <img src="https://avatars.githubusercontent.com/u/188234786?v=4" alt="Jonas Berman" class="avatar-img">
+              <span class="status-badge">Active</span>
+            </div>
+            <div class="profile-titles">
+              <h3>Jonas Berman</h3>
+              <a href="https://github.com/JMAN730" target="_blank" class="profile-username">@JMAN730</a>
+            </div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-badges">
+              <span class="role-badge contributor-badge">Core Contributor</span>
+              <span class="role-badge tester-badge">First Contributor</span>
+            </div>
+            <p class="profile-bio">
+              First contributor of OpenDroid. Jonas contributed critical enhancements to project reliability, early codebase optimization, and accessibility framework robustness.
+            </p>
+            <div class="profile-achievements">
+              <h4 class="ach-title">GitHub Achievements</h4>
+              <div class="ach-list">
+                <span class="ach-badge" title="Pair Extraordinaire x4">
+                  <img src="https://github.githubassets.com/assets/pair-extraordinaire-default-579438a20e01.png" alt="Pair Extraordinaire">
+                  Pair Extraordinaire x4
+                </span>
+                <span class="ach-badge" title="Pull Shark x3">
+                  <img src="https://github.githubassets.com/assets/pull-shark-default-498c279a747d.png" alt="Pull Shark">
+                  Pull Shark x3
+                </span>
+                <span class="ach-badge" title="Quickdraw">
+                  <img src="https://github.githubassets.com/assets/quickdraw-default-39c6aec8ff89.png" alt="Quickdraw">
+                  Quickdraw
+                </span>
+                <span class="ach-badge" title="YOLO">
+                  <img src="https://github.githubassets.com/assets/yolo-default-be0bbff04951.png" alt="YOLO">
+                  YOLO
+                </span>
+              </div>
+            </div>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-num">7</span>
+                <span class="stat-label">Followers</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-num">6</span>
+                <span class="stat-label">Following</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-footer">
+            <a href="https://github.com/JMAN730" target="_blank" class="btn btn-secondary btn-sm">🧑‍💻 GitHub Profile</a>
+          </div>
+        </div>
+
+        <!-- Call to Action Card -->
+        <div class="profile-card join-card reveal">
+          <span class="join-icon">🚀</span>
+          <h3>Your Name Here?</h3>
+          <p>We are always looking for developers, designers, and documentation writers to join the team!</p>
+          <a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="btn btn-primary btn-sm">⭐ Start Contributing</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><div class="divider"></div></div>
+
+  <!-- Testers Section -->
+  <section class="section profile-section" id="testers" style="background: var(--bg-secondary);">
+    <div class="container">
+      <div class="section-header reveal text-center">
+        <span class="label">Quality Assurance</span>
+        <h2>Beta &amp; QA Testers</h2>
+        <p>The crew testing OpenDroid across different devices, Android versions, and real-world scenarios.</p>
+      </div>
+      
+      <div class="profile-grid">
+        
+        <!-- Jonas Berman (JMAN730) - First Tester -->
+        <div class="profile-card reveal">
+          <div class="profile-header">
+            <div class="avatar-wrapper">
+              <img src="https://avatars.githubusercontent.com/u/188234786?v=4" alt="Jonas Berman" class="avatar-img">
+              <span class="status-badge">Tester</span>
+            </div>
+            <div class="profile-titles">
+              <h3>Jonas Berman</h3>
+              <a href="https://github.com/JMAN730" target="_blank" class="profile-username">@JMAN730</a>
+            </div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-badges">
+              <span class="role-badge tester-badge">First Tester</span>
+              <span class="role-badge contributor-badge">Alpha QA</span>
+            </div>
+            <p class="profile-bio">
+              Led early QA efforts for OpenDroid. Extensively tested the autonomous planning system, API connectivity fallbacks, and accessibility gestures across various physical hardware brands.
+            </p>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-num">Android 12-15</span>
+                <span class="stat-label">OS Range Tested</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-num">Physical Devices</span>
+                <span class="stat-label">Testing Method</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-footer">
+            <a href="https://github.com/JMAN730" target="_blank" class="btn btn-secondary btn-sm">🧑‍💻 GitHub Profile</a>
+          </div>
+        </div>
+
+        <!-- Join as Tester Card -->
+        <div class="profile-card join-card reveal">
+          <span class="join-icon">🧪</span>
+          <h3>Help Us Test!</h3>
+          <p>Got an Android device? Help us verify accessibility gestures, system controls, and LLM providers.</p>
+          <a href="https://discord.gg/knRMyFmvpp" target="_blank" class="btn btn-primary btn-sm">💬 Join Beta on Discord</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Join the OpenDroid Movement</h2>
+        <p>Whether you're writing code, testing release candidates, writing guides, or designing graphics — there is a place for you.</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/yashab-cyber/opendroid" target="_blank" class="btn btn-primary">⭐ GitHub Repository</a>
+          <a href="https://github.com/yashab-cyber/opendroid/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-secondary">📖 Contributing Guide</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:28px;height:28px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank">Download</a></li>
+          <li><a href="https://indusapp.store/wphbqhzu" target="_blank">Indus Appstore</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contributor.html">Contributors</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://discord.gg/knRMyFmvpp" target="_blank">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
