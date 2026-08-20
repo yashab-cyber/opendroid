@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="js/theme-init.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://avatars.githubusercontent.com https://github.githubassets.com https://api.producthunt.com; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.github.com; base-uri 'self'; form-action 'self'">
+  <title>Releases &amp; Changelog — OpenDroid</title>
+  <meta name="description" content="Complete changelog and release history for OpenDroid, the autonomous open-source AI agent for Android.">
+  <meta property="og:title" content="Releases &amp; Changelog — OpenDroid">
+  <meta property="og:description" content="Explore all updates, features, and release assets from v1.0.0 to v1.0.6.">
+  <meta property="og:image" content="https://yashab-cyber.github.io/opendroid/assets/bot.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashab-cyber.github.io/opendroid/releases.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://yashab-cyber.github.io/opendroid/releases.html">
+  <link rel="icon" type="image/png" href="assets/bot.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Navigation -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="assets/bot.png" alt="OpenDroid">
+      <span>OpenDroid</span>
+    </a>
+    <div class="nav-right">
+    <ul class="nav-links" id="nav-links">
+      <li class="nav-dropdown">
+        <a href="features.html">Products</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html">Features</a></li>
+          <li><a href="releases.html">Releases &amp; Changelog</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank" rel="noopener noreferrer">Download APK</a></li>
+          <li><a href="https://indusapp.store/wphbqhzu" target="_blank" rel="noopener noreferrer">Indus Appstore</a></li>
+        </ul>
+      </li>
+      <li class="nav-dropdown">
+        <a href="features.html">Use Cases</a>
+        <ul class="dropdown-menu">
+          <li><a href="features.html#feat-planning">Autonomous Planning</a></li>
+          <li><a href="features.html#feat-routines">Habit &amp; Routine Detection</a></li>
+          <li><a href="features.html#feat-telegram">Telegram &amp; WhatsApp</a></li>
+          <li><a href="features.html#feat-device">Device Control</a></li>
+          <li><a href="features.html#feat-memory">Personal Knowledge Graph</a></li>
+          <li><a href="features.html#feat-vision">Vision Engine &amp; Screen Extraction</a></li>
+        </ul>
+      </li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="support.html">Support</a></li>
+      <li class="nav-dropdown">
+        <a href="#">Resources</a>
+        <ul class="dropdown-menu">
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://www.producthunt.com/products/opendroid?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-opendroid" target="_blank" rel="noopener noreferrer">Product Hunt</a></li>
+          <li><a href="https://discord.gg/knRMyFmvpp" target="_blank" rel="noopener noreferrer">Discord</a></li>
+          <li><a href="contributor.html">Contributors</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+      </li>
+      <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank" class="nav-cta" aria-label="Download OpenDroid" rel="noopener noreferrer">
+        Download
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </a></li>
+    </ul>
+    <div class="nav-controls">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Enable light mode" aria-pressed="false">
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <span class="theme-toggle-text-wrap"><span class="tt-dark">Dark</span><span class="tt-light">Light</span></span>
+      </button>
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  </div>
+</nav>
+
+<header class="page-header" id="main-content" tabindex="-1">
+  <div class="container">
+    <span class="label">Changelog</span>
+    <h1>Release History</h1>
+    <p>Explore the evolution of OpenDroid from v1.0.0 to the latest v1.0.6 release.</p>
+  </div>
+</header>
+
+<main class="section">
+  <div class="container">
+    <div class="release-timeline">
+
+      <!-- v1.0.6 -->
+      <article class="glass-card release-card latest reveal" id="v1.0.6">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.6</h2>
+            <span class="badge-latest">Latest Release</span>
+            <span class="tag">versionCode 7</span>
+          </div>
+          <time class="release-date" datetime="2026-08-20">August 20, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>🔄 Habit &amp; Routine Detection Engine</h4>
+          <ul class="release-list">
+            <li><strong>Proactive Pattern Recognition</strong>: Tracks background app switches via accessibility events and detects repeated sequential workflows (e.g. every weekday at 9:00 AM: <em>Gmail → Calendar → Slack → Chrome</em>).</li>
+            <li><strong>Proactive Suggestion Prompts</strong>: Automatically prompts the user: <em>"I noticed you usually do these tasks every weekday morning. Would you like me to automate them?"</em></li>
+            <li><strong>Multi-Step Morning Routine Automation</strong>: Synthesizes and executes 6-step routines: Read today's calendar, summarize meetings (<code>GET_MORNING_BRIEFING</code>), check important notifications, prepare task lists from notes, and speak the briefing.</li>
+            <li><strong>One-Click Routine Approval</strong>: Converts approved habits into recurring cron-scheduled macros in <code>MacroDao</code> and registers knowledge nodes in <code>PersonalGrowthEngine</code>.</li>
+            <li><strong>Routines UI Screen</strong>: Added modern <code>RoutinesScreen.kt</code> with suggestion approval cards, active routine toggles, template presets (Morning Routine, Work Focus, Evening Wrap-up), and learning analytics.</li>
+            <li><strong>Database Schema Migration 8</strong>: Added <code>habit_events</code> and <code>habit_routines</code> tables with Room <code>MIGRATION_7_8</code>.</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h4>✈️ Telegram Control &amp; Automation</h4>
+          <ul class="release-list">
+            <li><strong>Full Telegram Automation</strong>: Support for <code>SEND_TELEGRAM</code> and <code>OPEN_TELEGRAM</code> actions across official Telegram, Telegram Web/FOSS, Plus Messenger, and NekoX.</li>
+            <li><strong>Handle &amp; Contact Resolution</strong>: Seamlessly resolves direct <code>@username</code> handles, contact address book lookups, international phone numbers, and deep links (<code>tg://resolve</code>, <code>https://t.me/</code>).</li>
+            <li><strong>Accessibility Automator</strong>: Added <code>TelegramAutomator.kt</code> for automatic chat input typing and message dispatch.</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h4>🧪 LiteRT Model Compatibility &amp; Probe Fixes</h4>
+          <ul class="release-list">
+            <li><strong>Model Verification Fix</strong>: Fixed a false <code>FORMAT_INVALID</code> validation error during verification of LiteRT-LM models (such as <code>Gemma 4 e2b-it</code> and <code>Qwen 2.5</code>).</li>
+            <li><strong>Probe Logic</strong>: Corrected failure marker matching from strict <code>.all</code> to <code>.any</code> and expanded backend error diagnostics.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📱 Download app-release.aab</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.6" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.6</a>
+        </div>
+      </article>
+
+      <!-- v1.0.5 -->
+      <article class="glass-card release-card reveal" id="v1.0.5">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.5</h2>
+            <span class="tag">versionCode 6</span>
+          </div>
+          <time class="release-date" datetime="2026-08-18">August 18, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>🧠 Screen Understanding → “Read &amp; Remember”</h4>
+          <ul class="release-list">
+            <li><strong>Multimodal Screen Extraction</strong>: Added <code>extractAndStructureScreenInfo</code> to <code>VisionEngine</code> combining screen captures with text accessibility fallback to automatically extract meeting details (<em>Title, Date, Time, Location, Participants, Action Items</em>) and notes.</li>
+            <li><strong><code>READ_AND_REMEMBER_SCREEN</code> Action</strong>: Fast-paths for <em>"Read this screen and save the meeting details"</em> and <em>"Add this to my notes"</em>.</li>
+            <li><strong><code>RECALL_MEMORY</code> Action</strong>: Semantic search across stored notes, facts, and memories.</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h4>📈 4-Tier Personal Knowledge Graph (`PersonalGrowthEngine`)</h4>
+          <ul class="release-list">
+            <li><strong>Level 1 (Temporary)</strong>: Active plan state and intermediate results.</li>
+            <li><strong>Level 2 (Long-Term)</strong>: Explicit facts and user preferences with confidence <code>1.0</code>.</li>
+            <li><strong>Level 3 (Learned Patterns)</strong>: Inferred behaviors with dynamic confidence scoring (50% → 85% → 95%).</li>
+            <li><strong>Level 4 (Sensitive Data)</strong>: High-security records encrypted with Android Keystore AES-256-GCM authenticated storage.</li>
+            <li><strong>Interactive Growth Graph UI</strong>: Filter by memory tier, view confidence badges, and promote patterns to preferences with one tap.</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h4>🌐 Cellular Network Model Downloads</h4>
+          <ul class="release-list">
+            <li>Support for downloading on-device LiteRT AI models over mobile cellular connections with an interactive data charges warning dialog.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.5" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.5</a>
+        </div>
+      </article>
+
+      <!-- v1.0.4 -->
+      <article class="glass-card release-card reveal" id="v1.0.4">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.4</h2>
+            <span class="tag">versionCode 5</span>
+          </div>
+          <time class="release-date" datetime="2026-08-10">August 10, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>🤖 Dynamic Model Discovery &amp; Catalog Updates</h4>
+          <ul class="release-list">
+            <li><strong>Runtime Model Lists</strong>: Dynamically fetches live models from provider endpoints (Gemini, OpenAI, Cohere, Groq, OpenRouter) instead of static hardcoded lists.</li>
+            <li><strong>Capability-Based Filtering</strong>: Automatically detects chat-capable models and excludes non-chat embeddings/audio models.</li>
+            <li><strong>Dynamic About Screen Version</strong>: About screen dynamically loads <code>BuildConfig.VERSION_NAME</code>.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.4" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.4</a>
+        </div>
+      </article>
+
+      <!-- v1.0.3 -->
+      <article class="glass-card release-card reveal" id="v1.0.3">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.3</h2>
+            <span class="tag">versionCode 4</span>
+          </div>
+          <time class="release-date" datetime="2026-08-05">August 5, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>🔐 Security Hardening &amp; Android 16 Toolchain</h4>
+          <ul class="release-list">
+            <li><strong>Direct Android Keystore Storage</strong>: Migrated all API keys and secrets to hardware-backed AES-256-GCM authenticated envelopes.</li>
+            <li><strong>Model Download Integrity</strong>: Added publisher SHA-256 hash pins and atomic model installs.</li>
+            <li><strong>Toolchain Upgrade</strong>: Target SDK 36 (Android 16), Gradle 9.7.0, AGP 9.3.1, Retrofit 3.0.0, OkHttp 5.4.0 BOM.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.3" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.3</a>
+        </div>
+      </article>
+
+      <!-- v1.0.2 -->
+      <article class="glass-card release-card reveal" id="v1.0.2">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.2</h2>
+            <span class="tag">versionCode 3</span>
+          </div>
+          <time class="release-date" datetime="2026-07-30">July 30, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>📱 Android 16 Edge-to-Edge &amp; Accessibility Harness</h4>
+          <ul class="release-list">
+            <li><strong>Edge-to-Edge Support</strong>: Optimized window insets and layouts for Android 16.</li>
+            <li><strong>Accessibility Testing</strong>: Extracted injectable node traversal component with automated instrumentation tests.</li>
+            <li><strong>Voice Interface</strong>: High-fidelity ElevenLabs TTS voice playback fallback.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.2" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.2</a>
+        </div>
+      </article>
+
+      <!-- v1.0.1 -->
+      <article class="glass-card release-card reveal" id="v1.0.1">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.1</h2>
+            <span class="tag">versionCode 2</span>
+          </div>
+          <time class="release-date" datetime="2026-07-15">July 15, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>⚙️ Plan Validation &amp; Approval Safety Modes</h4>
+          <ul class="release-list">
+            <li><strong>Approval Modes</strong>: Introduced OFF (always confirm), AUTO (allowlist confirmation), and YOLO (autonomous execution) modes.</li>
+            <li><strong>Compound Intent Guard</strong>: Detects multi-step natural language commands without executing premature partial actions.</li>
+            <li><strong>Expanded System Controls</strong>: Added DND toggles, mobile hotspot control, and camera flash listeners.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.1" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.1</a>
+        </div>
+      </article>
+
+      <!-- v1.0.0 -->
+      <article class="glass-card release-card reveal" id="v1.0.0">
+        <div class="release-header">
+          <div class="release-title-row">
+            <h2 class="release-version">v1.0.0</h2>
+            <span class="tag">versionCode 1</span>
+          </div>
+          <time class="release-date" datetime="2026-06-01">June 1, 2026</time>
+        </div>
+
+        <div class="release-section">
+          <h4>🤖 Initial Open-Source Release</h4>
+          <ul class="release-list">
+            <li><strong>Autonomous Planning Engine (<code>PlanManager</code>)</strong>: Converts high-level natural language instructions into multi-step DAG action plans.</li>
+            <li><strong>Dynamic Re-evaluation (<code>ReEvaluationEngine</code>)</strong>: Evaluates step execution results and adapts plans on failure.</li>
+            <li><strong>Accessibility Service Automation</strong>: Interacts with Android app layouts, clicks, scrolls, and types.</li>
+            <li><strong>WhatsApp Automator</strong>: Automated contact lookup, text entry, and message sending.</li>
+            <li><strong>10+ LLM Providers</strong>: Out-of-the-box integration for Claude, GPT, Gemini, Ollama (offline), Groq, Cohere, DeepSeek.</li>
+            <li><strong>Premium Cyberpunk Glassmorphic UI</strong>: Built with Jetpack Compose dark theme and pulsing audio visualizers.</li>
+          </ul>
+        </div>
+
+        <div class="release-assets">
+          <a href="https://github.com/yashab-cyber/opendroid/releases" class="release-asset-btn" target="_blank" rel="noopener noreferrer">📦 Download app-release.apk</a>
+          <a href="https://github.com/yashab-cyber/opendroid/tree/v1.0.0" class="release-asset-btn" target="_blank" rel="noopener noreferrer">🏷️ GitHub Tag v1.0.0</a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/bot.png" alt="OpenDroid" style="width:28px;height:28px;">
+          <span>OpenDroid</span>
+        </a>
+        <p>Your open autonomous Android agent. Built with ❤ by the open-source community.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="releases.html">Releases &amp; Changelog</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/releases" target="_blank" rel="noopener noreferrer">Download</a></li>
+          <li><a href="https://indusapp.store/wphbqhzu" target="_blank" rel="noopener noreferrer">Indus Appstore</a></li>
+          <li><a href="https://www.producthunt.com/products/opendroid?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-opendroid" target="_blank" rel="noopener noreferrer">Product Hunt</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contributor.html">Contributors</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 OpenDroid Contributors. Apache License 2.0.</span>
+      <span>
+        <a href="https://www.producthunt.com/products/opendroid?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-opendroid" target="_blank" rel="noopener noreferrer">Product Hunt</a> &nbsp;·&nbsp;
+        <a href="https://discord.gg/knRMyFmvpp" target="_blank" rel="noopener noreferrer">Discord</a> &nbsp;·&nbsp;
+        <a href="https://github.com/yashab-cyber/opendroid" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

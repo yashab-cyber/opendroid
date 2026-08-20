@@ -293,3 +293,19 @@ html[data-theme="light"] .profile-username:hover{color:var(--accent);}
 .gh-stats .gh-stat strong{color:var(--text-primary);font-weight:600;}
 .gh-stats .ca-stat{max-width:100%;}
 .gh-stats .ca-code{font-size:0.8rem;word-break:break-all;}
+.release-timeline{display:flex;flex-direction:column;gap:28px;max-width:900px;margin:0 auto;}
+.release-card{padding:32px;position:relative;overflow:hidden;}
+.release-card.latest{border-color:var(--accent);box-shadow:0 0 24px var(--accent-light);}
+.release-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;border-bottom:1px solid var(--surface-border);padding-bottom:16px;}
+.release-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.release-version{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--text-primary);}
+.badge-latest{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);font-family:var(--font-display);font-size:0.75rem;font-weight:600;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;}
+.release-date{font-family:var(--font-display);font-size:0.85rem;color:var(--text-muted);}
+.release-section{margin-top:18px;}
+.release-section h4{font-size:1.05rem;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.release-list{list-style:none;padding:0;margin:0 0 16px 0;}
+.release-list li{position:relative;padding-left:20px;margin-bottom:8px;color:var(--text-body);font-size:0.92rem;line-height:1.55;}
+.release-list li::before{content:'•';position:absolute;left:6px;color:var(--accent);font-weight:bold;}
+.release-assets{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--surface-border);}
+.release-asset-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:0.82rem;padding:6px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--surface-border);color:var(--text-primary);text-decoration:none;transition:var(--transition);}
+.release-asset-btn:hover{background:var(--surface-hover);border-color:var(--hover-border);color:var(--accent);}
