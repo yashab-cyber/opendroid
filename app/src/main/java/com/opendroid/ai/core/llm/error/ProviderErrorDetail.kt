@@ -51,6 +51,7 @@ class ProviderErrorDetail private constructor(
         COHERE("Cohere"),
         DEEPSEEK("DeepSeek"),
         OPENROUTER("OpenRouter"),
+        REQUESTY("Requesty"),
         TOGETHER_AI("Together AI"),
         CUSTOM_OPENAI("Custom OpenAI Compatible"),
         COPILOT("Copilot API"),

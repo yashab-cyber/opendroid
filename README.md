@@ -181,6 +181,7 @@ OpenDroid supports **12 LLM providers** with automatic failover:
 | 🔷 **DeepSeek** | DeepSeek V3, R1 | Cloud |
 | 🟠 **Mistral AI** | Mistral Large, Medium | Cloud |
 | 🌐 **OpenRouter** | 200+ models via unified API | Cloud |
+| 🔀 **Requesty** | 700+ models via one OpenAI-compatible gateway | Cloud |
 | 🤝 **Together AI** | Open-source model hosting | Cloud |
 | 🔴 **Cohere** | Command R+ | Cloud |
 | 🐙 **GitHub Copilot** | GPT-4.1, Claude via Copilot API | Cloud |

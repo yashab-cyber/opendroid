@@ -31,6 +31,7 @@ object ProviderCatalog {
         // OpenRouter's auto-router always resolves to a live model, so this seed
         // cannot be retired out from under the user.
         ProviderSpec("OpenRouter", "openrouter/auto"),
+        ProviderSpec("Requesty", "openai/gpt-4o-mini"),
         ProviderSpec("Together AI", "meta-llama/Llama-3-70b-chat-hf"),
         ProviderSpec("Cohere", "command-r-plus"),
         ProviderSpec("DeepSeek", "deepseek-chat"),
@@ -69,6 +70,7 @@ object ProviderCatalog {
         "Mistral AI",
         "Groq",
         "OpenRouter",
+        "Requesty",
         "Together AI",
         "Cohere",
         "DeepSeek",

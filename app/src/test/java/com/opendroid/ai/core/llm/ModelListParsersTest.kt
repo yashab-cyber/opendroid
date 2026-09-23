@@ -132,6 +132,44 @@ class ModelListParsersTest {
     }
 
     @Test
+    fun `requesty lists managed policies first and merges the catalog`() {
+        val managed = JSONObject(
+            """
+            {"data":[
+              {"id":"vendor-model@eu","api":"chat","context_window":200000},
+              {"id":"vendor-model","api":"chat"}
+            ]}
+            """.trimIndent()
+        )
+        val catalog = JSONObject(
+            """
+            {"data":[
+              {"id":"vendor/model","api":"chat","context_window":128000},
+              {"id":"vendor/text-embedding","api":"embedding"},
+              {"id":"vendor-model","api":"chat"}
+            ]}
+            """.trimIndent()
+        )
+
+        val models = ModelListParsers.requesty(managed, catalog, "Requesty")
+
+        assertEquals(listOf("vendor-model", "vendor-model@eu", "vendor/model"), models.map { it.id })
+        assertEquals(listOf(true, true, false), models.map { it.isRecommended })
+        assertEquals(200000, models[1].contextWindow)
+        assertEquals(128000, models[2].contextWindow)
+    }
+
+    @Test
+    fun `requesty still lists the catalog when managed policies are unavailable`() {
+        val catalog = JSONObject("""{"data":[{"id":"vendor/model","api":"chat"}]}""")
+
+        assertEquals(
+            listOf("vendor/model"),
+            ModelListParsers.requesty(null, catalog, "Requesty").map { it.id }
+        )
+    }
+
+    @Test
     fun `ollama lists whatever the server has installed`() {
         val json = JSONObject("""{"models":[{"name":"llama9:latest"},{"name":"mistral:7b"}]}""")
 
@@ -150,6 +188,7 @@ class ModelListParsersTest {
         assertTrue(ModelListParsers.anthropic(json, "Anthropic Claude").isEmpty())
         assertTrue(ModelListParsers.cohere(json, "Cohere").isEmpty())
         assertTrue(ModelListParsers.openRouter(json, "OpenRouter").isEmpty())
+        assertTrue(ModelListParsers.requesty(json, json, "Requesty").isEmpty())
         assertTrue(ModelListParsers.ollama(json, "Ollama").isEmpty())
     }
 }

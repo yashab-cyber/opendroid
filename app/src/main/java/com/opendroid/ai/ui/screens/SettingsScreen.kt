@@ -95,6 +95,7 @@ fun SettingsScreen(
         "Groq",
         "Mistral AI",
         "OpenRouter",
+        "Requesty",
         "Together AI",
         "Cohere",
         "DeepSeek",
