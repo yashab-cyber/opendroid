@@ -147,7 +147,7 @@ com.opendroid.ai
 ├── ⚡ actions/             60+ action executors across 10 modules
 ├── 🧠 core/
 │   ├── agent/              AgentLoop, PlanManager, IntentClassifier, VisionEngine
-│   ├── llm/                12 LLM providers, fallback chain, prompt engine
+│   ├── llm/                13 LLM providers, fallback chain, prompt engine
 │   ├── memory/             4-tier memory system + notification intelligence
 │   ├── security/           Direct Keystore provider credentials + legacy plaintext migration
 │   ├── service/            Foreground service, notification listener, boot receiver
@@ -170,7 +170,7 @@ com.opendroid.ai
 
 ## 🔌 Supported LLM Providers
 
-OpenDroid supports **12 LLM providers** with automatic failover:
+OpenDroid supports **13 LLM providers** with automatic failover:
 
 | Provider | Models | Type |
 |----------|--------|------|
