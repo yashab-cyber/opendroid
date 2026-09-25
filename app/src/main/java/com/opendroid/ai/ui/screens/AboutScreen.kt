@@ -252,7 +252,7 @@ fun AboutScreen(
 
                         val providers = listOf(
                             "Google Gemini", "OpenAI (GPT-4o, etc.)", "Anthropic Claude",
-                            "Groq", "Mistral AI", "OpenRouter", "Together AI",
+                            "Groq", "Mistral AI", "OpenRouter", "Requesty", "Together AI",
                             "Cohere", "DeepSeek", "Copilot API", "Ollama (Local)"
                         )
                         providers.forEach { provider ->

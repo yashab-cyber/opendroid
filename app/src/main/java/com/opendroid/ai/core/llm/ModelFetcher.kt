@@ -123,6 +123,26 @@ class ModelFetcher @Inject constructor(
                     ModelFetchOutcome.Success(ModelListParsers.openRouter(page, provider))
                 }
 
+                "Requesty" -> {
+                    // Managed policies are Requesty's curated routing chains and are
+                    // listed anonymously. The full catalog is merged in so any
+                    // vendor/model id stays selectable; a key narrows it to the
+                    // models the organization allows.
+                    val managed = runCatching {
+                        getJson(url = "https://router.requesty.ai/v1/models/managed", headers = emptyMap())
+                    }
+                    val catalog = runCatching {
+                        getJson(
+                            url = "https://router.requesty.ai/v1/models",
+                            headers = apiKey?.let { mapOf("Authorization" to "Bearer $it") } ?: emptyMap()
+                        )
+                    }
+                    if (managed.isFailure && catalog.isFailure) throw catalog.exceptionOrNull()!!
+                    ModelFetchOutcome.Success(
+                        ModelListParsers.requesty(managed.getOrNull(), catalog.getOrNull(), provider)
+                    )
+                }
+
                 "Cohere" -> {
                     apiKey ?: return@withContext needsKey(provider)
                     val page = getJson(
@@ -383,6 +403,36 @@ internal object ModelListParsers {
             )
         }
         return list.sortedWith(compareByDescending<AIModel> { it.isFree }.thenBy { it.displayName })
+    }
+
+    /**
+     * Managed policies come first and are marked recommended, so the picker
+     * lands on one when the seed model is not served. Catalog entries follow;
+     * both lists share one model shape and report their own `api` type.
+     */
+    fun requesty(managed: JSONObject?, catalog: JSONObject?, provider: String): List<AIModel> {
+        fun parse(json: JSONObject?, recommended: Boolean): List<AIModel> {
+            val data = json?.optJSONArray("data") ?: return emptyList()
+            val list = mutableListOf<AIModel>()
+            for (i in 0 until data.length()) {
+                val obj = data.optJSONObject(i) ?: continue
+                val id = obj.optString("id").takeIf { it.isNotBlank() } ?: continue
+                val api = obj.opt("api") as? String ?: continue
+                if (api != "chat" || !isChatCapableId(id)) continue
+                list.add(
+                    AIModel(
+                        id = id,
+                        displayName = id,
+                        provider = provider,
+                        contextWindow = obj.optInt("context_window").takeIf { it > 0 },
+                        isRecommended = recommended
+                    )
+                )
+            }
+            return list.sortedBy { it.displayName }
+        }
+        return (parse(managed, recommended = true) + parse(catalog, recommended = false))
+            .distinctBy { it.id }
     }
 
     fun cohere(json: JSONObject, provider: String): List<AIModel> {

@@ -13,7 +13,7 @@ class ProviderCatalogTest {
 
     @Test
     fun `catalog has one default for every stable provider`() {
-        assertEquals(15, ProviderCatalog.providers.size)
+        assertEquals(16, ProviderCatalog.providers.size)
         ProviderCatalog.providers.forEach { provider ->
             assertTrue(provider.displayName, ProviderCatalog.defaultModel(provider.displayName).isNotBlank())
         }

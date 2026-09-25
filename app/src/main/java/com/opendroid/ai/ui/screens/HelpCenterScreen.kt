@@ -134,7 +134,7 @@ fun HelpCenterScreen(
                             "• OpenAI (GPT-4, GPT-3.5)\n" +
                             "• Anthropic Claude\n" +
                             "• Groq (fast inference)\n" +
-                            "• Mistral AI, OpenRouter, Together AI, Cohere, DeepSeek\n" +
+                            "• Mistral AI, OpenRouter, Requesty, Together AI, Cohere, DeepSeek\n" +
                             "• Ollama (fully local, no API key needed)"
                 )
             }
