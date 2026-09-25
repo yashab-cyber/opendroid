@@ -170,6 +170,25 @@ class ModelListParsersTest {
     }
 
     @Test
+    fun `requesty skips entries whose api is missing or not a string`() {
+        val catalog = JSONObject(
+            """
+            {"data":[
+              {"id":"vendor/model","api":"chat"},
+              {"id":"vendor/no-api"},
+              {"id":"vendor/null-api","api":null},
+              {"id":"vendor/number-api","api":1}
+            ]}
+            """.trimIndent()
+        )
+
+        assertEquals(
+            listOf("vendor/model"),
+            ModelListParsers.requesty(null, catalog, "Requesty").map { it.id }
+        )
+    }
+
+    @Test
     fun `ollama lists whatever the server has installed`() {
         val json = JSONObject("""{"models":[{"name":"llama9:latest"},{"name":"mistral:7b"}]}""")
 

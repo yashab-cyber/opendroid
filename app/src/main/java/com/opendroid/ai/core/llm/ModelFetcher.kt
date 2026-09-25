@@ -417,7 +417,8 @@ internal object ModelListParsers {
             for (i in 0 until data.length()) {
                 val obj = data.optJSONObject(i) ?: continue
                 val id = obj.optString("id").takeIf { it.isNotBlank() } ?: continue
-                if (obj.optString("api", "chat") != "chat" || !isChatCapableId(id)) continue
+                val api = obj.opt("api") as? String ?: continue
+                if (api != "chat" || !isChatCapableId(id)) continue
                 list.add(
                     AIModel(
                         id = id,
