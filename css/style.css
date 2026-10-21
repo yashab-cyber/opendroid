@@ -291,8 +291,6 @@ html[data-theme="light"] .profile-username:hover{color:var(--accent);}
 .gh-stats .gh-stat{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-size:0.82rem;color:var(--text-muted);}
 .gh-stats .gh-stat svg{width:14px;height:14px;color:var(--accent);}
 .gh-stats .gh-stat strong{color:var(--text-primary);font-weight:600;}
-.gh-stats .ca-stat{max-width:100%;}
-.gh-stats .ca-code{font-size:0.8rem;word-break:break-all;}
 .release-timeline{display:flex;flex-direction:column;gap:28px;max-width:900px;margin:0 auto;}
 .release-card{padding:32px;position:relative;overflow:hidden;}
 .release-card.latest{border-color:var(--accent);box-shadow:0 0 24px var(--accent-light);}
