@@ -52,12 +52,20 @@ class GemmaProvider @Inject constructor(
     override suspend fun complete(request: LLMRequest): LLMResponse {
         val startTime = System.currentTimeMillis()
         val selectedModel = request.model?.takeIf { it.isNotBlank() } ?: ProviderCatalog.defaultModel(name)
-        val systemPrompt = request.systemPrompt
-        val messages = request.messages
-        val prompt = buildPrompt(systemPrompt, messages, request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) } ?: emptyList())
+        val spec = OnDeviceModelRegistry.findById(selectedModel)
+        val prompt = buildPrompt(
+            request.systemPrompt,
+            request.messages,
+            request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) } ?: emptyList(),
+            spec,
+            request.maxTokens
+        )
 
         return withContext(Dispatchers.IO) {
             try {
+                spec?.let {
+                    OnDeviceModelRegistry.checkDeviceMemoryCompatibility(context, it)
+                }
                 val generativeModel = getClientForModel(selectedModel)
                 val status = generativeModel.checkStatus()
                 
@@ -90,6 +98,10 @@ class GemmaProvider @Inject constructor(
     override fun streamComplete(request: LLMRequest): Flow<String> = flow {
         try {
             val selectedModel = request.model?.takeIf { it.isNotBlank() } ?: ProviderCatalog.defaultModel(name)
+            val spec = OnDeviceModelRegistry.findById(selectedModel)
+            spec?.let {
+                OnDeviceModelRegistry.checkDeviceMemoryCompatibility(context, it)
+            }
             val generativeModel = getClientForModel(selectedModel)
             val status = generativeModel.checkStatus()
             
@@ -105,9 +117,13 @@ class GemmaProvider @Inject constructor(
                 3 -> { /* Ready */ }
             }
 
-            val systemPrompt = request.systemPrompt
-            val messages = request.messages
-            val prompt = buildPrompt(systemPrompt, messages, request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) } ?: emptyList())
+            val prompt = buildPrompt(
+                request.systemPrompt,
+                request.messages,
+                request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) } ?: emptyList(),
+                spec,
+                request.maxTokens
+            )
 
             val contentRequest = generateContentRequest(TextPart(prompt)) {
                 maxOutputTokens = request.maxTokens
@@ -127,6 +143,10 @@ class GemmaProvider @Inject constructor(
     ): Flow<StreamChunk> = flow {
         try {
             val selectedModel = settingsRepository.llmConfig.first().selectedModelFor(name)
+            val spec = OnDeviceModelRegistry.findById(selectedModel)
+            spec?.let {
+                OnDeviceModelRegistry.checkDeviceMemoryCompatibility(context, it)
+            }
             val generativeModel = getClientForModel(selectedModel)
             val status = generativeModel.checkStatus()
             
@@ -143,7 +163,7 @@ class GemmaProvider @Inject constructor(
             }
 
             val systemPrompt = "You are an autonomous AI agent for Android."
-            val prompt = buildPrompt(systemPrompt, messages, tools)
+            val prompt = buildPrompt(systemPrompt, messages, tools, spec, 512)
 
             val contentRequest = generateContentRequest(TextPart(prompt)) {
                 maxOutputTokens = 2000
@@ -241,31 +261,58 @@ class GemmaProvider @Inject constructor(
         }
     }
 
-    private fun buildPrompt(systemPrompt: String, messages: List<ChatMessage>, tools: List<ToolDefinition>): String {
-        val sb = StringBuilder()
-        if (systemPrompt.isNotEmpty()) {
-            sb.append("System Instructions:\n").append(systemPrompt).append("\n\n")
+    private fun buildPrompt(
+        systemPrompt: String,
+        messages: List<ChatMessage>,
+        tools: List<ToolDefinition>,
+        spec: OnDeviceModelSpec? = null,
+        requestedMaxTokens: Int = 512
+    ): String {
+        val window = spec?.contextWindow ?: 2048
+        val minOutput = minOf(requestedMaxTokens, 512).coerceAtLeast(PromptBudget.MIN_OUTPUT_TOKENS)
+
+        val sbHeader = StringBuilder()
+        val maxSysChars = (window / 2) * 4
+        val trimmedSystemPrompt = if (systemPrompt.length > maxSysChars) {
+            systemPrompt.take(maxSysChars) + "\n...[instructions truncated for on-device context]"
+        } else {
+            systemPrompt
+        }
+
+        if (trimmedSystemPrompt.isNotEmpty()) {
+            sbHeader.append("System Instructions:\n").append(trimmedSystemPrompt).append("\n\n")
         }
 
         if (tools.isNotEmpty()) {
-            sb.append("Available tools you can call:\n")
+            sbHeader.append("Available tools you can call:\n")
             tools.forEach { tool ->
-                sb.append("- Tool: ").append(tool.name).append("\n")
-                sb.append("  Description: ").append(tool.description).append("\n")
-                sb.append("  Parameters schema: ").append(tool.parameters).append("\n\n")
+                sbHeader.append("- Tool: ").append(tool.name).append("\n")
+                sbHeader.append("  Description: ").append(tool.description).append("\n")
+                sbHeader.append("  Parameters schema: ").append(tool.parameters).append("\n\n")
             }
-            sb.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")
-            sb.append("{\n")
-            sb.append("  \"toolCall\": {\n")
-            sb.append("    \"name\": \"TOOL_NAME\",\n")
-            sb.append("    \"arguments\": { ... }\n")
-            sb.append("  }\n")
-            sb.append("}\n")
-            sb.append("Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n")
+            sbHeader.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")
+            sbHeader.append("{\n")
+            sbHeader.append("  \"toolCall\": {\n")
+            sbHeader.append("    \"name\": \"TOOL_NAME\",\n")
+            sbHeader.append("    \"arguments\": { ... }\n")
+            sbHeader.append("  }\n")
+            sbHeader.append("}\n")
+            sbHeader.append("Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n")
         }
 
+        val headerText = sbHeader.toString()
+        val overheadTokens = PromptBudget.estimateTokens(headerText) + 20
+
+        val fittedMessages = PromptBudget.fitMessagesToBudget(
+            messages = messages,
+            contextWindow = window,
+            reservedOutputTokens = minOutput,
+            overheadTokens = overheadTokens
+        )
+
+        val sb = StringBuilder(headerText)
         sb.append("Conversation History:\n")
-        messages.forEach { msg ->
+        fittedMessages.forEach { msg ->
             val sender = if (msg.sender == ChatMessage.Sender.USER) "User" else "Model"
             sb.append(sender).append(": ").append(msg.text).append("\n")
         }

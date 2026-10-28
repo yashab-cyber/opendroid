@@ -106,10 +106,14 @@ class AutoReplyEngine @Inject constructor(
                     return@launch
                 }
 
-                // Wait the configured delay
-                val delayMs = config.replyDelayMinutes * 60 * 1000L
-                Log.d(TAG, "Scheduling auto-reply in ${config.replyDelayMinutes} min for ${notification.contactName}")
-                delay(delayMs)
+                // Wait the configured delay if greater than 0
+                val delayMs = if (config.replyDelayMinutes > 0) config.replyDelayMinutes * 60 * 1000L else 0L
+                if (delayMs > 0L) {
+                    Log.d(TAG, "Scheduling auto-reply in ${config.replyDelayMinutes} min for ${notification.contactName}")
+                    delay(delayMs)
+                } else {
+                    Log.d(TAG, "Executing auto-reply immediately (0 sec delay) for ${notification.contactName}")
+                }
 
                 // Re-check config (user might have disabled it during the wait)
                 val freshConfig = settingsRepository.autoReplyConfig.first()
@@ -180,6 +184,8 @@ class AutoReplyEngine @Inject constructor(
         // Check per-app enablement
         val appEnabled = when {
             notification.packageName.contains("whatsapp", ignoreCase = true) -> config.whatsappEnabled
+            notification.packageName.contains("telegram", ignoreCase = true) -> config.telegramEnabled
+            notification.packageName.contains("discord", ignoreCase = true) -> config.discordEnabled
             notification.category == "EMAIL" -> config.emailEnabled
             notification.category == "MESSAGE" -> config.smsEnabled
             else -> false
@@ -203,6 +209,9 @@ class AutoReplyEngine @Inject constructor(
     }
 
     private suspend fun generateReply(notification: NotificationEntity, config: AutoReplyConfig): String? {
+        if (!config.customReplyText.isNullOrBlank()) {
+            return config.customReplyText
+        }
         return try {
             val provider = llmProviderFactory.getActiveProvider()
 
@@ -224,7 +233,9 @@ class AutoReplyEngine @Inject constructor(
 
             // Build the prompt based on app type
             val systemPrompt = when {
-                notification.packageName.contains("whatsapp", ignoreCase = true) ->
+                notification.packageName.contains("whatsapp", ignoreCase = true) ||
+                notification.packageName.contains("telegram", ignoreCase = true) ||
+                notification.packageName.contains("discord", ignoreCase = true) ->
                     AutoReplyPrompts.buildWhatsAppReplyPrompt(
                         userName, senderName, notification.text,
                         conversationHistory, userContext, config.customPrompt
@@ -271,8 +282,10 @@ class AutoReplyEngine @Inject constructor(
         context: Context
     ): Boolean {
         return when {
-            // WhatsApp — use notification inline reply with a fresh SBN
-            notification.packageName.contains("whatsapp", ignoreCase = true) -> {
+            // WhatsApp, Telegram, Discord — use notification inline reply with a fresh SBN
+            notification.packageName.contains("whatsapp", ignoreCase = true) ||
+            notification.packageName.contains("telegram", ignoreCase = true) ||
+            notification.packageName.contains("discord", ignoreCase = true) -> {
                 // Fetch a fresh SBN from the NotificationListenerService — the original
                 // one captured at schedule time may have a stale PendingIntent after the delay
                 val listener = com.opendroid.ai.core.service.OpenDroidNotificationListener.getInstance()
@@ -285,11 +298,11 @@ class AutoReplyEngine @Inject constructor(
                     val replied = replyDispatcher.replyViaNotificationAction(targetSbn, replyText)
                     if (!replied && freshSbn == null && sbn != null) {
                         // Both failed — the notification was probably dismissed
-                        Log.w(TAG, "WhatsApp reply failed: notification may have been dismissed")
+                        Log.w(TAG, "Inline notification reply failed: notification may have been dismissed")
                     }
                     replied
                 } else {
-                    Log.w(TAG, "No StatusBarNotification available for WhatsApp reply (neither fresh nor original)")
+                    Log.w(TAG, "No StatusBarNotification available for reply (neither fresh nor original)")
                     false
                 }
             }

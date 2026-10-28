@@ -38,6 +38,12 @@ class OpenDroidNotificationListener : NotificationListenerService() {
         private val WHATSAPP_PACKAGES = setOf(
             "com.whatsapp", "com.whatsapp.w4b"
         )
+        private val TELEGRAM_PACKAGES = setOf(
+            "org.telegram.messenger", "org.telegram.messenger.web", "org.thunderdog.challegram"
+        )
+        private val DISCORD_PACKAGES = setOf(
+            "com.discord"
+        )
         private val SMS_PACKAGES = setOf(
             "com.google.android.apps.messaging",
             "com.android.mms",
@@ -206,7 +212,9 @@ class OpenDroidNotificationListener : NotificationListenerService() {
         if (!messagingPerson.isNullOrBlank()) return messagingPerson
 
         // For WhatsApp, the title is usually the contact name
-        if (WHATSAPP_PACKAGES.contains(sbn.packageName)) {
+        if (WHATSAPP_PACKAGES.contains(sbn.packageName) ||
+            TELEGRAM_PACKAGES.contains(sbn.packageName) ||
+            DISCORD_PACKAGES.contains(sbn.packageName)) {
             return title.ifBlank { null }
         }
 
@@ -229,6 +237,8 @@ class OpenDroidNotificationListener : NotificationListenerService() {
     private fun isMessageNotification(sbn: StatusBarNotification): Boolean {
         val pkg = sbn.packageName
         if (WHATSAPP_PACKAGES.contains(pkg)) return true
+        if (TELEGRAM_PACKAGES.contains(pkg)) return true
+        if (DISCORD_PACKAGES.contains(pkg)) return true
         if (SMS_PACKAGES.contains(pkg)) return true
         if (EMAIL_PACKAGES.contains(pkg)) return true
         if (sbn.notification?.category == Notification.CATEGORY_MESSAGE) return true

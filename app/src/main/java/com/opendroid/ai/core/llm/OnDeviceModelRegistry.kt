@@ -283,8 +283,8 @@ object OnDeviceModelRegistry {
     }
 
     /**
-     * Checks if the device has enough system RAM to load the model.
-     * Throws IllegalStateException if the device memory is insufficient.
+     * Checks if the device has enough system RAM and available memory to load the model safely.
+     * Throws IllegalStateException if the device memory is insufficient or under critical pressure.
      */
     fun checkDeviceMemoryCompatibility(context: Context, spec: OnDeviceModelSpec) {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
@@ -293,19 +293,47 @@ object OnDeviceModelRegistry {
             activityManager.getMemoryInfo(memoryInfo)
             val totalRam = memoryInfo.totalMem
             val totalRamGb = totalRam.toDouble() / (1024 * 1024 * 1024)
+            val modelName = spec.displayName
             
+            // Critical system memory pressure check
+            if (memoryInfo.lowMemory) {
+                throw IllegalStateException(
+                    "Device is currently under critical memory pressure. " +
+                    "Free up RAM by closing background apps before running $modelName."
+                )
+            }
+
             val requiredRamGb = when {
-                spec.expectedSize >= 3.0 * 1024 * 1024 * 1024L -> 8.0  // e.g. Gemma 4 E4B (~3.66 GB)
+                spec.expectedSize >= 4.5 * 1024 * 1024 * 1024L -> 12.0 // e.g. Gemma 3n E4B (~4.92 GB)
+                spec.expectedSize >= 3.0 * 1024 * 1024 * 1024L -> 8.0  // e.g. Gemma 4 E4B (~3.66 GB), Gemma 3n E2B (~3.65 GB)
                 spec.expectedSize >= 2.0 * 1024 * 1024 * 1024L -> 6.0  // e.g. Gemma 4 E2B (~2.58 GB)
                 spec.expectedSize >= 1.0 * 1024 * 1024 * 1024L -> 4.0
-                else -> 0.0
+                else -> 3.5 // Small models (e.g. Qwen 2.5 0.5B ~546 MB) still need >= 3.5 GB system RAM
             }
             
-            if (requiredRamGb > 0.0 && totalRamGb < requiredRamGb) {
-                val modelName = spec.displayName
+            if (totalRamGb < requiredRamGb) {
                 throw IllegalStateException(
-                    "Insufficient device memory: $modelName requires at least ${String.format("%.1f", requiredRamGb)} GB of system RAM, but your device only has ${String.format("%.1f", totalRamGb)} GB RAM. " +
+                    "Insufficient device memory: $modelName requires at least ${String.format(java.util.Locale.US, "%.1f", requiredRamGb)} GB of system RAM, but your device only has ${String.format(java.util.Locale.US, "%.1f", totalRamGb)} GB RAM. " +
                     "Running this model will cause the system to crash. Please use a smaller model like Qwen 2.5."
+                )
+            }
+
+            // Headroom check: ensure available RAM can accommodate runtime working memory and OS LMK threshold
+            val requiredWorkingMem = when {
+                spec.expectedSize >= 4.5 * 1024 * 1024 * 1024L -> (2200L * 1024 * 1024)
+                spec.expectedSize >= 2.8 * 1024 * 1024 * 1024L -> (1500L * 1024 * 1024)
+                spec.expectedSize >= 1.0 * 1024 * 1024 * 1024L -> (900L * 1024 * 1024)
+                spec.expectedSize > 0L -> (400L * 1024 * 1024)
+                else -> (500L * 1024 * 1024)
+            }
+            val safetyBuffer = 150L * 1024 * 1024 // 150 MB safety margin above LMK threshold
+            val requiredAvailMem = memoryInfo.threshold + requiredWorkingMem + safetyBuffer
+            if (memoryInfo.availMem < requiredAvailMem) {
+                val availMb = memoryInfo.availMem / (1024 * 1024)
+                val neededMb = requiredAvailMem / (1024 * 1024)
+                throw IllegalStateException(
+                    "Insufficient available memory: $modelName requires ~${neededMb} MB free RAM to run safely, but only ${availMb} MB is available right now. " +
+                    "Close background apps or switch to a cloud provider to avoid freezing the device."
                 )
             }
         }

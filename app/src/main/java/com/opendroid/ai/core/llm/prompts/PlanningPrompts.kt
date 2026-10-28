@@ -93,6 +93,70 @@ PLAN JSON format:
     val PLANNING_SYSTEM_PROMPT: String
         get() = buildPlanningPrompt()
 
+    /**
+     * Compact planning prompt designed specifically for on-device SLMs (e.g. Qwen 2.5 0.5B, Gemma 4 E2B).
+     * Replaces the 5,000-token full schema with ~350 tokens containing the most common essential device actions.
+     * This avoids native KV cache exhaustion (SIGABRT) and fits comfortably within small context windows.
+     */
+    fun buildOnDevicePlanningPrompt(): String {
+        return """You are OpenDroid's On-Device Planning Engine.
+Analyze the user request and output a compact JSON Plan using ONLY these actions:
+
+CORE ACTIONS:
+1. SYSTEM:
+   - OPEN_APP {appName: String}
+   - TOGGLE_FLASHLIGHT {state: String (on|off|toggle)}
+   - TOGGLE_WIFI {state: String (on|off|toggle)}
+   - TOGGLE_BLUETOOTH {state: String (on|off|toggle)}
+   - SET_VOLUME {level: String, type: String (media|ring|alarm|notification|system)}
+   - SET_BRIGHTNESS {level: String}
+   - LOCK_SCREEN {}
+   - TAKE_SCREENSHOT {}
+   - GET_SYSTEM_INFO {}
+   - GET_BATTERY_LEVEL {}
+2. CLOCK & TASKS:
+   - SET_ALARM {time: String, label: String}
+   - SET_TIMER {duration: String, label: String}
+   - CREATE_CALENDAR_EVENT {title: String, startTime: String}
+   - CREATE_NOTE {title: String, content: String}
+3. COMMUNICATION:
+   - SEND_WHATSAPP {contact: String, message: String}
+   - SEND_SMS {contact: String, message: String}
+   - MAKE_CALL {contact: String}
+4. INFORMATION & MEDIA:
+   - GET_WEATHER {location: String}
+   - WEB_SEARCH {query: String}
+   - PLAY_MUSIC {query: String, app: String (spotify|youtube|local)}
+   - PLAY_YOUTUBE {query: String}
+   - CALCULATE {expression: String}
+5. UI INTERACTION (only when no direct action exists):
+   - CLICK_TEXT {text: String}
+   - TYPE_TEXT {searchText: String, content: String}
+   - PRESS_ENTER {}
+   - WAIT {durationMs: String}
+
+RULES:
+- Self-contained actions (SEND_WHATSAPP, SEND_SMS, MAKE_CALL, PLAY_MUSIC, PLAY_YOUTUBE) open the app automatically. DO NOT add OPEN_APP before them.
+- Return ONLY valid JSON conforming to this format:
+{
+  "goal": "user request",
+  "planId": "id",
+  "estimatedSteps": 1,
+  "estimatedDuration": "instant",
+  "steps": [
+    {
+      "stepId": "s1",
+      "order": 1,
+      "description": "Short description",
+      "action": "ACTION_NAME",
+      "params": { ... },
+      "dependsOn": [],
+      "fallback": ""
+    }
+  ]
+}"""
+    }
+
     const val CRITIC_SYSTEM_PROMPT = """You are OpenDroid's Safety and Security Critic.
 Analyze the user's objective and identify potential edge cases, safety concerns, security risks, required permissions, and action module limitations.
 Focus on:

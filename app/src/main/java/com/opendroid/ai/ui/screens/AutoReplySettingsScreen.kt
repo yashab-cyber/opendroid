@@ -248,6 +248,14 @@ fun AutoReplySettingsScreen(
                                 saveConfig(config.copy(whatsappEnabled = it))
                             }
                             Divider(color = themeColors.borderColor.copy(alpha = 0.5f))
+                            AppToggleRow("Telegram", "✈️", config.telegramEnabled, themeColors) {
+                                saveConfig(config.copy(telegramEnabled = it))
+                            }
+                            Divider(color = themeColors.borderColor.copy(alpha = 0.5f))
+                            AppToggleRow("Discord", "🎮", config.discordEnabled, themeColors) {
+                                saveConfig(config.copy(discordEnabled = it))
+                            }
+                            Divider(color = themeColors.borderColor.copy(alpha = 0.5f))
                             AppToggleRow("SMS", "📱", config.smsEnabled, themeColors) {
                                 saveConfig(config.copy(smsEnabled = it))
                             }
@@ -284,7 +292,8 @@ fun AutoReplySettingsScreen(
                                     color = themeColors.textSecondary
                                 )
                                 Text(
-                                    "${config.replyDelayMinutes} minutes",
+                                    if (config.replyDelayMinutes <= 0) "Immediately (0 sec)"
+                                    else "${config.replyDelayMinutes} minutes",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = themeColors.accentPurple
@@ -296,8 +305,8 @@ fun AutoReplySettingsScreen(
                                 onValueChange = {
                                     saveConfig(config.copy(replyDelayMinutes = it.toInt()))
                                 },
-                                valueRange = 1f..60f,
-                                steps = 58,
+                                valueRange = 0f..60f,
+                                steps = 59,
                                 colors = SliderDefaults.colors(
                                     thumbColor = themeColors.accentPurple,
                                     activeTrackColor = themeColors.accentPurple
@@ -307,7 +316,7 @@ fun AutoReplySettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("1 min", fontSize = 12.sp, color = themeColors.textSecondary.copy(alpha = 0.6f))
+                                Text("0 sec (Instant)", fontSize = 12.sp, color = themeColors.textSecondary.copy(alpha = 0.6f))
                                 Text("60 min", fontSize = 12.sp, color = themeColors.textSecondary.copy(alpha = 0.6f))
                             }
                         }
@@ -361,9 +370,9 @@ fun AutoReplySettingsScreen(
                         }
                     }
 
-                    // Custom Prompt
+                    // Custom Prompt & Direct Reply
                     Text(
-                        "Reply Tone",
+                        "Reply Content",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = themeColors.textPrimary
@@ -377,6 +386,43 @@ fun AutoReplySettingsScreen(
                         colors = CardDefaults.cardColors(containerColor = themeColors.cardBackground)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                "Direct custom reply text (optional)",
+                                fontSize = 14.sp,
+                                color = themeColors.textSecondary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "When set, this exact text will be sent instead of generating an AI reply.",
+                                fontSize = 12.sp,
+                                color = themeColors.textSecondary.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = config.customReplyText ?: "",
+                                onValueChange = {
+                                    saveConfig(config.copy(customReplyText = it.ifBlank { null }), debounce = true)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = {
+                                    Text(
+                                        "e.g., I'm currently driving. I'll get back to you soon!",
+                                        color = themeColors.textSecondary.copy(alpha = 0.5f)
+                                    )
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = themeColors.accentPurple,
+                                    unfocusedBorderColor = themeColors.borderColor,
+                                    focusedTextColor = themeColors.textPrimary,
+                                    unfocusedTextColor = themeColors.textPrimary,
+                                    cursorColor = themeColors.accentPurple
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                maxLines = 3
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
                             Text(
                                 "Custom reply style (optional)",
                                 fontSize = 14.sp,

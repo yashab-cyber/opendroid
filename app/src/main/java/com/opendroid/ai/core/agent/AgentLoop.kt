@@ -7,6 +7,7 @@ import com.opendroid.ai.core.llm.LLMProviderFactory
 import com.opendroid.ai.core.llm.LLMRequest
 import com.opendroid.ai.core.llm.LLMResponse
 import com.opendroid.ai.core.llm.LatencyBudgetStatus
+import com.opendroid.ai.core.llm.ProviderCatalog
 import com.opendroid.ai.core.llm.ResponseFormat
 import com.opendroid.ai.core.llm.prompts.PlanningPrompts
 import com.opendroid.ai.core.memory.MemoryManager
@@ -64,6 +65,47 @@ internal fun paramKeyForNeedsInput(needsInput: ActionResult.NeedsInput, actionNa
     } else {
         "value"
     }
+}
+
+internal fun extractJsonPayload(raw: String): String {
+    val trimmed = raw.trim()
+
+    // 1. Check if enclosed in markdown code fences anywhere in the string
+    val fenceRegex = Regex("""```(?:json)?\s*([\s\S]*?)\s*```""", RegexOption.MULTILINE)
+    val matches = fenceRegex.findAll(trimmed).toList()
+    for (match in matches) {
+        val candidate = match.groupValues[1].trim()
+        if (candidate.startsWith("{") && candidate.endsWith("}")) {
+            return candidate
+        }
+    }
+
+    // 2. Look for the outermost matching { and }
+    val firstBrace = trimmed.indexOf('{')
+    val lastBrace = trimmed.lastIndexOf('}')
+    if (firstBrace != -1 && lastBrace > firstBrace) {
+        return trimmed.substring(firstBrace, lastBrace + 1).trim()
+    }
+
+    return stripMarkdownFences(trimmed)
+}
+
+internal fun stripMarkdownFences(raw: String): String {
+    var content = raw.trim()
+    val fenceRegex = Regex("""^```(?:json)?\s*([\s\S]*?)\s*```$""", RegexOption.MULTILINE)
+    val match = fenceRegex.matchEntire(content)
+    if (match != null) {
+        return match.groupValues[1].trim()
+    }
+    if (content.startsWith("```json")) {
+        content = content.removePrefix("```json")
+    } else if (content.startsWith("```")) {
+        content = content.removePrefix("```")
+    }
+    if (content.endsWith("```")) {
+        content = content.removeSuffix("```")
+    }
+    return content.trim()
 }
 
 sealed interface AgentState {
@@ -629,10 +671,27 @@ class AgentLoop @Inject constructor(
         try {
             val provider = llmProviderFactory.getActiveProvider()
             val relevantContext = memoryManager.getRelevantContext(userMsg.text)
-            val sysPrompt = "${PlanningPrompts.PLANNING_SYSTEM_PROMPT}\n\nContext about user and device:\n$relevantContext"
+            val isOnDevice = ProviderCatalog.isOnDevice(provider.name)
+
+            val basePlanningPrompt = if (isOnDevice) {
+                PlanningPrompts.buildOnDevicePlanningPrompt()
+            } else {
+                PlanningPrompts.PLANNING_SYSTEM_PROMPT
+            }
+
+            val sysPrompt = if (isOnDevice) {
+                if (relevantContext.isNotBlank()) {
+                    "$basePlanningPrompt\n\nContext:\n${relevantContext.take(250)}"
+                } else {
+                    basePlanningPrompt
+                }
+            } else {
+                "$basePlanningPrompt\n\nContext about user and device:\n$relevantContext"
+            }
             
             val config = settingsRepository.llmConfig.first()
-            val plan = if (config.multiAgentModeEnabled) {
+            val maxTokensForPlan = if (isOnDevice) 512 else 1500
+            val plan = if (config.multiAgentModeEnabled && !isOnDevice) {
                 kotlinx.coroutines.coroutineScope {
                     val plannerDeferred = async(Dispatchers.Default) {
                         provider.complete(
@@ -660,6 +719,7 @@ class AgentLoop @Inject constructor(
 
                     val plannerResponse = plannerDeferred.await()
                     val criticResponse = criticDeferred.await()
+
                     reportLocalPlanningLatency(plannerResponse)
                     reportLocalPlanningLatency(criticResponse)
 
@@ -697,7 +757,7 @@ class AgentLoop @Inject constructor(
                         systemPrompt = sysPrompt,
                         messages = listOf(userMsg),
                         temperature = 0.1f,
-                        maxTokens = 1500,
+                        maxTokens = maxTokensForPlan,
                         responseFormat = ResponseFormat.JSON
                     )
                 )
@@ -1573,11 +1633,11 @@ class AgentLoop @Inject constructor(
     }
 
     private fun parsePlanFromLlmResponse(raw: String, userGoal: String): Plan {
-        val stripped = stripMarkdownFences(raw)
+        val extracted = extractJsonPayload(raw)
 
         // Prefer wrapper action before unwrapping plan — handles {"action":"...","plan":null}.
         try {
-            val root = json.parseToJsonElement(stripped)
+            val root = json.parseToJsonElement(extracted)
             if (root is JsonObject) {
                 val action = root["action"]?.jsonPrimitive?.contentOrNull
                     ?.takeIf { it.isNotBlank() && it != "null" }
@@ -1604,39 +1664,30 @@ class AgentLoop @Inject constructor(
             // Continue with wrapper/single-action parsing below
         }
 
-        val root = json.parseToJsonElement(cleaned)
-        if (root is JsonObject) {
-            root["plan"]?.let { planElement ->
-                if (planElement is JsonObject) {
-                    try {
-                        return normalizePlan(json.decodeFromString<Plan>(planElement.toString()))
-                    } catch (_: Exception) {
-                        // fall through
+        try {
+            val root = json.parseToJsonElement(cleaned)
+            if (root is JsonObject) {
+                root["plan"]?.let { planElement ->
+                    if (planElement is JsonObject) {
+                        try {
+                            return normalizePlan(json.decodeFromString<Plan>(planElement.toString()))
+                        } catch (_: Exception) {
+                            // fall through
+                        }
                     }
                 }
-            }
 
-            val action = root["action"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
-            if (action != null) {
-                val params = jsonObjectToStringMap(root["params"]?.jsonObject)
-                return buildSingleStepPlan(userGoal, action, params)
+                val action = root["action"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() && it != "null" }
+                if (action != null) {
+                    val params = jsonObjectToStringMap(root["params"]?.jsonObject)
+                    return buildSingleStepPlan(userGoal, action, params)
+                }
             }
+        } catch (_: Exception) {
+            // fall through
         }
 
         throw IllegalArgumentException("Could not parse a valid plan from LLM response")
-    }
-
-    private fun stripMarkdownFences(raw: String): String {
-        var content = raw.trim()
-        if (content.startsWith("```json")) {
-            content = content.removePrefix("```json")
-        } else if (content.startsWith("```")) {
-            content = content.removePrefix("```")
-        }
-        if (content.endsWith("```")) {
-            content = content.removeSuffix("```")
-        }
-        return content.trim()
     }
 
     private fun normalizePlan(plan: Plan): Plan {
@@ -1680,7 +1731,7 @@ class AgentLoop @Inject constructor(
     }
 
     private fun cleanPlanJson(raw: String): String {
-        var content = stripMarkdownFences(raw)
+        val content = extractJsonPayload(raw)
         try {
             val jsonElement = json.parseToJsonElement(content)
             if (jsonElement is JsonObject) {

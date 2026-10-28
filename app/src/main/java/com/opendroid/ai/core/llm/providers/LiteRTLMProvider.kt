@@ -16,6 +16,7 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.Conversation
@@ -127,7 +128,9 @@ class LiteRTLMProvider @Inject constructor(
                     request.systemPrompt,
                     request.messages,
                     request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) }
-                        ?: emptyList()
+                        ?: emptyList(),
+                    spec,
+                    request.maxTokens
                 )
 
                 val outputText = invokeLiteRTInference(modelPath, spec, prompt, request.maxTokens, request.temperature)
@@ -157,10 +160,12 @@ class LiteRTLMProvider @Inject constructor(
                 request.systemPrompt,
                 request.messages,
                 request.tools?.map { ToolDefinition(it.name, it.description, it.parameters) }
-                    ?: emptyList()
+                    ?: emptyList(),
+                spec,
+                request.maxTokens
             )
 
-            checkPromptFits(prompt, spec, request.maxTokens)
+            val maxAllowedTokens = checkPromptFits(prompt, spec, request.maxTokens)
             val engine = getOrInitializeEngine(modelPath, spec)
 
             val samplerConfig = SamplerConfig(
@@ -172,10 +177,18 @@ class LiteRTLMProvider @Inject constructor(
             val conversationConfig = ConversationConfig(samplerConfig = samplerConfig)
             val conversation = engine.createConversation(conversationConfig)
 
+            var lastLength = 0
             try {
                 conversation.sendMessageAsync(prompt).collect { msg ->
                     val fullText = msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
-                    emit(fullText)
+                    if (fullText.length > lastLength) {
+                        val delta = fullText.substring(lastLength)
+                        lastLength = fullText.length
+                        emit(delta)
+                    }
+                    if (PromptBudget.estimateTokens(fullText) >= maxAllowedTokens) {
+                        return@collect
+                    }
                 }
             } finally {
                 conversation.close()
@@ -198,7 +211,7 @@ class LiteRTLMProvider @Inject constructor(
             checkModelReady(modelPath, spec)
 
             val systemPrompt = "You are an autonomous AI agent for Android."
-            val prompt = buildPrompt(systemPrompt, messages, tools)
+            val prompt = buildPrompt(systemPrompt, messages, tools, spec, 512)
 
             val result = invokeLiteRTInference(modelPath, spec, prompt, 2000, 0.7f)
             emit(StreamChunk.Content(result))
@@ -306,7 +319,12 @@ class LiteRTLMProvider @Inject constructor(
             // CPU, so fall back rather than locking every model to one backend.
             Log.i(TAG, "[INIT FLOW] Initializing Engine (loading model)...")
             var lastFailure: Throwable? = null
-            for (backend in LiteRtCompatibility.backendPreference) {
+            val backends = if (spec.modelFilename.contains("q8", ignoreCase = true) || spec.family.equals("Qwen", ignoreCase = true)) {
+                listOf<() -> Backend>({ Backend.CPU() }, { Backend.GPU() })
+            } else {
+                LiteRtCompatibility.backendPreference
+            }
+            for (backend in backends) {
                 val config = EngineConfig(
                     modelPath = modelPath,
                     backend = backend(),
@@ -419,9 +437,18 @@ class LiteRTLMProvider @Inject constructor(
                 val conversation = engine.createConversation(conversationConfig)
 
                 try {
-                    val message = conversation.sendMessage(prompt)
-                    val responseText = message.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
-                    responseText
+                    val maxAllowedTokens = checkPromptFits(prompt, spec, maxTokens)
+                    var accumulatedText = ""
+                    kotlinx.coroutines.runBlocking {
+                        conversation.sendMessageAsync(prompt).collect { msg ->
+                            val text = msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
+                            accumulatedText = text
+                            if (PromptBudget.estimateTokens(accumulatedText) >= maxAllowedTokens) {
+                                return@collect
+                            }
+                        }
+                    }
+                    accumulatedText
                 } finally {
                     conversation.close()
                 }
@@ -458,32 +485,55 @@ class LiteRTLMProvider @Inject constructor(
     private fun buildPrompt(
         systemPrompt: String,
         messages: List<ChatMessage>,
-        tools: List<ToolDefinition>
+        tools: List<ToolDefinition>,
+        spec: OnDeviceModelSpec? = null,
+        requestedMaxTokens: Int = 512
     ): String {
-        val sb = StringBuilder()
-        if (systemPrompt.isNotEmpty()) {
-            sb.append("System Instructions:\n").append(systemPrompt).append("\n\n")
+        val window = spec?.contextWindow ?: 2048
+        val minOutput = minOf(requestedMaxTokens, 512).coerceAtLeast(PromptBudget.MIN_OUTPUT_TOKENS)
+
+        val sbHeader = StringBuilder()
+        val maxSysChars = (window / 2) * 4
+        val trimmedSystemPrompt = if (systemPrompt.length > maxSysChars) {
+            systemPrompt.take(maxSysChars) + "\n...[instructions truncated for on-device context]"
+        } else {
+            systemPrompt
+        }
+
+        if (trimmedSystemPrompt.isNotEmpty()) {
+            sbHeader.append("System Instructions:\n").append(trimmedSystemPrompt).append("\n\n")
         }
 
         if (tools.isNotEmpty()) {
-            sb.append("Available tools you can call:\n")
+            sbHeader.append("Available tools you can call:\n")
             tools.forEach { tool ->
-                sb.append("- Tool: ").append(tool.name).append("\n")
-                sb.append("  Description: ").append(tool.description).append("\n")
-                sb.append("  Parameters schema: ").append(tool.parameters).append("\n\n")
+                sbHeader.append("- Tool: ").append(tool.name).append("\n")
+                sbHeader.append("  Description: ").append(tool.description).append("\n")
+                sbHeader.append("  Parameters schema: ").append(tool.parameters).append("\n\n")
             }
-            sb.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")
-            sb.append("{\n")
-            sb.append("  \"toolCall\": {\n")
-            sb.append("    \"name\": \"TOOL_NAME\",\n")
-            sb.append("    \"arguments\": { ... }\n")
-            sb.append("  }\n")
-            sb.append("}\n")
-            sb.append("Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n")
+            sbHeader.append("If you need to call a tool, respond ONLY with a JSON object conforming exactly to this format:\n")
+            sbHeader.append("{\n")
+            sbHeader.append("  \"toolCall\": {\n")
+            sbHeader.append("    \"name\": \"TOOL_NAME\",\n")
+            sbHeader.append("    \"arguments\": { ... }\n")
+            sbHeader.append("  }\n")
+            sbHeader.append("}\n")
+            sbHeader.append("Do not add markdown formatting or backticks around the JSON. Output only the raw JSON. If no tool is needed, respond with standard text.\n\n")
         }
 
+        val headerText = sbHeader.toString()
+        val overheadTokens = PromptBudget.estimateTokens(headerText) + 20
+
+        val fittedMessages = PromptBudget.fitMessagesToBudget(
+            messages = messages,
+            contextWindow = window,
+            reservedOutputTokens = minOutput,
+            overheadTokens = overheadTokens
+        )
+
+        val sb = StringBuilder(headerText)
         sb.append("Conversation History:\n")
-        messages.forEach { msg ->
+        fittedMessages.forEach { msg ->
             val sender = if (msg.sender == ChatMessage.Sender.USER) "User" else "Model"
             sb.append(sender).append(": ").append(msg.text).append("\n")
         }

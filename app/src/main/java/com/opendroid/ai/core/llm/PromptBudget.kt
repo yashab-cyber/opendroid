@@ -1,5 +1,7 @@
 package com.opendroid.ai.core.llm
 
+import com.opendroid.ai.data.models.ChatMessage
+
 /**
  * Token budgeting for on-device models with small, fixed context windows.
  *
@@ -32,5 +34,50 @@ object PromptBudget {
         val remaining = contextWindow - estimateTokens(prompt)
         if (remaining < MIN_OUTPUT_TOKENS) return null
         return minOf(requestedOutputTokens, remaining)
+    }
+
+    /**
+     * Fits a list of conversation messages into a prompt budget within [contextWindow] tokens,
+     * reserving [reservedOutputTokens] for generation.
+     *
+     * Ensures:
+     * 1. The latest message is always retained (truncated if extraordinarily large).
+     * 2. System prompt and tool schemas are respected via [overheadTokens].
+     * 3. Prior messages are included from newest to oldest up to available budget.
+     */
+    fun fitMessagesToBudget(
+        messages: List<ChatMessage>,
+        contextWindow: Int,
+        reservedOutputTokens: Int = MIN_OUTPUT_TOKENS * 2,
+        overheadTokens: Int = 0
+    ): List<ChatMessage> {
+        if (messages.isEmpty()) return emptyList()
+
+        val availableBudget = (contextWindow - reservedOutputTokens - overheadTokens).coerceAtLeast(MIN_OUTPUT_TOKENS)
+        val latestMessage = messages.last()
+        val latestTokens = estimateTokens(latestMessage.text)
+
+        val trimmedLatest = if (latestTokens > availableBudget) {
+            val maxChars = availableBudget * CHARS_PER_TOKEN
+            latestMessage.copy(text = latestMessage.text.takeLast(maxChars))
+        } else {
+            latestMessage
+        }
+
+        var remainingTokens = availableBudget - estimateTokens(trimmedLatest.text)
+        val selectedPriorMessages = mutableListOf<ChatMessage>()
+
+        for (i in messages.size - 2 downTo 0) {
+            val msg = messages[i]
+            val msgTokens = estimateTokens(msg.text) + 4 // ~4 tokens for message prefix/newline
+            if (remainingTokens >= msgTokens) {
+                selectedPriorMessages.add(msg)
+                remainingTokens -= msgTokens
+            } else {
+                break
+            }
+        }
+
+        return selectedPriorMessages.reversed() + trimmedLatest
     }
 }

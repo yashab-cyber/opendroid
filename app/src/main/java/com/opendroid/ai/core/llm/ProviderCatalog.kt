@@ -39,7 +39,7 @@ object ProviderCatalog {
         ProviderSpec("Custom OpenAI Compatible", "custom-model"),
         ProviderSpec("Ollama", "llama3"),
         ProviderSpec(ON_DEVICE, "gemma-4-on-device"),
-        ProviderSpec("LiteRT-LM (On-device)", "gemma3-1b-it"),
+        ProviderSpec("LiteRT-LM (On-device)", "qwen-2.5-0.5b-it-litert"),
         // Compatibility entry for the directly addressable AI Core backend.
         // Its persisted key is normalized to the unified on-device provider.
         ProviderSpec(LEGACY_ON_DEVICE, "gemma-4-on-device", ON_DEVICE)

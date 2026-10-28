@@ -2,6 +2,7 @@ package com.opendroid.ai.core.llm
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PromptBudgetTest {
@@ -63,5 +64,58 @@ class PromptBudgetTest {
     fun `registry qwen spec carries its ekv1280 context window`() {
         val qwen = OnDeviceModelRegistry.findById("qwen-2.5-0.5b-it-litert")!!
         assertEquals(1280, qwen.contextWindow)
+    }
+
+    @Test
+    fun `fitMessagesToBudget retains latest message and prunes oldest when budget exceeded`() {
+        val msg1 = com.opendroid.ai.data.models.ChatMessage(
+            id = "1",
+            text = "Oldest message ".repeat(50), // ~750 chars ~= 188 tokens
+            sender = com.opendroid.ai.data.models.ChatMessage.Sender.USER
+        )
+        val msg2 = com.opendroid.ai.data.models.ChatMessage(
+            id = "2",
+            text = "Middle message ".repeat(50), // ~750 chars ~= 188 tokens
+            sender = com.opendroid.ai.data.models.ChatMessage.Sender.AGENT
+        )
+        val msg3 = com.opendroid.ai.data.models.ChatMessage(
+            id = "3",
+            text = "Latest user query",
+            sender = com.opendroid.ai.data.models.ChatMessage.Sender.USER
+        )
+
+        // Context window 500, overhead 100, reserved output 128 -> Available for messages = 272 tokens
+        // msg3 (~5 tokens) + msg2 (~192 tokens) = ~197 tokens -> fits!
+        // msg1 cannot fit in remaining 75 tokens -> pruned!
+        val fitted = PromptBudget.fitMessagesToBudget(
+            messages = listOf(msg1, msg2, msg3),
+            contextWindow = 500,
+            reservedOutputTokens = 128,
+            overheadTokens = 100
+        )
+
+        assertEquals(2, fitted.size)
+        assertEquals("2", fitted[0].id)
+        assertEquals("3", fitted[1].id)
+    }
+
+    @Test
+    fun `fitMessagesToBudget truncates latest message if it alone exceeds budget`() {
+        val massiveLatest = com.opendroid.ai.data.models.ChatMessage(
+            id = "1",
+            text = "word ".repeat(1000), // ~5000 chars ~= 1250 tokens
+            sender = com.opendroid.ai.data.models.ChatMessage.Sender.USER
+        )
+
+        val fitted = PromptBudget.fitMessagesToBudget(
+            messages = listOf(massiveLatest),
+            contextWindow = 500,
+            reservedOutputTokens = 128,
+            overheadTokens = 100
+        )
+
+        assertEquals(1, fitted.size)
+        // Available budget is (500 - 128 - 100) = 272 tokens ~= 1088 chars
+        assertTrue("Expected message to be truncated to fit budget", fitted[0].text.length <= 272 * 4)
     }
 }

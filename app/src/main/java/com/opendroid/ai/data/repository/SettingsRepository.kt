@@ -253,12 +253,15 @@ class SettingsRepository internal constructor(
     // Auto-reply preference keys
     private val autoReplyGlobalKey = booleanPreferencesKey("auto_reply_global")
     private val autoReplyWhatsAppKey = booleanPreferencesKey("auto_reply_whatsapp")
+    private val autoReplyTelegramKey = booleanPreferencesKey("auto_reply_telegram")
+    private val autoReplyDiscordKey = booleanPreferencesKey("auto_reply_discord")
     private val autoReplySmsKey = booleanPreferencesKey("auto_reply_sms")
     private val autoReplyEmailKey = booleanPreferencesKey("auto_reply_email")
     private val autoReplyDelayKey = intPreferencesKey("auto_reply_delay_minutes")
     private val autoReplyBlacklistKey = stringSetPreferencesKey("auto_reply_blacklist")
     private val autoReplyWhitelistKey = stringSetPreferencesKey("auto_reply_whitelist")
     private val autoReplyCustomPromptKey = stringPreferencesKey("auto_reply_custom_prompt")
+    private val autoReplyCustomReplyKey = stringPreferencesKey("auto_reply_custom_reply")
     private val autoReplyMaxPerHourKey = intPreferencesKey("auto_reply_max_per_hour")
 
     val llmConfig: Flow<LLMConfig> = dataStore.data
@@ -271,12 +274,15 @@ class SettingsRepository internal constructor(
             // user explicitly enables each channel.
             globalEnabled = preferences[autoReplyGlobalKey] ?: false,
             whatsappEnabled = preferences[autoReplyWhatsAppKey] ?: false,
+            telegramEnabled = preferences[autoReplyTelegramKey] ?: false,
+            discordEnabled = preferences[autoReplyDiscordKey] ?: false,
             smsEnabled = preferences[autoReplySmsKey] ?: false,
             emailEnabled = preferences[autoReplyEmailKey] ?: false,
             replyDelayMinutes = preferences[autoReplyDelayKey] ?: 15,
             blacklistedContacts = preferences[autoReplyBlacklistKey] ?: emptySet(),
             whitelistedContacts = preferences[autoReplyWhitelistKey] ?: emptySet(),
             customPrompt = preferences[autoReplyCustomPromptKey],
+            customReplyText = preferences[autoReplyCustomReplyKey],
             maxRepliesPerContactPerHour = preferences[autoReplyMaxPerHourKey] ?: 3
         )
     }
@@ -335,6 +341,8 @@ class SettingsRepository internal constructor(
         dataStore.edit { preferences ->
             preferences[autoReplyGlobalKey] = config.globalEnabled
             preferences[autoReplyWhatsAppKey] = config.whatsappEnabled
+            preferences[autoReplyTelegramKey] = config.telegramEnabled
+            preferences[autoReplyDiscordKey] = config.discordEnabled
             preferences[autoReplySmsKey] = config.smsEnabled
             preferences[autoReplyEmailKey] = config.emailEnabled
             preferences[autoReplyDelayKey] = config.replyDelayMinutes
@@ -344,6 +352,11 @@ class SettingsRepository internal constructor(
                 preferences[autoReplyCustomPromptKey] = config.customPrompt
             } else {
                 preferences.remove(autoReplyCustomPromptKey)
+            }
+            if (config.customReplyText != null) {
+                preferences[autoReplyCustomReplyKey] = config.customReplyText
+            } else {
+                preferences.remove(autoReplyCustomReplyKey)
             }
             preferences[autoReplyMaxPerHourKey] = config.maxRepliesPerContactPerHour
         }

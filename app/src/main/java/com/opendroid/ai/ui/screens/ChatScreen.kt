@@ -152,9 +152,12 @@ fun ChatScreen(
     // history.size alone left the scroll position from the PREVIOUS chat in place
     // whenever the newly switched-to chat happened to have the same message count -
     // including currentSessionId forces a re-anchor to the bottom on every chat switch.
-    LaunchedEffect(currentSessionId, history.size, visibleAgentState) {
-        if (history.isNotEmpty()) {
-            listState.animateScrollToItem(history.size - 1)
+    LaunchedEffect(currentSessionId, history.size, visibleAgentState, chatError) {
+        val totalItems = history.size +
+            (if (visibleAgentState is AgentState.Thinking) 1 else 0) +
+            (if (chatError != null) 1 else 0)
+        if (totalItems > 0) {
+            listState.animateScrollToItem(totalItems - 1)
         }
     }
 
@@ -575,7 +578,8 @@ fun ChatScreen(
                                         focusedTextColor = TextPrimary,
                                         unfocusedTextColor = TextPrimary
                                     ),
-                                    singleLine = true,
+                                    singleLine = false,
+                                    maxLines = 4,
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                                     keyboardActions = KeyboardActions(onSend = { submitInput() }),
                                     modifier = Modifier.fillMaxWidth()
@@ -777,7 +781,7 @@ fun ChatBubble(
         ) {
             Column(
                 modifier = Modifier
-                    .widthIn(max = 290.dp)
+                    .widthIn(max = 340.dp)
                     .clip(
                         RoundedCornerShape(
                             topStart = 18.dp,
