@@ -25,7 +25,7 @@ Send directly via any UPI app (Google Pay, PhonePe, Paytm, etc.):
 ```
 
 ### 📧 Contact for Other Methods
-For international donations, crypto, or other payment methods, reach out via email:
+For international donations or other payment methods, reach out via email:
 
 📩 **yashabalam707@gmail.com**
 
