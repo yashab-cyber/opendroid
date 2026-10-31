@@ -184,7 +184,7 @@ class ModelDownloadWorker(
                 target = ModelStoragePaths.targetFile(targetDir, spec),
                 manifestFile = ModelStoragePaths.manifestFile(targetDir),
                 spec = spec,
-                verifyFormat = { LiteRtCompatibility.verify(it, applicationContext.cacheDir) }
+                verifyFormat = { LiteRtCompatibility.verify(it, applicationContext.cacheDir, spec.contextWindow) }
             )
             if (install is ArtifactVerificationResult.Invalid) {
                 return fail(modelId, verificationFailureMessage(install.failure))
