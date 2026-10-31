@@ -106,6 +106,9 @@ class OpenDroidNotificationListener : NotificationListenerService() {
                             entity.title.equals("You", ignoreCase = true)
 
                         if (isSelfMessage) {
+                            // The user answered this conversation themselves, so the reply
+                            // still waiting for it must not go out as well (#83).
+                            autoReplyEngine.cancelPendingReply(sbn.packageName, contactName)
                             Log.d(TAG, "Skipping auto-reply: self-message/outgoing detected for $contactName")
                         } else {
                             // Only check bounceback for incoming messages

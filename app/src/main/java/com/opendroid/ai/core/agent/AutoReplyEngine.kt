@@ -94,7 +94,9 @@ class AutoReplyEngine @Inject constructor(
     ) {
         val contactKey = "${notification.packageName}:${notification.contactName ?: notification.title}"
 
-        val job = scope.launch {
+        // LAZY so the job is registered before it can run: with a zero delay it could
+        // otherwise finish before registration and leave a stale entry behind.
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 val config = settingsRepository.autoReplyConfig.first()
 
@@ -112,10 +114,11 @@ class AutoReplyEngine @Inject constructor(
                     Log.d(TAG, "Executing auto-reply immediately (0 sec delay) for ${notification.contactName}")
                 }
 
-                // Re-check config (user might have disabled it during the wait)
+                // Re-check the full policy: during the wait the user may have turned
+                // auto-reply off globally or for this app, or blocklisted the contact.
                 val freshConfig = settingsRepository.autoReplyConfig.first()
-                if (!freshConfig.globalEnabled) {
-                    Log.d(TAG, "Auto-reply disabled during wait period")
+                if (!shouldAutoReply(notification, freshConfig)) {
+                    Log.d(TAG, "Auto-reply no longer allowed after the wait period")
                     return@launch
                 }
 
@@ -157,6 +160,7 @@ class AutoReplyEngine @Inject constructor(
 
         // Replaces (and cancels) any reply already waiting for this contact: they sent another message.
         pendingReplies.register(contactKey, job)
+        job.start()
     }
 
     /**
