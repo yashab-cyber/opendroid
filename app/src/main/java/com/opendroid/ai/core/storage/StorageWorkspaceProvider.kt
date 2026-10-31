@@ -162,16 +162,14 @@ object StorageWorkspaceProvider {
                 throw SecurityException("Access to system directory is not permitted: $canonical")
             }
 
-            val appDataDir = context.applicationInfo.dataDir
-            val appFilesDir = context.filesDir.canonicalPath
-            val extFilesDir = context.getExternalFilesDir(null)?.canonicalPath
+            // Only the workspace and the agent's own photo folder are reachable by absolute
+            // path. The rest of the app's storage (downloaded models, settings, model
+            // references) is not, however the path is spelled (#90).
+            val picturesCanonical = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.canonicalPath
+            val isAllowedAppPath = isWithin(canonical, workspaceCanonical) ||
+                (picturesCanonical != null && isWithin(canonical, picturesCanonical))
 
-            val isAppDir = (appDataDir != null && canonical.startsWith(appDataDir)) ||
-                canonical.startsWith(appFilesDir) ||
-                (extFilesDir != null && canonical.startsWith(extFilesDir)) ||
-                canonical.startsWith(workspaceCanonical)
-
-            if (isAppDir) {
+            if (isAllowedAppPath) {
                 File(canonical)
             } else {
                 val extRoot = Environment.getExternalStorageDirectory().canonicalPath
@@ -195,13 +193,17 @@ object StorageWorkspaceProvider {
         }
 
         if (!trimmed.startsWith("/")) {
-            if (!canonicalResult.startsWith(workspaceCanonical)) {
+            if (!isWithin(canonicalResult, workspaceCanonical)) {
                 throw SecurityException("Path traversal attempt detected: $canonicalResult")
             }
         }
 
         return File(canonicalResult)
     }
+
+    /** True when [path] is [root] or inside it; a shared name prefix ("workspace-other") is not. */
+    private fun isWithin(path: String, root: String): Boolean =
+        path == root || path.startsWith(root + File.separator)
 
     // ── File Operations ──────────────────────────────────────────────────
 
@@ -343,6 +345,10 @@ object StorageWorkspaceProvider {
                 val root = DocumentFile.fromTreeUri(context, customUri)
                     ?: return deleteFileLocal(context, filePath)
                 val cleanPath = cleanRelativePath(filePath)
+                if (cleanPath.split("/").none { it.isNotEmpty() && it != "." }) {
+                    // A blank path finds the tree root: the user's whole chosen folder (#90).
+                    return ActionResult(false, null, "Refusing to delete your whole chosen folder. Name the file or folder to delete.")
+                }
                 val doc = findDocumentByPath(root, cleanPath)
                 if (doc == null || !doc.exists()) {
                     return ActionResult(false, null, "File/directory does not exist: $filePath")
@@ -364,6 +370,10 @@ object StorageWorkspaceProvider {
     private fun deleteFileLocal(context: Context, filePath: String): ActionResult {
         return try {
             val file = resolveFile(context, filePath)
+            if (file.canonicalPath == getDefaultWorkspaceDir(context).canonicalPath) {
+                // "", ".", "/" and "/sdcard" all resolve to the workspace root (#90).
+                return ActionResult(false, null, "Refusing to delete the whole workspace. Name the file or folder to delete.")
+            }
             if (!file.exists()) {
                 return ActionResult(false, null, "File/directory does not exist: ${file.absolutePath}")
             }
