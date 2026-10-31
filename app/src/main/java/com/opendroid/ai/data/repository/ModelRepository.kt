@@ -322,7 +322,7 @@ class ModelRepository @Inject constructor(
                 target = targetFile,
                 manifestFile = manifestFile,
                 spec = spec,
-                verifyFormat = { LiteRtCompatibility.verify(it, context.cacheDir) }
+                verifyFormat = { LiteRtCompatibility.verify(it, context.cacheDir, spec.contextWindow) }
             )
             if (install is ArtifactVerificationResult.Invalid) {
                 if (install.failure == ArtifactVerificationFailure.LITERT_RUNTIME_INCOMPATIBLE) {

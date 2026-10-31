@@ -1,5 +1,6 @@
 package com.opendroid.ai.core.llm
 
+import android.util.Log
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -19,6 +20,8 @@ class LiteRtRuntimeIncompatibilityException(cause: Throwable) : Exception(cause)
  */
 object LiteRtCompatibility {
 
+    private const val TAG = "LiteRtCompatibility"
+
     /**
      * Backends to try, in order. Gemma 4 LiteRT packages constrain their main
      * section to GPU, while older catalog models and arbitrary custom imports
@@ -27,18 +30,42 @@ object LiteRtCompatibility {
      */
     val backendPreference: List<() -> Backend> = listOf({ Backend.GPU() }, { Backend.CPU() })
 
-    fun verify(file: File, cacheDir: File) {
-        val failures = mutableListOf<Throwable>()
-        for (backend in backendPreference) {
-            val config = EngineConfig(
+    /**
+     * Probes [file] with the engine configuration the app will later run it with.
+     * [maxNumTokens] must be the spec's `contextWindow`, the value
+     * [com.opendroid.ai.core.llm.providers.LiteRTLMProvider] passes when it loads the
+     * model. Probing with the runtime's default instead validated a configuration the
+     * app never uses.
+     */
+    fun verify(file: File, cacheDir: File, maxNumTokens: Int) {
+        verify(probeConfigs(file, cacheDir, maxNumTokens)) { config ->
+            Engine(config).use { engine ->
+                engine.initialize()
+            }
+        }
+    }
+
+    internal fun probeConfigs(file: File, cacheDir: File, maxNumTokens: Int): List<EngineConfig> =
+        backendPreference.map { backend ->
+            EngineConfig(
                 modelPath = file.absolutePath,
                 backend = backend(),
                 cacheDir = cacheDir.absolutePath
             )
+        }
+
+    /**
+     * Tries each config in order and returns on the first that initializes. Each
+     * failure is logged as it happens. When every backend fails, the first failure is
+     * thrown with the others attached as suppressed exceptions. The runtime's own
+     * message is the only diagnosis available for a model that will not load (#57),
+     * so none of them may be dropped.
+     */
+    internal fun verify(configs: List<EngineConfig>, initialize: (EngineConfig) -> Unit) {
+        val failures = mutableListOf<Throwable>()
+        for (config in configs) {
             try {
-                Engine(config).use { engine ->
-                    engine.initialize()
-                }
+                initialize(config)
                 return
             } catch (e: Throwable) {
                 failures += e
