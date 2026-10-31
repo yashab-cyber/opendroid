@@ -1404,29 +1404,8 @@ class AgentLoop @Inject constructor(
         conversationRepository.insertMessage(sessionId, userPickMsg)
 
         // Resolve user selection to a contact
-        val selectedContact = when {
-            // User typed a number: "1", "2", "3"
-            userSelection.trim().toIntOrNull() != null -> {
-                val index = userSelection.trim().toInt() - 1
-                matches.getOrNull(index)
-            }
-
-            // User said "first", "second", "third"
-            userSelection.lowercase().contains("first") -> matches.getOrNull(0)
-            userSelection.lowercase().contains("second") -> matches.getOrNull(1)
-            userSelection.lowercase().contains("third") -> matches.getOrNull(2)
-            userSelection.lowercase().contains("fourth") -> matches.getOrNull(3)
-            userSelection.lowercase().contains("fifth") -> matches.getOrNull(4)
-
-            // User typed the name
-            else -> {
-                matches.find { contact ->
-                    userSelection.contains(contact["name"] ?: "", ignoreCase = true)
-                } ?: matches.find { contact ->
-                    (contact["name"] ?: "").contains(userSelection.trim(), ignoreCase = true)
-                }
-            }
-        }
+        val choice = ContactChoice.parse(userSelection, matches.map { it["name"] ?: "" })
+        val selectedContact = (choice as? ContactChoice.Picked)?.let { matches.getOrNull(it.index) }
 
         if (selectedContact == null) {
             // Couldn't match — tell user and fail gracefully
