@@ -200,25 +200,8 @@ class MemoryManager @Inject constructor(
     }
 
     suspend fun cleanPoisonedMemories() {
-        val poisonPhrases = listOf(
-            "invalid_action",
-            "not registered",
-            "actiondispatcher",
-            "do not use this action",
-            "whitelisted",
-            "execution error",
-            "action module",
-            "unknown action",
-            "not a valid action"
-        )
-
         val allFacts = memoryRepository.getMemoriesByType(MemoryType.SEMANTIC)
-        val poisoned = allFacts.filter { fact ->
-            poisonPhrases.any { phrase ->
-                fact.key.contains(phrase, ignoreCase = true) ||
-                fact.value.contains(phrase, ignoreCase = true)
-            }
-        }
+        val poisoned = allFacts.filter { fact -> PoisonedMemories.isPoisoned(fact.key, fact.value) }
 
         if (poisoned.isNotEmpty()) {
             poisoned.forEach { memoryRepository.deleteMemory(it.key) }
