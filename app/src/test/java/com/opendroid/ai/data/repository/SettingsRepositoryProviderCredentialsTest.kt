@@ -7,7 +7,9 @@ import com.opendroid.ai.core.security.CredentialStoreResult
 import com.opendroid.ai.core.security.ProviderCredentialId
 import com.opendroid.ai.core.security.ProviderCredentialRecoveryState
 import com.opendroid.ai.core.security.ProviderCredentialStore
+import com.opendroid.ai.data.models.AutoMode
 import com.opendroid.ai.data.models.LLMConfig
+import com.opendroid.ai.data.models.resolvedAutoMode
 import java.nio.file.Files
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -170,6 +172,65 @@ class SettingsRepositoryProviderCredentialsTest {
         assertTrue(repository.llmConfig.first().apiKeys["OpenAI"] == "old-openai-secret")
     }
 
+    @Test
+    fun `a non-secret change is still saved while credentials need re-entry`() = runBlocking {
+        // Turning YOLO off must stick even when the Keystore credentials are unreadable;
+        // the whole edit used to be rolled back while Settings showed OFF (#106).
+        val dataStore = newDataStore()
+        val legacySecret = "sk-legacy-migration-input"
+        dataStore.edit { preferences ->
+            preferences[LLM_CONFIG_KEY] = Json.encodeToString(
+                LLMConfig(autoMode = AutoMode.YOLO, apiKeys = mapOf("OpenAI" to legacySecret))
+            )
+        }
+        val repository = SettingsRepository(
+            dataStore,
+            InMemoryProviderCredentialStore(recoveryRequired = true),
+            runStartupMigration = false
+        )
+
+        repository.updateConfig { it.copy(autoMode = AutoMode.OFF) }
+
+        assertEquals(AutoMode.OFF, repository.llmConfig.first().resolvedAutoMode())
+        // The legacy plaintext stays as migration input; it is still never exposed.
+        assertTrue(dataStore.data.first()[LLM_CONFIG_KEY].orEmpty().contains(legacySecret))
+        assertTrue(repository.llmConfig.first().apiKeys.isEmpty())
+    }
+
+    @Test
+    fun `a credential change during re-entry is still refused as a whole`() = runBlocking {
+        val dataStore = newDataStore()
+        val previousJson = Json.encodeToString(LLMConfig(autoMode = AutoMode.YOLO))
+        dataStore.edit { preferences -> preferences[LLM_CONFIG_KEY] = previousJson }
+        val credentials = InMemoryProviderCredentialStore(recoveryRequired = true)
+        val repository = SettingsRepository(dataStore, credentials, runStartupMigration = false)
+
+        assertEquals(
+            ProviderCredentialPersistenceState.CredentialsMustBeReentered,
+            repository.updateConfig { it.copy(autoMode = AutoMode.OFF, apiKeys = mapOf("OpenAI" to "sk-new")) }
+        )
+
+        assertEquals(previousJson, dataStore.data.first()[LLM_CONFIG_KEY])
+        assertTrue(credentials.values.isEmpty())
+    }
+
+    @Test
+    fun `an unreadable first credential read does not delete stored keys`() = runBlocking {
+        // updateConfig used to read the credential store twice: an empty first read and a
+        // healthy second one made every stored key look removed (#106).
+        val dataStore = newDataStore()
+        val openAi = ProviderCredentialId.ApiKey("OpenAI")
+        val credentials = InMemoryProviderCredentialStore(
+            initialValues = mapOf(openAi to "sk-stored"),
+            unavailableReads = 1
+        )
+        val repository = SettingsRepository(dataStore, credentials, runStartupMigration = false)
+
+        repository.updateConfig { it.copy(isDarkMode = false) }
+
+        assertEquals("sk-stored", credentials.values[openAi])
+    }
+
     private fun newDataStore() = PreferenceDataStoreFactory.create(
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
         produceFile = {
@@ -183,7 +244,9 @@ class SettingsRepositoryProviderCredentialsTest {
         private val unavailable: Boolean = false,
         recoveryRequired: Boolean = false,
         initialValues: Map<ProviderCredentialId, String> = emptyMap(),
-        private val failMutationAt: Int? = null
+        private val failMutationAt: Int? = null,
+        /** The first N provider-key reads fail transiently (StorageUnavailable). */
+        private var unavailableReads: Int = 0
     ) : ProviderCredentialStore {
         val values = initialValues.toMutableMap()
         private var mutationCount = 0
@@ -201,7 +264,7 @@ class SettingsRepositoryProviderCredentialsTest {
             unavailableResult() ?: CredentialStoreResult.Success(values[credential])
 
         override fun readProviderApiKeys(): CredentialStoreResult<Map<String, String>> =
-            unavailableResult() ?: CredentialStoreResult.Success(
+            unavailableResult() ?: transientReadFailure() ?: CredentialStoreResult.Success(
                 values.filterKeys { it is ProviderCredentialId.ApiKey }
                     .mapKeys { (credential, _) -> (credential as ProviderCredentialId.ApiKey).providerName }
             )
@@ -237,6 +300,12 @@ class SettingsRepositoryProviderCredentialsTest {
             if (!unavailable) return null
             mutableRecoveryState.value = ProviderCredentialRecoveryState.CredentialsMustBeReentered
             return CredentialStoreResult.CredentialsMustBeReentered
+        }
+
+        private fun <T> transientReadFailure(): CredentialStoreResult<T>? {
+            if (unavailableReads <= 0) return null
+            unavailableReads -= 1
+            return CredentialStoreResult.StorageUnavailable
         }
 
         private fun mutationFailureResult(): CredentialStoreResult<Unit>? {
