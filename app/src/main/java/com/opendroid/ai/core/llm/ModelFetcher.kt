@@ -174,7 +174,7 @@ class ModelFetcher @Inject constructor(
                         )
                     }
                     val baseUrl = UrlUtils.formatBaseUrl(customUrl, "")
-                    ModelFetchOutcome.Success(openAiStyle(modelsUrl(baseUrl), apiKey, provider))
+                    ModelFetchOutcome.Success(openAiStyle(customModelsUrl(baseUrl), apiKey, provider))
                 }
 
                 ProviderCatalog.ON_DEVICE -> {
@@ -221,6 +221,18 @@ class ModelFetcher @Inject constructor(
 
     private fun modelsUrl(baseUrl: String): String =
         if (baseUrl.endsWith("/v1")) "$baseUrl/models" else "$baseUrl/v1/models"
+
+    /**
+     * A custom OpenAI-compatible base URL is read the way the OpenAI SDK reads
+     * `base_url`: it already names the API version (`/v1`, `/v2`, `/v1beta/openai`),
+     * and [com.opendroid.ai.core.llm.providers.CustomOpenAIProvider] posts chat to
+     * `<base>/chat/completions`. The model list is therefore `<base>/models` on the
+     * same base. Only a bare host, which names no version at all, gets `/v1`.
+     */
+    private fun customModelsUrl(baseUrl: String): String {
+        val namesAPath = baseUrl.toHttpUrlOrNull()?.encodedPath?.let { it != "/" } ?: false
+        return if (namesAPath) "$baseUrl/models" else "$baseUrl/v1/models"
+    }
 
     /**
      * Gemini pages its model list, and the page a model lands on shifts as
