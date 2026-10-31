@@ -47,6 +47,9 @@ data class LLMConfig(
     val elevenLabsApiKey: String = "",
     val elevenLabsVoiceId: String = "",
     val ollamaUrl: String = "",
+    // Read via resolvedOllamaTimeoutSeconds(); a cold local model load routinely
+    // outlasts the shared client's 15-second limit.
+    val ollamaTimeoutSeconds: Int = OllamaTimeout.DEFAULT_SECONDS,
     val copilotUrl: String = "",
     val multiAgentModeEnabled: Boolean = false,
     val showFloatingButton: Boolean = true,
@@ -54,6 +57,17 @@ data class LLMConfig(
     val lastModelFetch: Map<String, Long> = emptyMap(), // Provider -> last fetch timestamp
     val modelCache: Map<String, List<AIModel>> = emptyMap() // Provider -> cached AIModels list
 )
+
+/** Bounds for the user-set Ollama read/write timeout, in seconds. */
+object OllamaTimeout {
+    const val DEFAULT_SECONDS = 120
+    const val MIN_SECONDS = 15
+    const val MAX_SECONDS = 600
+
+    fun clamp(seconds: Int): Int = seconds.coerceIn(MIN_SECONDS, MAX_SECONDS)
+}
+
+fun LLMConfig.resolvedOllamaTimeoutSeconds(): Int = OllamaTimeout.clamp(ollamaTimeoutSeconds)
 
 fun LLMConfig.resolvedAutoMode(): AutoMode =
     autoMode ?: if (autoConfirmPlans) AutoMode.YOLO else AutoMode.OFF

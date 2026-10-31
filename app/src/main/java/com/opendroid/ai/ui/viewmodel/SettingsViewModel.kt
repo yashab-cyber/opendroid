@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.opendroid.ai.data.models.AutoMode
 import com.opendroid.ai.data.models.LLMConfig
+import com.opendroid.ai.data.models.OllamaTimeout
 import com.opendroid.ai.data.models.effectiveGrantedActions
 import com.opendroid.ai.data.models.withActiveProvider
 import com.opendroid.ai.data.models.withSelectedModel
@@ -108,6 +109,7 @@ class SettingsViewModel @Inject constructor(
     private var elevenLabsApiKeyJob: Job? = null
     private var elevenLabsVoiceIdJob: Job? = null
     private var ollamaUrlJob: Job? = null
+    private var ollamaTimeoutJob: Job? = null
     private var copilotUrlJob: Job? = null
     private var customEndpointJob: Job? = null
 
@@ -148,6 +150,7 @@ class SettingsViewModel @Inject constructor(
                         elevenLabsApiKey = _llmConfig.value.elevenLabsApiKey,
                         elevenLabsVoiceId = _llmConfig.value.elevenLabsVoiceId,
                         ollamaUrl = _llmConfig.value.ollamaUrl,
+                        ollamaTimeoutSeconds = _llmConfig.value.ollamaTimeoutSeconds,
                         copilotUrl = _llmConfig.value.copilotUrl
                     )
                 }
@@ -501,6 +504,25 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e !is kotlinx.coroutines.CancellationException) {
                     android.util.Log.e("SettingsViewModel", "Failed to update Ollama URL: ${e.message}", e)
+                }
+            }
+        }
+    }
+
+    /** Out-of-range values are clamped rather than rejected, so a half-typed number still saves. */
+    fun updateOllamaTimeout(seconds: Int) {
+        val clamped = OllamaTimeout.clamp(seconds)
+        _llmConfig.value = _llmConfig.value.copy(ollamaTimeoutSeconds = clamped)
+        ollamaTimeoutJob?.cancel()
+        ollamaTimeoutJob = viewModelScope.launch {
+            try {
+                delay(1000)
+                settingsRepository.updateConfig { current ->
+                    current.copy(ollamaTimeoutSeconds = clamped)
+                }
+            } catch (e: Exception) {
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    android.util.Log.e("SettingsViewModel", "Failed to update Ollama timeout: ${e.message}", e)
                 }
             }
         }

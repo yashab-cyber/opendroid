@@ -155,6 +155,8 @@ Cloud network requests (OpenAI, Anthropic, Gemini) enforce:
 - Maximum 15-second connection, read, and write timeouts.
 - Exponential backoff retry logic for `HTTP 429` (Rate Limited) and `5xx` server error responses.
 
+Ollama is the exception: a cold local model load can outlast 15 seconds, so its read and write timeouts come from **Settings → Ollama → Response Timeout** (default 120 s, clamped to 15–600 s). Its connect timeout stays at 15 seconds.
+
 ### 7.2. Provider Failover Cascade
 
 If an active cloud provider fails after retries, `LLMProviderFactory` catches the exception and attempts failover to secondary cloud providers or local LiteRT-LM / Ollama offline engines.
