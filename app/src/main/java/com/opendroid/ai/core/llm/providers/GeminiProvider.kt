@@ -3,6 +3,7 @@ package com.opendroid.ai.core.llm.providers
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.opendroid.ai.core.llm.*
+import com.opendroid.ai.core.llm.error.LLMErrorMapper
 import com.opendroid.ai.core.llm.error.ProviderErrorDetail
 import com.opendroid.ai.core.llm.error.toSafeProviderException
 import com.opendroid.ai.data.repository.SettingsRepository
@@ -107,14 +108,17 @@ class GeminiProvider @Inject constructor(
                 throw IOException("Empty response body from Gemini")
             }
             val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
-            val candidates = jsonResponse.getAsJsonArray("candidates")
-            val firstCandidate = candidates[0].asJsonObject
-            val contentObj = firstCandidate.getAsJsonObject("content")
-            val parts = contentObj.getAsJsonArray("parts")
-            val text = parts[0].asJsonObject.get("text").asString
+            val text = replyText(jsonResponse)
+                ?: throw if (wasBlocked(jsonResponse)) {
+                    LLMErrorMapper.requestInvalid(name, selectedModel)
+                } else {
+                    // e.g. finishReason MAX_TOKENS with no parts: on 2.5 models thinking
+                    // counts against maxOutputTokens and can use up a small budget (#87).
+                    LLMErrorMapper.malformed(name, selectedModel)
+                }
 
-            val usageMetadata = jsonResponse.getAsJsonObject("usageMetadata")
-            val totalTokens = usageMetadata?.get("totalTokenCount")?.asInt ?: 0
+            val usageMetadata = jsonResponse.get("usageMetadata")?.takeIf { it.isJsonObject }?.asJsonObject
+            val totalTokens = usageMetadata?.get("totalTokenCount")?.takeIf { it.isJsonPrimitive }?.asInt ?: 0
 
             LLMResponse(
                 content = text,
@@ -125,6 +129,30 @@ class GeminiProvider @Inject constructor(
             )
         }
         } // withContext
+    }
+
+    /** The first candidate's text parts joined, or null when it has none. */
+    private fun replyText(response: JsonObject): String? {
+        val candidate = response.get("candidates")?.takeIf { it.isJsonArray }?.asJsonArray
+            ?.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
+        val parts = candidate.get("content")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("parts")?.takeIf { it.isJsonArray }?.asJsonArray ?: return null
+        return parts
+            .mapNotNull { part -> part.takeIf { it.isJsonObject }?.asJsonObject }
+            .filterNot { part -> part.get("thought")?.takeIf { it.isJsonPrimitive }?.asBoolean == true }
+            .mapNotNull { part -> part.get("text")?.takeIf { it.isJsonPrimitive }?.asString }
+            .joinToString("")
+            .ifEmpty { null }
+    }
+
+    /** Gemini refused the prompt, or stopped the candidate, for a content policy reason. */
+    private fun wasBlocked(response: JsonObject): Boolean {
+        val promptBlocked = response.get("promptFeedback")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.has("blockReason") == true
+        val finishReason = response.get("candidates")?.takeIf { it.isJsonArray }?.asJsonArray
+            ?.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("finishReason")?.takeIf { it.isJsonPrimitive }?.asString
+        return promptBlocked || finishReason in BLOCKED_FINISH_REASONS
     }
 
     private fun executeNanoMock(request: LLMRequest): LLMResponse {
@@ -172,3 +200,8 @@ class GeminiProvider @Inject constructor(
         return !config.apiKeys[name].isNullOrBlank()
     }
 }
+
+/** Gemini finish reasons that mean the candidate was withheld for policy reasons. */
+private val BLOCKED_FINISH_REASONS = setOf(
+    "SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "IMAGE_SAFETY"
+)
