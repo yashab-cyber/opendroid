@@ -169,7 +169,7 @@ if (heroVideo && heroVideoToggle) {
 // (element just stays hidden) if the API is unreachable or rate-limited.
 const ghStats = document.getElementById('gh-stats');
 if (ghStats) {
-  fetch('https://api.github.com/repos/yashab-cyber/opendroid')
+  fetch('https://api.github.com/repos/JMAN730/opendroid')
     .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
     .then(data => {
       const stars = ghStats.querySelector('[data-stat="stars"]');

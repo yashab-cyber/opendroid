@@ -13,9 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/yashab-cyber/opendroid/releases"><img src="https://img.shields.io/github/v/release/yashab-cyber/opendroid?style=for-the-badge&color=00FF88&labelColor=0D1117&logo=android&logoColor=white" alt="Release"></a>
-  <a href="https://github.com/yashab-cyber/opendroid/stargazers"><img src="https://img.shields.io/github/stars/yashab-cyber/opendroid?style=for-the-badge&color=FFD700&labelColor=0D1117&logo=github&logoColor=white" alt="Stars"></a>
-  <a href="https://github.com/yashab-cyber/opendroid/blob/main/LICENSE"><img src="https://img.shields.io/github/license/yashab-cyber/opendroid?style=for-the-badge&color=00BFFF&labelColor=0D1117" alt="License"></a>
+  <a href="https://github.com/JMAN730/opendroid/releases"><img src="https://img.shields.io/github/v/release/JMAN730/opendroid?style=for-the-badge&color=00FF88&labelColor=0D1117&logo=android&logoColor=white" alt="Release"></a>
+  <a href="https://github.com/JMAN730/opendroid/stargazers"><img src="https://img.shields.io/github/stars/JMAN730/opendroid?style=for-the-badge&color=FFD700&labelColor=0D1117&logo=github&logoColor=white" alt="Stars"></a>
+  <a href="https://github.com/JMAN730/opendroid/blob/main/LICENSE"><img src="https://img.shields.io/github/license/JMAN730/opendroid?style=for-the-badge&color=00BFFF&labelColor=0D1117" alt="License"></a>
   <a href="https://discord.gg/knRMyFmvpp"><img src="https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=0D1117" alt="Discord"></a>
 </p>
 
@@ -200,7 +200,7 @@ OpenDroid supports **13 LLM providers** with automatic failover:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yashab-cyber/opendroid.git
+git clone https://github.com/JMAN730/opendroid.git
 cd opendroid
 
 # Build debug APK
@@ -241,11 +241,11 @@ See [SECURITY.md](docs/SECURITY.md) for details.
 ## ⭐ Star History
 
 
-<a href="https://www.star-history.com/?repos=yashab-cyber%2Fopendroid&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=JMAN730%2Fopendroid&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=yashab-cyber/opendroid&type=date&theme=dark&legend=top-left&sealed_token=_Y78t8Ar-D4NNqkSXt6ARVN22DZYznwQAD5wzR40TUgqtwjvMk5dU9wruh4XFvB5MkstKgAkNa1imj3B_TFGFcZkSEuKdTVmDTeay8Tnp2cYn3H4gDp_3A" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=yashab-cyber/opendroid&type=date&legend=top-left&sealed_token=_Y78t8Ar-D4NNqkSXt6ARVN22DZYznwQAD5wzR40TUgqtwjvMk5dU9wruh4XFvB5MkstKgAkNa1imj3B_TFGFcZkSEuKdTVmDTeay8Tnp2cYn3H4gDp_3A" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=yashab-cyber/opendroid&type=date&legend=top-left&sealed_token=_Y78t8Ar-D4NNqkSXt6ARVN22DZYznwQAD5wzR40TUgqtwjvMk5dU9wruh4XFvB5MkstKgAkNa1imj3B_TFGFcZkSEuKdTVmDTeay8Tnp2cYn3H4gDp_3A" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JMAN730/opendroid&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JMAN730/opendroid&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JMAN730/opendroid&type=date&legend=top-left" />
  </picture>
 </a>
  
@@ -279,5 +279,5 @@ limitations under the License.
 </p>
 
 <p align="center">
-  <a href="https://github.com/yashab-cyber/opendroid">⭐ Star this repo</a> if OpenDroid has helped you!
+  <a href="https://github.com/JMAN730/opendroid">⭐ Star this repo</a> if OpenDroid has helped you!
 </p>

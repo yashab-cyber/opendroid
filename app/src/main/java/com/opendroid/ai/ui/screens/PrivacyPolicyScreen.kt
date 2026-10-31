@@ -231,7 +231,7 @@ fun PrivacyPolicyScreen(
                 PolicySection(
                     title = "10. CONTACT",
                     content = "If you have questions about this privacy policy or OpenDroid's data practices, " +
-                            "please open an issue on our GitHub repository (yashab-cyber/opendroid) or contact the development team.\n\n" +
+                            "please open an issue on our GitHub repository (JMAN730/opendroid) or contact the development team.\n\n" +
                             "• Email: yashabalam707@gmail.com\n" +
                             "• You can also contact us at: opendroid.ai@gmail.com"
                 )

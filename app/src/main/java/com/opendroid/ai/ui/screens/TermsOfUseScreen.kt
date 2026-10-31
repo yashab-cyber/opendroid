@@ -187,7 +187,7 @@ fun TermsOfUseScreen(
             item {
                 PolicySection(
                     title = "9. CONTACT",
-                    content = "For questions about these Terms of Use, please open an issue on our GitHub repository (yashab-cyber/opendroid) or contact the development team.\n\n" +
+                    content = "For questions about these Terms of Use, please open an issue on our GitHub repository (JMAN730/opendroid) or contact the development team.\n\n" +
                             "• Email: opendroid.ai@gmail.com\n" +
                             "• Email: yashabalam707@gmail.com"
                 )

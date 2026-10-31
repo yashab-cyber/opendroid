@@ -1,8 +1,8 @@
 # 🚀 OpenDroid Product Hunt Launch & Community Kit
 
 > **Product Hunt Listing**: [OpenDroid on Product Hunt](https://www.producthunt.com/products/opendroid?utm_source=other&utm_medium=social)  
-> **GitHub Repository**: [yashab-cyber/OpenDroid](https://github.com/yashab-cyber/OpenDroid)  
-> **Official Website**: [yashab-cyber.github.io/opendroid](https://yashab-cyber.github.io/opendroid/)
+> **GitHub Repository**: [JMAN730/opendroid](https://github.com/JMAN730/opendroid)  
+> **Official Website**: [jman730.github.io/opendroid](https://jman730.github.io/opendroid/)
 
 ---
 
