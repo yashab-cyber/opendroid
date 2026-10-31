@@ -179,15 +179,14 @@ class LiteRTLMProvider @Inject constructor(
 
             var lastLength = 0
             try {
-                conversation.sendMessageAsync(prompt).collect { msg ->
-                    val fullText = msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
+                val snapshots = conversation.sendMessageAsync(prompt).map { msg ->
+                    msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
+                }
+                collectCapped(snapshots, maxAllowedTokens) { fullText ->
                     if (fullText.length > lastLength) {
                         val delta = fullText.substring(lastLength)
                         lastLength = fullText.length
                         emit(delta)
-                    }
-                    if (PromptBudget.estimateTokens(fullText) >= maxAllowedTokens) {
-                        return@collect
                     }
                 }
             } finally {
@@ -440,13 +439,10 @@ class LiteRTLMProvider @Inject constructor(
                     val maxAllowedTokens = checkPromptFits(prompt, spec, maxTokens)
                     var accumulatedText = ""
                     kotlinx.coroutines.runBlocking {
-                        conversation.sendMessageAsync(prompt).collect { msg ->
-                            val text = msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
-                            accumulatedText = text
-                            if (PromptBudget.estimateTokens(accumulatedText) >= maxAllowedTokens) {
-                                return@collect
-                            }
+                        val snapshots = conversation.sendMessageAsync(prompt).map { msg ->
+                            msg.contents.contents.filterIsInstance<Content.Text>().joinToString("") { it.text }
                         }
+                        collectCapped(snapshots, maxAllowedTokens) { text -> accumulatedText = text }
                     }
                     accumulatedText
                 } finally {
