@@ -160,7 +160,9 @@ class LinkedInAdapter @Inject constructor(
                 )
             )
         }
-        return Result.success(ReplyCommentResult(success = true, platformReplyId = "urn:li:comment:${System.currentTimeMillis()}"))
+        // There is no API call behind this yet; reporting success marked comments as
+        // replied although nothing reached LinkedIn (#93).
+        return Result.failure(UnsupportedOperationException("Replying on LinkedIn isn't supported yet."))
     }
 
     override suspend fun fetchAnalytics(credentials: SocialCredentials): Result<SocialAnalytics> {

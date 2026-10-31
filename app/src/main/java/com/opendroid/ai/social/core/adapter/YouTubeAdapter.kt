@@ -73,13 +73,9 @@ class YouTubeAdapter @Inject constructor(
                 )
             )
         }
-        return Result.success(
-            PublishPostResult(
-                success = true,
-                platformPostId = "yt_${System.currentTimeMillis()}",
-                url = "https://youtube.com"
-            )
-        )
+        // There is no API call behind this yet; reporting success marked posts PUBLISHED
+        // although nothing reached YouTube (#93).
+        return Result.failure(UnsupportedOperationException("Publishing to YouTube isn't supported yet."))
     }
 
     override suspend fun fetchInbox(credentials: SocialCredentials, since: Long?): Result<List<SocialInteraction>> {
@@ -138,7 +134,8 @@ class YouTubeAdapter @Inject constructor(
                 )
             )
         }
-        return Result.success(ReplyCommentResult(success = true, platformReplyId = "yt_reply_${System.currentTimeMillis()}"))
+        // No API call behind this yet; see publishPost (#93).
+        return Result.failure(UnsupportedOperationException("Replying on YouTube isn't supported yet."))
     }
 
     override suspend fun fetchAnalytics(credentials: SocialCredentials): Result<SocialAnalytics> {
