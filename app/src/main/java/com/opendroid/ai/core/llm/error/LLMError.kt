@@ -117,6 +117,8 @@ object SecretRegistry {
 object LLMErrorMapper {
     private const val MAX_ERROR_BODY_CHARS = 32_768
     private val GO_DURATION_PART = Regex("""(\d+(?:\.\d+)?)(ms|h|m|s)""")
+    /** delay-seconds, plus the fractional form some providers send ("1.25"). */
+    private val RETRY_AFTER_SECONDS = Regex("""\d+(?:\.\d+)?""")
 
     fun fromHttpFailure(
         provider: ProviderErrorDetail.Provider,
@@ -300,8 +302,9 @@ object LLMErrorMapper {
 
     private fun parseRetryAfter(value: String?): Long? {
         val text = value?.trim()?.takeIf(String::isNotEmpty) ?: return null
-        text.toDoubleOrNull()?.takeIf { it >= 0.0 }?.let {
-            return (it * 1_000.0).roundToLong()
+        // Not toDoubleOrNull alone: it also accepts "Infinity", "NaN", "1e30" and hex floats.
+        if (RETRY_AFTER_SECONDS.matches(text)) {
+            return (text.toDouble() * 1_000.0).roundToLong()
         }
 
         val parts = GO_DURATION_PART.findAll(text).toList()
