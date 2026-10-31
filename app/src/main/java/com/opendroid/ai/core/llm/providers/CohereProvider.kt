@@ -1,8 +1,8 @@
 package com.opendroid.ai.core.llm.providers
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.opendroid.ai.core.llm.*
+import com.opendroid.ai.core.llm.error.LLMErrorMapper
 import com.opendroid.ai.core.llm.error.ProviderErrorDetail
 import com.opendroid.ai.core.llm.error.toSafeProviderException
 import com.opendroid.ai.data.repository.SettingsRepository
@@ -67,13 +67,13 @@ class CohereProvider @Inject constructor(
             }
             val responseBody = response.body.string()
             if (responseBody.isBlank()) throw IOException("Empty response body from Cohere")
-            val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
-            val messageObj = jsonResponse.getAsJsonObject("message")
-            val contentArray = messageObj.getAsJsonArray("content")
-            val content = contentArray[0].asJsonObject.get("text").asString
+            val jsonResponse = parseJsonObject(responseBody, name, selectedModel)
+            val content = textOf(jsonResponse.objectOrNull("message")?.get("content"))
+                ?: throw LLMErrorMapper.malformed(name, selectedModel)
 
-            val usage = jsonResponse.getAsJsonObject("usage")
-            val tokensUsed = usage?.getAsJsonObject("tokens")?.get("total_tokens")?.asInt ?: 0
+            // v2 reports usage.tokens.{input_tokens, output_tokens}; there is no total.
+            val tokens = jsonResponse.objectOrNull("usage")?.objectOrNull("tokens")
+            val tokensUsed = tokens?.let { (it.intOrNull("input_tokens") ?: 0) + (it.intOrNull("output_tokens") ?: 0) } ?: 0
 
             LLMResponse(
                 content = content,

@@ -1,9 +1,9 @@
 package com.opendroid.ai.core.llm.providers
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.opendroid.ai.core.llm.*
 import com.opendroid.ai.core.llm.error.LLMException
+import com.opendroid.ai.core.llm.error.LLMErrorMapper
 import com.opendroid.ai.core.llm.error.ProviderErrorDetail
 import com.opendroid.ai.core.llm.error.toSafeProviderException
 import com.opendroid.ai.data.models.resolveClaudeModelOrNull
@@ -112,13 +112,14 @@ class ClaudeProvider @Inject constructor(
             }
             val responseBody = response.body.string()
             if (responseBody.isBlank()) throw IOException("Empty response body from Claude")
-            val jsonResponse = gson.fromJson(responseBody, JsonObject::class.java)
-            val contentArray = jsonResponse.getAsJsonArray("content")
-            val content = contentArray[0].asJsonObject.get("text").asString
+            val jsonResponse = parseJsonObject(responseBody, name, selectedModel)
+            // Joins every text block; thinking and tool_use blocks carry no reply text.
+            val content = textOf(jsonResponse.get("content"))
+                ?: throw LLMErrorMapper.malformed(name, selectedModel)
 
-            val usage = jsonResponse.getAsJsonObject("usage")
-            val inputTokens = usage?.get("input_tokens")?.asInt ?: 0
-            val outputTokens = usage?.get("output_tokens")?.asInt ?: 0
+            val usage = jsonResponse.objectOrNull("usage")
+            val inputTokens = usage?.intOrNull("input_tokens") ?: 0
+            val outputTokens = usage?.intOrNull("output_tokens") ?: 0
 
             LLMResponse(
                 content = content,
