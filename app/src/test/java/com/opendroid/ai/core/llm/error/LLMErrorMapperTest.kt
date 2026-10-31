@@ -82,6 +82,21 @@ class LLMErrorMapperTest {
     }
 
     @Test
+    fun `retry after ignores values that are not a delay in seconds`() {
+        // Kotlin's toDoubleOrNull accepts these, but none is a Retry-After delay (#79).
+        for (value in listOf("Infinity", "1e30", "NaN", "-5", "0x1p3")) {
+            val failure = LLMErrorMapper.fromHttpFailure(
+                provider = ProviderErrorDetail.Provider.OPENAI,
+                model = "gpt-4o",
+                httpStatus = 429,
+                headers = mapOf("Retry-After" to value),
+                rawBody = """{"error":{"type":"rate_limit_error"}}"""
+            )
+            assertEquals("Retry-After: $value", null, failure.retryAfterMillis)
+        }
+    }
+
+    @Test
     fun `malformed non-json error retains no body text or secrets`() {
         val key = "sk-secret-value-ABCD6789"
         val raw = "<html>Bearer $key at https://user:password@example.test?key=$key</html>"
