@@ -99,8 +99,8 @@ class SettingsRepository internal constructor(
      * Supplies legacy DataStore values to a write only when direct credential reads are healthy.
      * This gives the one-time DataStore migration a source without exposing it to callers.
      */
-    private fun mergeSecretsForUpdate(persisted: LLMConfig): LLMConfig {
-        val snapshot = (readCredentialSnapshot() as? CredentialSnapshotResult.Success)?.snapshot
+    private fun mergeSecretsForUpdate(persisted: LLMConfig, snapshotResult: CredentialSnapshotResult): LLMConfig {
+        val snapshot = (snapshotResult as? CredentialSnapshotResult.Success)?.snapshot
             ?: return persisted.copy(apiKeys = emptyMap(), elevenLabsApiKey = "")
         return persisted.copy(
             apiKeys = persisted.apiKeys + snapshot.providerApiKeys,
@@ -113,8 +113,11 @@ class SettingsRepository internal constructor(
      * Any failed direct-store mutation rolls back successful earlier mutations and aborts the
      * DataStore transaction, preserving the previously persisted configuration as retry input.
      */
-    private fun storeSecretsAndStrip(config: LLMConfig): CredentialStripResult {
-        val snapshot = when (val snapshotResult = readCredentialSnapshot()) {
+    private fun storeSecretsAndStrip(
+        config: LLMConfig,
+        snapshotResult: CredentialSnapshotResult
+    ): CredentialStripResult {
+        val snapshot = when (snapshotResult) {
             is CredentialSnapshotResult.Success -> snapshotResult.snapshot
             is CredentialSnapshotResult.Failure -> return CredentialStripResult.Failure(snapshotResult.state)
         }
@@ -291,18 +294,42 @@ class SettingsRepository internal constructor(
         update: (LLMConfig) -> LLMConfig
     ): ProviderCredentialPersistenceState = withContext(Dispatchers.IO) {
         try {
+            var credentialsNotSaved: ProviderCredentialPersistenceState? = null
             dataStore.edit { preferences ->
+                credentialsNotSaved = null
                 val currentConfig = decodeConfig(preferences[llmConfigKey])
-                val newConfig = update(mergeSecretsForUpdate(currentConfig))
-                when (val result = storeSecretsAndStrip(newConfig)) {
+                // One credential snapshot per transaction: reading twice let an unreadable
+                // first read and a healthy second one look like every key was removed (#106).
+                val snapshot = readCredentialSnapshot()
+                val input = mergeSecretsForUpdate(currentConfig, snapshot)
+                val newConfig = update(input)
+                when (val result = storeSecretsAndStrip(newConfig, snapshot)) {
                     is CredentialStripResult.Success -> {
                         preferences[llmConfigKey] = json.encodeToString(result.strippedConfig)
                     }
-                    is CredentialStripResult.Failure -> throw CredentialPersistenceAborted(result.state)
+                    is CredentialStripResult.Failure -> {
+                        val credentialsUntouched = newConfig.apiKeys == input.apiKeys &&
+                            newConfig.elevenLabsApiKey == input.elevenLabsApiKey
+                        if (snapshot !is CredentialSnapshotResult.Failure || !credentialsUntouched) {
+                            throw CredentialPersistenceAborted(result.state)
+                        }
+                        // Credentials can't be read (re-entry needed, or storage down), but this
+                        // update changes none of them. Save the rest - Auto Mode, grants - so
+                        // turning YOLO off can't be silently rolled back (#106), and keep the
+                        // stored secret fields exactly as they were, as migration input.
+                        preferences[llmConfigKey] = json.encodeToString(
+                            newConfig.copy(
+                                apiKeys = currentConfig.apiKeys,
+                                elevenLabsApiKey = currentConfig.elevenLabsApiKey
+                            )
+                        )
+                        credentialsNotSaved = result.state
+                    }
                 }
             }
-            mutableProviderCredentialPersistenceState.value = ProviderCredentialPersistenceState.Ready
-            ProviderCredentialPersistenceState.Ready
+            val state = credentialsNotSaved ?: ProviderCredentialPersistenceState.Ready
+            mutableProviderCredentialPersistenceState.value = state
+            state
         } catch (aborted: CredentialPersistenceAborted) {
             mutableProviderCredentialPersistenceState.value = aborted.state
             aborted.state
