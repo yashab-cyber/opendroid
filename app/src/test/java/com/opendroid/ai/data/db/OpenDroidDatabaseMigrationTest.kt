@@ -8,6 +8,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
+import com.opendroid.ai.di.DatabaseModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -94,31 +95,7 @@ class OpenDroidDatabaseMigrationTest {
 
     @Test
     fun `full migration chain from 1 to 7 produces the current schema and keeps data`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        context.deleteDatabase(TEST_DATABASE)
-
-        // Version 1 predates schema export (app/schemas only contains 6.json and
-        // 7.json), so the v1 database is created by hand: every table that no
-        // MIGRATION_* creates must already have existed at version 1.
-        FrameworkSQLiteOpenHelperFactory().create(
-            SupportSQLiteOpenHelper.Configuration.builder(context)
-                .name(databasePath)
-                .callback(V1SchemaCallback())
-                .build()
-        ).writableDatabase.use { db ->
-            db.execSQL(
-                """
-                INSERT INTO conversations (`id`, `text`, `sender`, `timestamp`, `modelBadge`)
-                VALUES ('msg-1', 'hello', 'USER', 42, NULL)
-                """.trimIndent()
-            )
-            db.execSQL(
-                """
-                INSERT INTO memories (`key`, `value`, `type`, `timestamp`, `ttlHours`, `category`)
-                VALUES ('preferred-model', 'claude-sonnet', 'PREFERENCE', 1234, -1, 'FACT')
-                """.trimIndent()
-            )
-        }
+        createVersion1Database(TEST_DATABASE)
 
         // Runs every migration in sequence and validates the final schema
         // against the exported 7.json.
@@ -195,6 +172,93 @@ class OpenDroidDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun `migration 7 to 8 keeps existing data and matches the exported 8 schema`() {
+        helper.createDatabase(databasePath, 7).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO memories (`key`, `value`, `type`, `timestamp`, `ttlHours`, `category`)
+                VALUES ('preferred-model', 'claude-sonnet', 'PREFERENCE', 1234, -1, 'FACT')
+                """.trimIndent()
+            )
+        }
+
+        // Validates habit_events / habit_routines (columns and indices) against 8.json.
+        val migrated = helper.runMigrationsAndValidate(
+            databasePath, 8, true, OpenDroidDatabase.MIGRATION_7_8
+        )
+
+        migrated.query("SELECT `value` FROM memories WHERE `key` = 'preferred-model'").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("claude-sonnet", cursor.getString(0))
+        }
+    }
+
+    @Test
+    fun `migration 8 to 9 matches the exported 9 schema`() {
+        helper.createDatabase(databasePath, 8).close()
+
+        // The data test above runs MIGRATION_8_9 directly; this one validates all
+        // eight social tables (columns and indices) against 9.json.
+        helper.runMigrationsAndValidate(databasePath, 9, true, OpenDroidDatabase.MIGRATION_8_9)
+    }
+
+    @Test
+    fun `the app's database builder upgrades a version 1 database without losing data`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        createVersion1Database(APP_DATABASE)
+
+        // DatabaseModule is what the app ships: if a migration were missing from its
+        // addMigrations list, or produced a schema that differs from the entities,
+        // opening the database here would throw instead of upgrading it.
+        val database = DatabaseModule.provideDatabase(context)
+        try {
+            val db = database.openHelper.writableDatabase
+            assertEquals(9, db.version)
+            db.query("SELECT `text`, `sessionId` FROM conversations WHERE `id` = 'msg-1'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("hello", cursor.getString(0))
+                assertEquals("default_session", cursor.getString(1))
+            }
+            db.query("SELECT `value` FROM memories WHERE `key` = 'preferred-model'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("claude-sonnet", cursor.getString(0))
+            }
+        } finally {
+            database.close()
+            context.deleteDatabase(APP_DATABASE)
+        }
+    }
+
+    /**
+     * Version 1 predates schema export (app/schemas starts at 6.json), so the v1
+     * database is created by hand: every table that no MIGRATION_* creates must
+     * already have existed at version 1. Seeds one chat message and one memory.
+     */
+    private fun createVersion1Database(name: String) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.deleteDatabase(name)
+        FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(context.getDatabasePath(name).absolutePath)
+                .callback(V1SchemaCallback())
+                .build()
+        ).writableDatabase.use { db ->
+            db.execSQL(
+                """
+                INSERT INTO conversations (`id`, `text`, `sender`, `timestamp`, `modelBadge`)
+                VALUES ('msg-1', 'hello', 'USER', 42, NULL)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO memories (`key`, `value`, `type`, `timestamp`, `ttlHours`, `category`)
+                VALUES ('preferred-model', 'claude-sonnet', 'PREFERENCE', 1234, -1, 'FACT')
+                """.trimIndent()
+            )
+        }
+    }
+
     private class V1SchemaCallback : SupportSQLiteOpenHelper.Callback(1) {
         override fun onCreate(db: SupportSQLiteDatabase) {
             V1_CREATE_STATEMENTS.forEach(db::execSQL)
@@ -205,6 +269,9 @@ class OpenDroidDatabaseMigrationTest {
 
     private companion object {
         const val TEST_DATABASE = "migration-test"
+
+        /** The name [DatabaseModule.provideDatabase] opens. */
+        const val APP_DATABASE = "opendroid_database"
 
         // The version-1 schema: the current schema minus everything the
         // migrations add (contactPickerData 1->2, notifications 2->3 with
