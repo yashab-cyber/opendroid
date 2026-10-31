@@ -72,8 +72,10 @@ class LLMProviderFactory @Inject constructor(
             // Direct backend access (for advanced users / testing)
             "LiteRT-LM (On-device)" -> liteRTLMProvider.get()
             else -> {
-                Log.w(TAG, "Unknown LLM provider persisted; falling back to Google Gemini.")
-                geminiProvider.get()
+                // A name this build doesn't know (an auto-backup restored onto an older
+                // version, a renamed provider). Never substitute another vendor for it (#82).
+                Log.w(TAG, "Unknown LLM provider persisted; refusing to route it to another vendor.")
+                return UnknownProvider(name)
             }
         }
         return WrappedLLMProvider(
@@ -169,6 +171,25 @@ class LLMProviderFactory @Inject constructor(
     private companion object {
         const val TAG = "LLMProviderFactory"
     }
+}
+
+/**
+ * Stands in for a saved provider name this build doesn't know. Every call fails as a
+ * configuration error before any network access, so no prompt reaches a vendor the
+ * user didn't choose. Not wrapped: [WrappedLLMProvider] resolves the provider's
+ * default model, which an unknown name doesn't have.
+ */
+private class UnknownProvider(override val name: String) : LLMProvider {
+    override val availableModels: List<String> = emptyList()
+
+    override suspend fun complete(request: LLMRequest): LLMResponse =
+        throw LLMErrorMapper.requestInvalid(name, request.model.orEmpty())
+
+    override fun streamComplete(request: LLMRequest): Flow<String> = flow {
+        throw LLMErrorMapper.requestInvalid(name, request.model.orEmpty())
+    }
+
+    override suspend fun isAvailable(): Boolean = false
 }
 
 data class RetryRuntime(
