@@ -1,5 +1,6 @@
 package com.opendroid.ai.core.storage
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -138,6 +139,8 @@ object StorageWorkspaceProvider {
      * Resolves a path to a File in the app's workspace or allowed roots.
      * Prevents path traversal and maps inaccessible external storage paths to workspace.
      */
+    // lint false positive: "/sdcard" is only matched in a typed path string to remap it into the workspace; it is never used to open storage.
+    @SuppressLint("SdCardPath")
     fun resolveFile(context: Context, pathStr: String?): File {
         val trimmed = pathStr?.trim().orEmpty()
         if (trimmed.startsWith("content://")) {
@@ -509,6 +512,8 @@ object StorageWorkspaceProvider {
 
     // ── Helper Utilities ─────────────────────────────────────────────────
 
+    // lint false positive: these prefixes are only stripped from a typed path string to make it relative; they are never used to open storage.
+    @SuppressLint("SdCardPath")
     private fun cleanRelativePath(pathStr: String?): String {
         var clean = pathStr?.trim().orEmpty()
         val prefixes = listOf("/sdcard/", "/storage/emulated/0/", "sdcard/", "./")
