@@ -35,8 +35,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.opendroid.ai.data.models.AutoMode
 import com.opendroid.ai.data.models.LLMConfig
+import com.opendroid.ai.data.models.OllamaTimeout
 import com.opendroid.ai.data.models.effectiveGrantedActions
 import com.opendroid.ai.data.models.resolvedAutoMode
+import com.opendroid.ai.data.models.resolvedOllamaTimeoutSeconds
 import com.opendroid.ai.core.llm.OnDeviceModelRegistry
 import com.opendroid.ai.core.llm.OnDeviceBackend
 import com.opendroid.ai.core.llm.ConnectionTestState
@@ -622,6 +624,45 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Use local LAN IP (e.g. http://192.168.1.50:11434) if testing from a physical Android device.",
+                                fontSize = 10.sp,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            // Local text so the field can be empty or half-typed; the
+                            // view model clamps what it saves.
+                            val savedOllamaTimeout = config.resolvedOllamaTimeoutSeconds()
+                            var ollamaTimeoutText by remember {
+                                mutableStateOf(savedOllamaTimeout.toString())
+                            }
+                            // Re-sync only when the saved value is not what the text means,
+                            // e.g. the stored setting loaded after first composition.
+                            LaunchedEffect(savedOllamaTimeout) {
+                                val typed = ollamaTimeoutText.toIntOrNull()?.let(OllamaTimeout::clamp)
+                                if (typed != savedOllamaTimeout) {
+                                    ollamaTimeoutText = savedOllamaTimeout.toString()
+                                }
+                            }
+                            OutlinedTextField(
+                                value = ollamaTimeoutText,
+                                onValueChange = { input ->
+                                    val digits = input.filter(Char::isDigit).take(3)
+                                    ollamaTimeoutText = digits
+                                    digits.toIntOrNull()?.let(viewModel::updateOllamaTimeout)
+                                },
+                                label = { Text("Response Timeout (seconds)", fontSize = 12.sp) },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = AccentCyan,
+                                    unfocusedBorderColor = BorderColor,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "How long to wait for a reply (${OllamaTimeout.MIN_SECONDS}–${OllamaTimeout.MAX_SECONDS}s). Raise it if the first message after loading a model times out.",
                                 fontSize = 10.sp,
                                 color = TextSecondary
                             )

@@ -7,6 +7,8 @@ import com.opendroid.ai.core.llm.error.ProviderErrorDetail
 import com.opendroid.ai.core.llm.error.toSafeProviderException
 import com.opendroid.ai.core.util.NetworkErrorFormatter
 import com.opendroid.ai.core.util.UrlUtils
+import com.opendroid.ai.data.models.LLMConfig
+import com.opendroid.ai.data.models.resolvedOllamaTimeoutSeconds
 import com.opendroid.ai.data.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,7 +74,7 @@ class OllamaProvider @Inject constructor(
         }
 
         return withContext(Dispatchers.IO) {
-        client.newCall(requestBuilder.build()).execute().use { response ->
+        httpClientFor(config).newCall(requestBuilder.build()).execute().use { response ->
             if (!response.isSuccessful) {
                 throw response.toSafeProviderException(
                     provider = ProviderErrorDetail.Provider.OLLAMA,
@@ -97,6 +100,19 @@ class OllamaProvider @Inject constructor(
             )
         }
         } // withContext
+    }
+
+    /**
+     * The shared client's 15-second limits suit cloud APIs, but a local server can spend
+     * longer than that loading a model before the first byte. Connect stays at the shared
+     * limit; only read/write follow the user's setting. newBuilder() shares the pool.
+     */
+    internal fun httpClientFor(config: LLMConfig): OkHttpClient {
+        val seconds = config.resolvedOllamaTimeoutSeconds().toLong()
+        return client.newBuilder()
+            .readTimeout(seconds, TimeUnit.SECONDS)
+            .writeTimeout(seconds, TimeUnit.SECONDS)
+            .build()
     }
 
     override fun streamComplete(request: LLMRequest): Flow<String> = flow {
