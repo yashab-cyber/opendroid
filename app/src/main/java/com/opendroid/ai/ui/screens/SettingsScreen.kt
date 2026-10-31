@@ -21,6 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -658,7 +659,15 @@ fun SettingsScreen(
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 ),
-                                modifier = Modifier.fillMaxWidth()
+                                // Once editing ends, show what was saved: an entry of 999
+                                // or 5 is stored clamped, and an empty field keeps the old value.
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focus ->
+                                        if (!focus.isFocused) {
+                                            ollamaTimeoutText = savedOllamaTimeout.toString()
+                                        }
+                                    }
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
