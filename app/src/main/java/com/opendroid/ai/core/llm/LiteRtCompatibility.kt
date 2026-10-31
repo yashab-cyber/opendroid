@@ -50,6 +50,7 @@ object LiteRtCompatibility {
             EngineConfig(
                 modelPath = file.absolutePath,
                 backend = backend(),
+                maxNumTokens = maxNumTokens,
                 cacheDir = cacheDir.absolutePath
             )
         }
@@ -68,6 +69,7 @@ object LiteRtCompatibility {
                 initialize(config)
                 return
             } catch (e: Throwable) {
+                Log.w(TAG, "LiteRT probe failed on ${config.backend}: ${e.javaClass.name}: ${e.message}", e)
                 failures += e
             }
         }
@@ -77,6 +79,7 @@ object LiteRtCompatibility {
         // Ordinary parse/corrupted artifact errors mean a malformed artifact and stay
         // classified as FORMAT_INVALID.
         val first = failures.first()
+        failures.drop(1).filter { it !== first }.forEach(first::addSuppressed)
         if (failures.any { isBackendIncompatibility(it) }) {
             throw LiteRtRuntimeIncompatibilityException(first)
         }
