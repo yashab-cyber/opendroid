@@ -19,13 +19,20 @@ object ExecutionHistoryPrivacy {
         actionName: String,
         params: Map<String, String>
     ): Map<String, String> = params.toSortedMap().mapValues { (key, value) ->
-        if (actionName.equals("SEND_EMAIL", ignoreCase = true) || sensitiveKey.containsMatchIn(key)) {
+        if (actionName.equals("SEND_EMAIL", ignoreCase = true) || isSensitiveParam(key, value)) {
             REDACTED
         } else {
-            val redacted = CrashLogRedactor.redact(value)
-            if (redacted != value) REDACTED else value
+            value
         }
     }
+
+    /**
+     * Whether a param is secret material by its name (`secret`, `token`, ...) or by its
+     * value's shape. Shared with [PlanStoragePrivacy] so every local sink redacts the
+     * same params.
+     */
+    fun isSensitiveParam(key: String, value: String): Boolean =
+        sensitiveKey.containsMatchIn(key) || CrashLogRedactor.redact(value) != value
 
     fun sanitizeDescription(actionName: String, description: String): String =
         if (actionName.equals("SEND_EMAIL", ignoreCase = true)) {

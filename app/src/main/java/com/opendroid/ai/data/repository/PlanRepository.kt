@@ -1,5 +1,6 @@
 package com.opendroid.ai.data.repository
 
+import com.opendroid.ai.core.memory.PlanStoragePrivacy
 import com.opendroid.ai.data.db.dao.PlanDao
 import com.opendroid.ai.data.db.entities.PlanEntity
 import com.opendroid.ai.data.models.Plan
@@ -27,17 +28,19 @@ class PlanRepository @Inject constructor(
         return mapEntityToPlan(entity)
     }
 
+    /** Writes a redacted copy: see [PlanStoragePrivacy]. The caller's [plan] keeps its values. */
     suspend fun savePlan(plan: Plan) {
-        val stepsJson = json.encodeToString(plan.steps)
+        val stored = PlanStoragePrivacy.redactForStorage(plan)
+        val stepsJson = json.encodeToString(stored.steps)
         planDao.insertOrUpdatePlan(
             PlanEntity(
-                planId = plan.planId,
-                goal = plan.goal,
-                estimatedDuration = plan.estimatedDuration,
-                estimatedSteps = plan.estimatedSteps,
+                planId = stored.planId,
+                goal = stored.goal,
+                estimatedDuration = stored.estimatedDuration,
+                estimatedSteps = stored.estimatedSteps,
                 stepsJson = stepsJson,
-                status = plan.status.name,
-                createdAt = plan.createdAt
+                status = stored.status.name,
+                createdAt = stored.createdAt
             )
         )
     }
