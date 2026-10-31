@@ -522,7 +522,7 @@ class LiteRTLMProvider @Inject constructor(
         }
 
         val headerText = sbHeader.toString()
-        val overheadTokens = PromptBudget.estimateTokens(headerText) + 20
+        val overheadTokens = PromptBudget.estimateTokens(headerText) + PromptBudget.PROMPT_OVERHEAD_TOKENS
 
         val fittedMessages = PromptBudget.fitMessagesToBudget(
             messages = messages,
