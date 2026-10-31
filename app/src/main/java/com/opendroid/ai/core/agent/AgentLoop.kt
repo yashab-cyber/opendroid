@@ -1240,6 +1240,15 @@ class AgentLoop @Inject constructor(
             // Refresh current state of plan
             currentPlanState = planManager.currentPlan.value ?: break
 
+            // The user said no to a confirmation: nothing after it may run, whatever the
+            // re-evaluation would say (#101).
+            val finishedStep = currentPlanState.steps.firstOrNull { it.stepId == stepToExecute.stepId }
+            if (finishedStep != null && PlanContinuation.endsPlan(finishedStep)) {
+                planManager.cancelPlan(currentPlanState.planId)
+                speakAndSaveSummary(currentPlanState, false, sessionId)
+                return
+            }
+
             // Re-evaluate Plan Loop
             val completed = currentPlanState.steps.filter { it.status == StepStatus.COMPLETED }
             val failed = currentPlanState.steps.filter { it.status == StepStatus.FAILED }
@@ -1277,13 +1286,13 @@ class AgentLoop @Inject constructor(
                 onSpeakCallback?.invoke(reEval.speech)
             }
 
-            when (reEval.decision.uppercase()) {
-                "ABANDON" -> {
+            when (PlanContinuation.decision(reEval.decision)) {
+                PlanContinuation.Decision.ABANDON -> {
                     planManager.updatePlanStatus(PlanStatus.FAILED)
                     speakAndSaveSummary(currentPlanState, false, sessionId)
                     return
                 }
-                "MODIFY" -> {
+                PlanContinuation.Decision.MODIFY -> {
                     if (reEval.updatedPlan != null) {
                         planManager.startNewPlan(
                             PlanRevision.merge(currentPlanState, reEval.updatedPlan.steps),
@@ -1292,7 +1301,7 @@ class AgentLoop @Inject constructor(
                         if (!keepRunningAfterRevision(currentPlanState, sessionId)) return
                     }
                 }
-                "CONTINUE" -> {
+                PlanContinuation.Decision.CONTINUE -> {
                     // Do nothing, continue to next step
                 }
             }
