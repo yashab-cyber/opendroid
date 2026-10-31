@@ -48,7 +48,7 @@ class AutoReplyEngine @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     // Track pending auto-replies so we can cancel them if user replies manually
-    private val pendingReplies = mutableMapOf<String, Job>()
+    private val pendingReplies = PendingReplies()
 
     // Track when we last sent an auto-reply per contact key to detect bouncebacks
     // Store both timestamp and the reply text to verify it's actually an echo
@@ -93,9 +93,6 @@ class AutoReplyEngine @Inject constructor(
         context: Context
     ) {
         val contactKey = "${notification.packageName}:${notification.contactName ?: notification.title}"
-
-        // Cancel any existing pending reply for this contact (they sent another message)
-        pendingReplies[contactKey]?.cancel()
 
         val job = scope.launch {
             try {
@@ -154,11 +151,12 @@ class AutoReplyEngine @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "Auto-reply failed: ${e.message}")
             } finally {
-                pendingReplies.remove(contactKey)
+                pendingReplies.finished(contactKey, coroutineContext.job)
             }
         }
 
-        pendingReplies[contactKey] = job
+        // Replaces (and cancels) any reply already waiting for this contact: they sent another message.
+        pendingReplies.register(contactKey, job)
     }
 
     /**
@@ -166,16 +164,14 @@ class AutoReplyEngine @Inject constructor(
      */
     fun cancelPendingReply(packageName: String, contactName: String?) {
         val contactKey = "$packageName:${contactName ?: ""}"
-        pendingReplies[contactKey]?.cancel()
-        pendingReplies.remove(contactKey)
+        pendingReplies.cancel(contactKey)
     }
 
     /**
      * Cancel all pending auto-replies.
      */
     fun cancelAll() {
-        pendingReplies.values.forEach { it.cancel() }
-        pendingReplies.clear()
+        pendingReplies.cancelAll()
     }
 
     private fun shouldAutoReply(notification: NotificationEntity, config: AutoReplyConfig): Boolean {
