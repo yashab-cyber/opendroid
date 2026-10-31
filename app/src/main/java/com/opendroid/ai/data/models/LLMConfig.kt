@@ -113,6 +113,9 @@ fun LLMConfig.selectedModelFor(providerName: String): String {
     }
 }
 
+/** Model IDs that "Delete Unused Models" must keep. */
+fun LLMConfig.modelsInUse(): Set<String> = setOf(activeModel)
+
 fun LLMConfig.withSelectedModel(providerName: String, model: String): LLMConfig {
     val provider = ProviderCatalog.canonicalName(providerName)
     require(ProviderCatalog.isKnown(provider)) { "Unknown LLM provider." }

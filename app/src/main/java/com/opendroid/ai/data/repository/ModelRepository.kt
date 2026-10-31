@@ -14,6 +14,7 @@ import com.opendroid.ai.data.db.entities.ModelStatus
 import com.opendroid.ai.data.db.dao.markDownloadReady
 import com.opendroid.ai.data.db.dao.markDownloadFailed
 import com.opendroid.ai.data.db.dao.clearDownloadState
+import com.opendroid.ai.data.models.modelsInUse
 import com.opendroid.ai.data.models.withActiveProvider
 import com.opendroid.ai.data.models.withSelectedModel
 import kotlinx.coroutines.CoroutineScope
@@ -505,11 +506,10 @@ class ModelRepository @Inject constructor(
     }
 
     suspend fun deleteUnusedModels() {
-        val config = settingsRepository.llmConfig.first()
-        val activeModelId = config.activeModel
-        
+        val modelsInUse = settingsRepository.llmConfig.first().modelsInUse()
+
         OnDeviceModelRegistry.liteRTOnly.forEach { spec ->
-            if (spec.id != activeModelId) {
+            if (spec.id !in modelsInUse) {
                 val dir = getModelDir(spec.id)
                 if (dir.exists()) {
                     dir.deleteRecursively()
@@ -524,9 +524,9 @@ class ModelRepository @Inject constructor(
             }
         }
 
-        // Remove custom imports that are not the active model
+        // Remove custom imports that no provider is set to run
         modelDao.getAllModels().first().forEach { entity ->
-            if (OnDeviceModelRegistry.isCustomId(entity.id) && entity.id != activeModelId) {
+            if (OnDeviceModelRegistry.isCustomId(entity.id) && entity.id !in modelsInUse) {
                 cancelDownload(
                     OnDeviceModelRegistry.customSpec(
                         id = entity.id,
