@@ -125,6 +125,69 @@ class GeminiProviderNetworkTest {
     }
 
     @Test
+    fun `a MAX_TOKENS candidate with no text parts fails as a malformed response`() {
+        // 2.5 models count thinking against maxOutputTokens; a small budget can end
+        // with no parts at all (#87). That used to throw a NullPointerException.
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"candidates":[{"content":{"role":"model"},"finishReason":"MAX_TOKENS","index":0}],
+                   "usageMetadata":{"promptTokenCount":30,"totalTokenCount":286}}"""
+            )
+        )
+
+        val failure = completeExpectingFailure()
+
+        assertEquals(LLMError.MalformedResponse, failure.error)
+        assertNothingLeaks(failure, apiKey, prompt, systemPrompt, server.hostName)
+    }
+
+    @Test
+    fun `a blocked prompt fails as an invalid request`() {
+        server.enqueue(jsonResponse(200, """{"promptFeedback":{"blockReason":"SAFETY"}}"""))
+
+        val failure = completeExpectingFailure()
+
+        assertEquals(LLMError.RequestInvalid, failure.error)
+    }
+
+    @Test
+    fun `a candidate stopped for safety without content fails as an invalid request`() {
+        server.enqueue(jsonResponse(200, """{"candidates":[{"finishReason":"SAFETY","index":0}]}"""))
+
+        val failure = completeExpectingFailure()
+
+        assertEquals(LLMError.RequestInvalid, failure.error)
+    }
+
+    @Test
+    fun `every text part of the reply is kept`() = runBlocking {
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"candidates":[{"content":{"role":"model","parts":[{"text":"po"},{"text":"ng"}]}}]}"""
+            )
+        )
+
+        assertEquals("pong", provider.complete(newRequest()).content)
+    }
+
+    @Test
+    fun `a null usageMetadata reports zero tokens`() = runBlocking {
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"candidates":[{"content":{"role":"model","parts":[{"text":"pong"}]}}],"usageMetadata":null}"""
+            )
+        )
+
+        val response = provider.complete(newRequest())
+
+        assertEquals("pong", response.content)
+        assertEquals(0, response.tokensUsed)
+    }
+
+    @Test
     fun `a 401 becomes a redacted AuthInvalid`() {
         server.enqueue(
             jsonResponse(
