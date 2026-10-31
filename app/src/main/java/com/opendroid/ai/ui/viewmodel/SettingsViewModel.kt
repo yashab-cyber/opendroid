@@ -34,7 +34,6 @@ import com.opendroid.ai.data.models.selectedModelFor
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
 import com.opendroid.ai.core.security.CredentialStoreResult
 import com.opendroid.ai.core.security.ProviderCredentialId
 import com.opendroid.ai.core.security.ProviderCredentialRecoveryState
@@ -735,17 +734,10 @@ class SettingsViewModel @Inject constructor(
         return try {
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
                 ?: return false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val network = connectivityManager.activeNetwork ?: return false
-                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                    connectivityManager.isActiveNetworkMetered
-            } else {
-                @Suppress("DEPRECATION")
-                val networkInfo = connectivityManager.activeNetworkInfo ?: return false
-                @Suppress("DEPRECATION")
-                networkInfo.type == ConnectivityManager.TYPE_MOBILE
-            }
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                connectivityManager.isActiveNetworkMetered
         } catch (_: Exception) {
             false
         }

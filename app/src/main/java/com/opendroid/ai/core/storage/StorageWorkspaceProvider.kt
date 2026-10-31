@@ -1,10 +1,13 @@
 package com.opendroid.ai.core.storage
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.opendroid.ai.actions.base.ActionResult
 import java.io.File
@@ -48,9 +51,7 @@ object StorageWorkspaceProvider {
             // Some providers or testing environments might not support persistable permissions
         }
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_CUSTOM_FOLDER_URI, uri.toString())
-            .apply()
+            .edit { putString(KEY_CUSTOM_FOLDER_URI, uri.toString()) }
     }
 
     /**
@@ -58,9 +59,7 @@ object StorageWorkspaceProvider {
      */
     fun clearCustomFolder(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .remove(KEY_CUSTOM_FOLDER_URI)
-            .apply()
+            .edit { remove(KEY_CUSTOM_FOLDER_URI) }
     }
 
     /**
@@ -70,7 +69,7 @@ object StorageWorkspaceProvider {
         val uriStr = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_CUSTOM_FOLDER_URI, null) ?: return null
         return try {
-            val uri = Uri.parse(uriStr)
+            val uri = uriStr.toUri()
             val persistedList = try {
                 context.contentResolver.persistedUriPermissions
             } catch (_: Exception) {
@@ -140,6 +139,8 @@ object StorageWorkspaceProvider {
      * Resolves a path to a File in the app's workspace or allowed roots.
      * Prevents path traversal and maps inaccessible external storage paths to workspace.
      */
+    // lint false positive: "/sdcard" is only matched in a typed path string to remap it into the workspace; it is never used to open storage.
+    @SuppressLint("SdCardPath")
     fun resolveFile(context: Context, pathStr: String?): File {
         val trimmed = pathStr?.trim().orEmpty()
         if (trimmed.startsWith("content://")) {
@@ -511,6 +512,8 @@ object StorageWorkspaceProvider {
 
     // ── Helper Utilities ─────────────────────────────────────────────────
 
+    // lint false positive: these prefixes are only stripped from a typed path string to make it relative; they are never used to open storage.
+    @SuppressLint("SdCardPath")
     private fun cleanRelativePath(pathStr: String?): String {
         var clean = pathStr?.trim().orEmpty()
         val prefixes = listOf("/sdcard/", "/storage/emulated/0/", "sdcard/", "./")

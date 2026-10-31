@@ -39,7 +39,7 @@ fun SocialScreen(
 ) {
     val theme = AppTheme.colors
 
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     val accounts by viewModel.accounts.collectAsState()
     val connectedAccounts by viewModel.connectedAccounts.collectAsState()

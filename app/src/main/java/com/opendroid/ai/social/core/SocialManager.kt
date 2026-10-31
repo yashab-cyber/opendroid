@@ -2,6 +2,7 @@ package com.opendroid.ai.social.core
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import com.opendroid.ai.core.security.SocialCredentialStore
 import com.opendroid.ai.data.repository.MemoryRepository
 import com.opendroid.ai.data.repository.SocialRepository
@@ -65,7 +66,7 @@ class SocialManager @Inject constructor(
 
     fun setAutomationLevel(level: AutomationLevel) {
         _automationLevel.value = level
-        prefs.edit().putString(KEY_AUTOMATION_LEVEL, level.name).apply()
+        prefs.edit { putString(KEY_AUTOMATION_LEVEL, level.name) }
     }
 
     // ── ACCOUNTS ─────────────────────────────────────────────────────────────

@@ -2,17 +2,6 @@
 <issues format="6" by="lint 9.3.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.3.1)" variant="all" version="9.3.1">
 
     <issue
-        id="SdCardPath"
-        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
-        errorLine1="                &quot;/sdcard&quot;,  // typically symlinks to externalStorageRoot"
-        errorLine2="                 ~~~~~~~">
-        <location
-            file="src/main/java/com/opendroid/ai/actions/AdvancedControlActions.kt"
-            line="83"
-            column="18"/>
-    </issue>
-
-    <issue
         id="NonObservableLocale"
         message="Reading locale in a non-observable way in a composable function"
         errorLine1="                        else -> message.modelBadge.uppercase(Locale.getDefault())"

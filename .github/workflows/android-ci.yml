@@ -82,6 +82,13 @@ jobs:
       - name: Run Android Lint
         run: ./gradlew :app:lintDebug --stacktrace
 
+      # The Gradle failure names only the first finding. Print the full text
+      # report so every finding is readable in the job log, without having to
+      # download the lint-report artifact.
+      - name: Print lint findings
+        if: failure()
+        run: cat app/build/reports/lint-results-debug.txt || true
+
       - name: Upload lint report
         if: always()
         uses: actions/upload-artifact@v4

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -166,7 +167,7 @@ private fun CommentReviewCard(
     onGenerateReply: ((SuggestedReply) -> Unit) -> Unit
 ) {
     val theme = AppTheme.colors
-    val timeFormatted = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(Date(comment.timestamp))
+    val timeFormatted = SimpleDateFormat("MMM d, HH:mm", LocalConfiguration.current.locales[0]).format(Date(comment.timestamp))
 
     var replyText by remember(comment.id) {
         mutableStateOf(comment.suggestedReply ?: "")

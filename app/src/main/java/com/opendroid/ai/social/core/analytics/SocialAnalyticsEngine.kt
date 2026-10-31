@@ -81,7 +81,7 @@ class SocialAnalyticsEngine @Inject constructor(
         val topPostSummary = topPost?.content?.take(80) ?: "OpenDroid v1.1 milestone announcement"
 
         val aiSummary = if (summary.totalPosts > 0) {
-            "Your product and developer updates generated the strongest engagement this week with ${summary.totalReach} total reach and an average engagement rate of ${String.format("%.1f", summary.averageEngagementRate)}%."
+            "Your product and developer updates generated the strongest engagement this week with ${summary.totalReach} total reach and an average engagement rate of ${String.format(Locale.getDefault(), "%.1f", summary.averageEngagementRate)}%."
         } else {
             "Your social channels remained steady this week. Publishing regular updates and release announcements will increase reach."
         }

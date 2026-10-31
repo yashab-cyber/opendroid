@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +38,7 @@ fun SocialReportsTab(
 ) {
     val context = LocalContext.current
     val theme = AppTheme.colors
-    val timeFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("MMM d, yyyy", LocalConfiguration.current.locales[0])
 
     val dateRange = if (weeklyReport != null) {
         "${timeFormat.format(Date(weeklyReport.startDate))} – ${timeFormat.format(Date(weeklyReport.endDate))}"

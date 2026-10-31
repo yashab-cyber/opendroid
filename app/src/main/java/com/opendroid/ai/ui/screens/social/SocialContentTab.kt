@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -455,7 +456,7 @@ private fun PostItemCard(
     onDelete: () -> Unit
 ) {
     val theme = AppTheme.colors
-    val timeFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("MMM d, HH:mm", LocalConfiguration.current.locales[0])
     val dateString = when {
         post.publishedTime != null -> "Published " + timeFormat.format(Date(post.publishedTime))
         post.scheduledPublishTime != null -> "Scheduled for " + timeFormat.format(Date(post.scheduledPublishTime))
@@ -602,7 +603,7 @@ internal fun ScheduleTimeDialog(
     onConfirm: (Long) -> Unit
 ) {
     val theme = AppTheme.colors
-    var selectedOffsetHours by remember { mutableStateOf(1) }
+    var selectedOffsetHours by remember { mutableIntStateOf(1) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
