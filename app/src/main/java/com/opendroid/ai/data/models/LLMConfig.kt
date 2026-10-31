@@ -113,8 +113,17 @@ fun LLMConfig.selectedModelFor(providerName: String): String {
     }
 }
 
-/** Model IDs that "Delete Unused Models" must keep. */
-fun LLMConfig.modelsInUse(): Set<String> = setOf(activeModel)
+/**
+ * Model IDs that "Delete Unused Models" must keep: the active model, and the model each
+ * on-device provider is set to run whichever provider is active. [activeModel] alone is a
+ * cloud model ID while a cloud provider is active (#115).
+ */
+fun LLMConfig.modelsInUse(): Set<String> =
+    ProviderCatalog.providers
+        .map { it.canonicalName }
+        .filter(ProviderCatalog::isOnDevice)
+        .map(::selectedModelFor)
+        .toSet() + activeModel
 
 fun LLMConfig.withSelectedModel(providerName: String, model: String): LLMConfig {
     val provider = ProviderCatalog.canonicalName(providerName)
