@@ -5,6 +5,7 @@ import com.opendroid.ai.social.domain.model.PostStatus
 import com.opendroid.ai.social.domain.model.SocialInsight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,7 +36,7 @@ class SocialInsightsEngine @Inject constructor(
                 insights.add(
                     SocialInsight(
                         id = UUID.randomUUID().toString(),
-                        observedData = "Announcement posts averaged ${String.format("%.1f", avgAnnouncementEngage)}% engagement vs ${String.format("%.1f", avgOtherEngage)}% for general posts across ${posts.size} published posts.",
+                        observedData = "Announcement posts averaged ${String.format(Locale.getDefault(), "%.1f", avgAnnouncementEngage)}% engagement vs ${String.format(Locale.getDefault(), "%.1f", avgOtherEngage)}% for general posts across ${posts.size} published posts.",
                         calculatedInsight = "Product and feature announcements generated $diffPercent% higher engagement rate than generic updates.",
                         aiRecommendation = "Focus your content schedule on product milestone announcements and developer release notes.",
                         category = "CONTENT_STRATEGY",

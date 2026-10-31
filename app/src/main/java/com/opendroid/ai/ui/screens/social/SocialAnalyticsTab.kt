@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +27,7 @@ import com.opendroid.ai.ui.components.DonutChart
 import com.opendroid.ai.ui.components.SimpleBarChart
 import com.opendroid.ai.ui.components.SimpleLineChart
 import com.opendroid.ai.ui.theme.AppTheme
+import java.util.Locale
 
 @Composable
 fun SocialAnalyticsTab(
@@ -35,6 +37,7 @@ fun SocialAnalyticsTab(
     onRefresh: () -> Unit
 ) {
     val theme = AppTheme.colors
+    val locale = LocalConfiguration.current.locales[0]
     var selectedRangeDays by remember { mutableStateOf(7) }
 
     LazyColumn(
@@ -95,7 +98,7 @@ fun SocialAnalyticsTab(
             ) {
                 AnalyticsMetricBox(
                     title = "Engagement",
-                    value = summary?.averageEngagementRate?.let { "${String.format("%.1f", it)}%" } ?: "0.0%",
+                    value = summary?.averageEngagementRate?.let { "${String.format(locale, "%.1f", it)}%" } ?: "0.0%",
                     delta = "Active",
                     modifier = Modifier.weight(1f)
                 )
@@ -292,8 +295,8 @@ private fun LegendItem(label: String, percent: String, color: Color) {
 
 private fun formatCount(count: Long): String {
     return when {
-        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
-        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+        count >= 1_000_000 -> String.format(Locale.getDefault(), "%.1fM", count / 1_000_000.0)
+        count >= 1_000 -> String.format(Locale.getDefault(), "%.1fK", count / 1_000.0)
         else -> count.toString()
     }
 }
