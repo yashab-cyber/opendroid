@@ -5,6 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.opendroid.ai.actions.base.ActionResult
 import java.io.File
@@ -48,9 +50,7 @@ object StorageWorkspaceProvider {
             // Some providers or testing environments might not support persistable permissions
         }
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_CUSTOM_FOLDER_URI, uri.toString())
-            .apply()
+            .edit { putString(KEY_CUSTOM_FOLDER_URI, uri.toString()) }
     }
 
     /**
@@ -58,9 +58,7 @@ object StorageWorkspaceProvider {
      */
     fun clearCustomFolder(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .remove(KEY_CUSTOM_FOLDER_URI)
-            .apply()
+            .edit { remove(KEY_CUSTOM_FOLDER_URI) }
     }
 
     /**
@@ -70,7 +68,7 @@ object StorageWorkspaceProvider {
         val uriStr = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_CUSTOM_FOLDER_URI, null) ?: return null
         return try {
-            val uri = Uri.parse(uriStr)
+            val uri = uriStr.toUri()
             val persistedList = try {
                 context.contentResolver.persistedUriPermissions
             } catch (_: Exception) {
