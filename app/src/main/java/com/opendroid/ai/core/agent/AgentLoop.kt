@@ -514,7 +514,7 @@ class AgentLoop @Inject constructor(
             planManager.startNewPlan(plan, context, PlanStatus.PROPOSED)
             val approval = settingsRepository.llmConfig.first().approvalSettings()
             if (AutoApprovalPolicy.shouldAutoApprove(approval.mode, approval.grantedActions, plan)) {
-                executePlanLoop(plan, context, sessionId, autoApproved = true)
+                executePlanLoop(plan, context, sessionId)
             } else {
                 proposePlan(plan, sessionId)
             }
@@ -772,7 +772,7 @@ class AgentLoop @Inject constructor(
             val approval = liveConfig.approvalSettings()
             if (AutoApprovalPolicy.shouldAutoApprove(approval.mode, approval.grantedActions, plan)) {
                 recordAutoApprovedTrace(plan, approval.mode, sessionId)
-                executePlanLoop(plan, context, sessionId, autoApproved = true)
+                executePlanLoop(plan, context, sessionId)
             } else {
                 proposePlan(plan, sessionId)
             }
@@ -997,12 +997,31 @@ class AgentLoop @Inject constructor(
         }
     }
 
+    /**
+     * A re-plan may add or change steps, and its prompt carries step results such as
+     * notification and screen text (#99). Unless [PlanRevision] finds every pending step
+     * already approved (or allowed by AUTO policy), park the remainder in the approval
+     * gate. Returns false when the plan was parked.
+     */
+    private suspend fun keepRunningAfterRevision(approved: Plan, sessionId: String): Boolean {
+        val revised = planManager.currentPlan.value ?: return false
+        val approval = settingsRepository.llmConfig.first().approvalSettings()
+        if (PlanRevision.mayRunWithoutApproval(approval.mode, approval.grantedActions, approved, revised)) {
+            return true
+        }
+        // startNewPlan persisted the revision as RUNNING; reflect the approval gate in the
+        // stored status too, so the Plan tab and history match the PlanProposed state.
+        planManager.updatePlanStatus(PlanStatus.PROPOSED)
+        proposePlan(planManager.currentPlan.value ?: revised.copy(status = PlanStatus.PROPOSED), sessionId)
+        return false
+    }
+
     private fun proposePlan(plan: Plan, sessionId: String) {
         proposedPlanSessionId = sessionId
         _agentState.value = AgentState.PlanProposed(plan)
     }
 
-    private suspend fun executePlanLoop(plan: Plan, context: Context, sessionId: String, autoApproved: Boolean = false) {
+    private suspend fun executePlanLoop(plan: Plan, context: Context, sessionId: String) {
         planManager.updatePlanStatus(PlanStatus.RUNNING)
         var currentPlanState = planManager.currentPlan.value ?: return
 
@@ -1169,37 +1188,11 @@ class AgentLoop @Inject constructor(
                     }
                     "MODIFY" -> {
                         if (replan.updatedPlan != null) {
-                            val mergedSteps = currentPlanState.steps.filter { it.status != StepStatus.PENDING } +
-                                    replan.updatedPlan.steps.filter { step ->
-                                        currentPlanState.steps.none { it.stepId == step.stepId }
-                                    }
-                            planManager.startNewPlan(currentPlanState.copy(steps = mergedSteps), context)
-                            // Auto-approved plans: silently injected steps must not run
-                            // past the allowlist. Re-check the merged plan's pending
-                            // steps; if any is blocked, park the WHOLE remainder back
-                            // in the PlanProposed gate. YOLO auto-approves everything
-                            // by design, so this re-check only gates AUTO mode.
-                            if (autoApproved) {
-                                val liveConfig = settingsRepository.llmConfig.first()
-                                val approval = liveConfig.approvalSettings()
-                                val mergedPlan = planManager.currentPlan.value
-                                val pending = mergedPlan?.steps?.filter { it.status == StepStatus.PENDING }.orEmpty()
-                                if (mergedPlan != null && !AutoApprovalPolicy.shouldAutoApprove(
-                                        approval.mode,
-                                        approval.grantedActions,
-                                        mergedPlan.copy(steps = pending)
-                                    )) {
-                                    // startNewPlan persisted the merged plan as RUNNING;
-                                    // reflect the approval gate in the stored status too so
-                                    // the Plan tab and history match the PlanProposed state.
-                                    planManager.updatePlanStatus(PlanStatus.PROPOSED)
-                                    proposePlan(
-                                        planManager.currentPlan.value ?: mergedPlan.copy(status = PlanStatus.PROPOSED),
-                                        sessionId
-                                    )
-                                    return
-                                }
-                            }
+                            planManager.startNewPlan(
+                                PlanRevision.merge(currentPlanState, replan.updatedPlan.steps),
+                                context
+                            )
+                            if (!keepRunningAfterRevision(currentPlanState, sessionId)) return
                         }
                     }
                     else -> {
@@ -1292,11 +1285,11 @@ class AgentLoop @Inject constructor(
                 }
                 "MODIFY" -> {
                     if (reEval.updatedPlan != null) {
-                        val mergedSteps = currentPlanState.steps.filter { it.status != StepStatus.PENDING } +
-                                reEval.updatedPlan.steps.filter { step ->
-                                    currentPlanState.steps.none { it.stepId == step.stepId }
-                                }
-                        planManager.startNewPlan(currentPlanState.copy(steps = mergedSteps), context)
+                        planManager.startNewPlan(
+                            PlanRevision.merge(currentPlanState, reEval.updatedPlan.steps),
+                            context
+                        )
+                        if (!keepRunningAfterRevision(currentPlanState, sessionId)) return
                     }
                 }
                 "CONTINUE" -> {
