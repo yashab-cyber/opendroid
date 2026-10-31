@@ -79,7 +79,7 @@ class LLMProviderFactory @Inject constructor(
         return WrappedLLMProvider(
             delegate = rawProvider,
             configProvider = { settingsRepository.llmConfig.first() },
-            requestRewriter = ::rewriteRequestIfNeeded
+            requestRewriter = { request -> rewriteRequestIfNeeded(name, request) }
         )
     }
 
@@ -133,8 +133,8 @@ class LLMProviderFactory @Inject constructor(
         }
     }
 
-    private fun rewriteRequestIfNeeded(request: LLMRequest): LLMRequest {
-        if (request.systemPrompt.contains("Planning Engine") || request.systemPrompt.contains("AVAILABLE ACTIONS")) {
+    private fun rewriteRequestIfNeeded(providerName: String, request: LLMRequest): LLMRequest {
+        if (PlanningPromptRewrite.applies(providerName, request.systemPrompt)) {
             val userMessageText = request.messages.lastOrNull()?.text ?: ""
             val complexity = intentClassifier.get().classifyComplexity(userMessageText)
             val maxSteps = when (complexity) {
