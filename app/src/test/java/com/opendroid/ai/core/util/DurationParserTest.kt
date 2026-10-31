@@ -39,6 +39,21 @@ class DurationParserTest {
     }
 
     @Test
+    fun `parses decimal amounts instead of only the digits after the dot`() {
+        // "1.5 hours" used to match only "5 hours" and start a 5-hour timer (#78).
+        assertEquals(5400, DurationParser.parseToSeconds("1.5 hours"))
+        assertEquals(5400, DurationParser.parseToSeconds("1.5h"))
+        assertEquals(150, DurationParser.parseToSeconds("2.5 minutes"))
+        assertEquals(30, DurationParser.parseToSeconds("0.5 min"))
+    }
+
+    @Test
+    fun `rounds fractional seconds to the nearest second`() {
+        assertEquals(180, DurationParser.parseToSeconds("2m59.56s"))
+        assertEquals(90, DurationParser.parseToSeconds("1m30.4s"))
+    }
+
+    @Test
     fun `bare digit fallback ignores embedded numbers`() {
         assertEquals(5, DurationParser.parseToSeconds("5"))
         assertNull(DurationParser.parseToSeconds("at 2pm yesterday"))
