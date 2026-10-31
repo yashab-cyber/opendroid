@@ -21,6 +21,8 @@ class StorageWorkspaceProviderTest {
 
     private lateinit var context: Context
 
+    private fun workspace(): File = StorageWorkspaceProvider.getDefaultWorkspaceDir(context)
+
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
@@ -126,6 +128,56 @@ class StorageWorkspaceProviderTest {
         val deleteResult = StorageWorkspaceProvider.deleteFile(context, "subfolder/hello.txt")
         assertTrue(deleteResult.success)
         assertFalse(StorageWorkspaceProvider.readFile(context, "subfolder/hello.txt").success)
+    }
+
+    @Test
+    fun `an absolute path into the app's model storage cannot be deleted`() {
+        // Downloaded models live under getExternalFilesDir(null)/models; an LLM plan
+        // could delete them by absolute path (#90).
+        val models = File(context.getExternalFilesDir(null), "models/m1").apply { mkdirs() }
+        File(models, "weights.bin").writeText("x")
+
+        StorageWorkspaceProvider.deleteFile(context, models.parentFile!!.absolutePath)
+
+        assertTrue(File(models, "weights.bin").exists())
+    }
+
+    @Test
+    fun `an absolute path into the app's private files cannot be overwritten`() {
+        val settings = File(context.filesDir, "datastore/settings.preferences_pb").apply {
+            parentFile!!.mkdirs()
+            writeText("original")
+        }
+
+        StorageWorkspaceProvider.writeFile(context, settings.absolutePath, "overwritten")
+        StorageWorkspaceProvider.deleteFile(context, settings.absolutePath)
+
+        assertEquals("original", settings.readText())
+    }
+
+    @Test
+    fun `root-like paths never delete the whole workspace`() {
+        StorageWorkspaceProvider.writeFile(context, "keep.txt", "x")
+
+        for (path in listOf("", ".", "./", "/", "/sdcard", "/sdcard/", "/storage/emulated/0")) {
+            assertFalse("deleteFile(\"$path\")", StorageWorkspaceProvider.deleteFile(context, path).success)
+        }
+
+        assertEquals("x", StorageWorkspaceProvider.readFile(context, "keep.txt").data)
+    }
+
+    @Test(expected = SecurityException::class)
+    fun `a sibling folder that only shares the workspace's name prefix is rejected`() {
+        StorageWorkspaceProvider.resolveFile(context, "../workspace-other/notes.txt")
+    }
+
+    @Test
+    fun `absolute paths inside the workspace and to the agent's photos still resolve`() {
+        val inWorkspace = File(workspace(), "docs/a.txt")
+        assertEquals(inWorkspace.canonicalPath, StorageWorkspaceProvider.resolveFile(context, inWorkspace.absolutePath).path)
+
+        val photo = File(context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES), "background_photo_1.jpg")
+        assertEquals(photo.canonicalPath, StorageWorkspaceProvider.resolveFile(context, photo.absolutePath).path)
     }
 
     @Test
