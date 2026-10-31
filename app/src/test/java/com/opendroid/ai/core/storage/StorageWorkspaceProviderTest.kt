@@ -21,6 +21,8 @@ class StorageWorkspaceProviderTest {
 
     private lateinit var context: Context
 
+    private fun workspace(): File = StorageWorkspaceProvider.getDefaultWorkspaceDir(context)
+
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
@@ -126,6 +128,42 @@ class StorageWorkspaceProviderTest {
         val deleteResult = StorageWorkspaceProvider.deleteFile(context, "subfolder/hello.txt")
         assertTrue(deleteResult.success)
         assertFalse(StorageWorkspaceProvider.readFile(context, "subfolder/hello.txt").success)
+    }
+
+    @Test
+    fun `moving a folder into its own subfolder fails and keeps the folder`() {
+        // renameTo refuses, and the copy fallback used to recurse into the new subfolder,
+        // then delete the source - destination included - and report success (#89).
+        StorageWorkspaceProvider.writeFile(context, "notes/a.txt", "keep")
+
+        val result = StorageWorkspaceProvider.moveFile(context, "notes", "notes/backup")
+
+        assertFalse(result.success)
+        assertEquals("keep", StorageWorkspaceProvider.readFile(context, "notes/a.txt").data)
+        assertFalse(File(workspace(), "notes/backup").exists())
+    }
+
+    @Test
+    fun `copying a folder into its own subfolder fails without nesting copies`() {
+        StorageWorkspaceProvider.writeFile(context, "notes/a.txt", "keep")
+
+        val result = StorageWorkspaceProvider.copyFile(context, "notes", "notes/copy")
+
+        assertFalse(result.success)
+        assertFalse(File(workspace(), "notes/copy").exists())
+        assertEquals("keep", StorageWorkspaceProvider.readFile(context, "notes/a.txt").data)
+    }
+
+    @Test
+    fun `copying a file onto itself fails and keeps its content`() {
+        // Both paths resolve to workspace/Download/report.txt; the copy used to
+        // truncate the file before reading it (#89).
+        StorageWorkspaceProvider.writeFile(context, "Download/report.txt", "important")
+
+        val result = StorageWorkspaceProvider.copyFile(context, "/sdcard/Download/report.txt", "Download/report.txt")
+
+        assertFalse(result.success)
+        assertEquals("important", StorageWorkspaceProvider.readFile(context, "Download/report.txt").data)
     }
 
     @Test
