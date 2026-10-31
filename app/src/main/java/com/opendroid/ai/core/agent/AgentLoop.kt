@@ -1357,6 +1357,7 @@ class AgentLoop @Inject constructor(
     /**
      * Handle contact disambiguation when an action returns NeedsInput with contact_picker metadata.
      * Shows options to user, waits for selection, stores preference, re-executes action.
+     * An answer like "stop" or "no" cancels: nothing is sent and nothing is remembered.
      */
     private suspend fun handleContactPicker(
         pickerResult: ActionResult.NeedsInput,
@@ -1403,9 +1404,27 @@ class AgentLoop @Inject constructor(
         )
         conversationRepository.insertMessage(sessionId, userPickMsg)
 
-        // Resolve user selection to a contact
+        // Resolve user selection to a contact. Only a clear pick counts: it is
+        // messaged straight away and remembered for this query (#102).
         val choice = ContactChoice.parse(userSelection, matches.map { it["name"] ?: "" })
-        val selectedContact = (choice as? ContactChoice.Picked)?.let { matches.getOrNull(it.index) }
+        val selectedContact = when (choice) {
+            is ContactChoice.Picked -> matches.getOrNull(choice.index)
+            ContactChoice.NotUnderstood -> null
+            ContactChoice.Cancelled -> {
+                // Send nothing and remember nothing.
+                val cancelMsg = ChatMessage(
+                    id = UUID.randomUUID().toString(),
+                    text = "Okay, cancelled. I won't contact any of them.",
+                    sender = ChatMessage.Sender.AGENT,
+                    modelBadge = "System"
+                )
+                conversationRepository.insertMessage(sessionId, cancelMsg)
+                return NeedsInputRetry(
+                    ActionResult.Failure(errorMsg = "Cancelled by the user before choosing a contact"),
+                    originalParams
+                )
+            }
+        }
 
         if (selectedContact == null) {
             // Couldn't match — tell user and fail gracefully
