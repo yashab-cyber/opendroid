@@ -15,7 +15,7 @@ We take the security of OpenDroid seriously. If you believe you have found a sec
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please send an email to **opendroid.ai@gmail.com** or **yashabalam707@gmail.com** with a detailed description of the vulnerability, steps to reproduce it, and any potential impact.
+Instead, please submit a private report through [GitHub private vulnerability reporting](https://github.com/JMAN730/opendroid/security/advisories/new) with a detailed description of the vulnerability, steps to reproduce it, and any potential impact.
 
 Once received:
 1. We will acknowledge receipt of your report within 48 hours.

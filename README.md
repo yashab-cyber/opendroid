@@ -275,7 +275,7 @@ limitations under the License.
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/yashab-cyber"><strong>Yashab Alam</strong></a>
+  Made with ❤️ by <a href="https://github.com/JMAN730"><strong>Jonas Berman</strong></a>
 </p>
 
 <p align="center">

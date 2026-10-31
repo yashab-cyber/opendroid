@@ -19,7 +19,7 @@ OpenDroid has officially launched on Product Hunt! This document serves as the c
 ```markdown
 👋 Hi Product Hunt community! 
 
-I'm Yashab, creator of **OpenDroid** — an open-source, fully autonomous AI agent that runs on your Android device.
+I'm Jonas, maintainer of **OpenDroid** — an open-source, fully autonomous AI agent that runs on your Android device.
 
 ### ❓ Why OpenDroid?
 Most mobile AI apps today are glorified chatbots — you type a question, and they return text. But smartphones are meant for action. We wanted an agent that could handle multi-step real-world workflows on your phone, like:
