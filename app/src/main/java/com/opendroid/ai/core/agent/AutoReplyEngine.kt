@@ -48,7 +48,7 @@ class AutoReplyEngine @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     // Track pending auto-replies so we can cancel them if user replies manually
-    private val pendingReplies = mutableMapOf<String, Job>()
+    private val pendingReplies = PendingReplies()
 
     // Track when we last sent an auto-reply per contact key to detect bouncebacks
     // Store both timestamp and the reply text to verify it's actually an echo
@@ -94,10 +94,9 @@ class AutoReplyEngine @Inject constructor(
     ) {
         val contactKey = "${notification.packageName}:${notification.contactName ?: notification.title}"
 
-        // Cancel any existing pending reply for this contact (they sent another message)
-        pendingReplies[contactKey]?.cancel()
-
-        val job = scope.launch {
+        // LAZY so the job is registered before it can run: with a zero delay it could
+        // otherwise finish before registration and leave a stale entry behind.
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 val config = settingsRepository.autoReplyConfig.first()
 
@@ -115,10 +114,11 @@ class AutoReplyEngine @Inject constructor(
                     Log.d(TAG, "Executing auto-reply immediately (0 sec delay) for ${notification.contactName}")
                 }
 
-                // Re-check config (user might have disabled it during the wait)
+                // Re-check the full policy: during the wait the user may have turned
+                // auto-reply off globally or for this app, or blocklisted the contact.
                 val freshConfig = settingsRepository.autoReplyConfig.first()
-                if (!freshConfig.globalEnabled) {
-                    Log.d(TAG, "Auto-reply disabled during wait period")
+                if (!shouldAutoReply(notification, freshConfig)) {
+                    Log.d(TAG, "Auto-reply no longer allowed after the wait period")
                     return@launch
                 }
 
@@ -154,11 +154,13 @@ class AutoReplyEngine @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "Auto-reply failed: ${e.message}")
             } finally {
-                pendingReplies.remove(contactKey)
+                pendingReplies.finished(contactKey, coroutineContext.job)
             }
         }
 
-        pendingReplies[contactKey] = job
+        // Replaces (and cancels) any reply already waiting for this contact: they sent another message.
+        pendingReplies.register(contactKey, job)
+        job.start()
     }
 
     /**
@@ -166,16 +168,14 @@ class AutoReplyEngine @Inject constructor(
      */
     fun cancelPendingReply(packageName: String, contactName: String?) {
         val contactKey = "$packageName:${contactName ?: ""}"
-        pendingReplies[contactKey]?.cancel()
-        pendingReplies.remove(contactKey)
+        pendingReplies.cancel(contactKey)
     }
 
     /**
      * Cancel all pending auto-replies.
      */
     fun cancelAll() {
-        pendingReplies.values.forEach { it.cancel() }
-        pendingReplies.clear()
+        pendingReplies.cancelAll()
     }
 
     private fun shouldAutoReply(notification: NotificationEntity, config: AutoReplyConfig): Boolean {
