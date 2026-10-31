@@ -258,7 +258,7 @@ private fun CreateCampaignDialog(
     val theme = AppTheme.colors
     var name by remember { mutableStateOf("") }
     var objective by remember { mutableStateOf("") }
-    var durationDays by remember { mutableStateOf(7) }
+    var durationDays by remember { mutableIntStateOf(7) }
     val selectedPlatforms = remember {
         mutableStateListOf(SocialPlatform.X, SocialPlatform.TELEGRAM, SocialPlatform.LINKEDIN)
     }

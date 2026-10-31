@@ -332,7 +332,7 @@ private fun AddRuleDialog(
     var ruleName by remember { mutableStateOf("") }
     var selectedTrigger by remember { mutableStateOf("SENTIMENT_POSITIVE") }
     var selectedAction by remember { mutableStateOf("AUTO_REPLY") }
-    var confidence by remember { mutableStateOf(0.85f) }
+    var confidence by remember { mutableFloatStateOf(0.85f) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

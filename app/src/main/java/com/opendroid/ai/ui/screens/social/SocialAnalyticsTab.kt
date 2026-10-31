@@ -38,7 +38,7 @@ fun SocialAnalyticsTab(
 ) {
     val theme = AppTheme.colors
     val locale = LocalConfiguration.current.locales[0]
-    var selectedRangeDays by remember { mutableStateOf(7) }
+    var selectedRangeDays by remember { mutableIntStateOf(7) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),

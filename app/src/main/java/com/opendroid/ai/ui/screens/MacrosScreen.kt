@@ -35,8 +35,8 @@ import java.util.UUID
 @Composable
 fun MacrosScreen(
     viewModel: MacroViewModel,
-    onNavigateToRoutines: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToRoutines: () -> Unit = {}
 ) {
     val macros by viewModel.macros.collectAsState()
     

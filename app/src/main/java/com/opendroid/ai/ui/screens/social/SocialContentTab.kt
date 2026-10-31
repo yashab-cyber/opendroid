@@ -603,7 +603,7 @@ internal fun ScheduleTimeDialog(
     onConfirm: (Long) -> Unit
 ) {
     val theme = AppTheme.colors
-    var selectedOffsetHours by remember { mutableStateOf(1) }
+    var selectedOffsetHours by remember { mutableIntStateOf(1) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

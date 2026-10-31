@@ -19,8 +19,8 @@ import com.opendroid.ai.ui.theme.AppTheme
 @Composable
 fun SimpleLineChart(
     dataPoints: List<Float>,
+    modifier: Modifier = Modifier,
     labels: List<String> = emptyList(),
-    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),
     lineColor: Color = AppTheme.colors.accentCyan,
     gridColor: Color = AppTheme.colors.borderColor
 ) {
@@ -102,7 +102,7 @@ fun SimpleLineChart(
 fun SimpleBarChart(
     values: List<Float>,
     labels: List<String>,
-    modifier: Modifier = Modifier.fillMaxWidth().height(160.dp),
+    modifier: Modifier = Modifier,
     barColor: Color = AppTheme.colors.textPrimary
 ) {
     if (values.isEmpty()) return
@@ -146,7 +146,7 @@ fun SimpleBarChart(
 fun DonutChart(
     proportions: List<Float>,
     colors: List<Color>,
-    modifier: Modifier = Modifier.size(100.dp)
+    modifier: Modifier = Modifier
 ) {
     val total = proportions.sum().coerceAtLeast(1f)
 

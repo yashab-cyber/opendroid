@@ -35,7 +35,7 @@ fun SocialCalendarTab(
     onNavigateToComposer: () -> Unit
 ) {
     val theme = AppTheme.colors
-    var selectedDayIndex by remember { mutableStateOf(0) }
+    var selectedDayIndex by remember { mutableIntStateOf(0) }
     var reschedulingPostId by remember { mutableStateOf<String?>(null) }
 
     // Generate next 14 days
