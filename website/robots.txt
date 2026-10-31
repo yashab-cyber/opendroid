@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://yashab-cyber.github.io/opendroid/sitemap.xml
+Sitemap: https://jman730.github.io/opendroid/sitemap.xml
 
 # Disallow crawling of non-page assets
 Disallow: /assets/*.mp4

@@ -191,9 +191,9 @@ fun HelpCenterScreen(
             item {
                 PolicySection(
                     title = "CONTACT & SUPPORT",
-                    content = "• GitHub: Report bugs and request features at github.com/yashab-cyber/opendroid\n" +
+                    content = "• GitHub: Report bugs and request features at github.com/JMAN730/opendroid\n" +
                             "• Discord: Join our community for live help and discussion\n" +
-                            "• Email: opendroid.ai@gmail.com / yashabalam707@gmail.com\n\n" +
+                            "• Security: Report vulnerabilities privately at github.com/JMAN730/opendroid/security/advisories/new, not in public issues or Discord\n\n" +
                             "OpenDroid is open-source and community-driven. We welcome contributions!"
                 )
             }

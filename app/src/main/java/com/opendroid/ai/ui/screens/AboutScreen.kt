@@ -309,7 +309,7 @@ fun AboutScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "github.com/yashab-cyber/opendroid",
+                            text = "github.com/JMAN730/opendroid",
                             fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold,

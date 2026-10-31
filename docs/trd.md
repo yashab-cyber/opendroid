@@ -4,7 +4,7 @@
 * **Document Version:** v1.2.0
 * **Last Updated:** August 20, 2026
 * **Status:** Approved
-* **Author:** yashab-cyber
+* **Author:** JMAN730
 
 ---
 
