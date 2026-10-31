@@ -429,6 +429,7 @@ object StorageWorkspaceProvider {
             if (!src.exists()) {
                 return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
             }
+            overlapError(src, dest, "copy")?.let { return it }
             copyRecursively(src, dest)
             ActionResult(true, "Copied from ${src.absolutePath} to ${dest.absolutePath}!", null)
         } catch (e: Exception) {
@@ -443,13 +444,20 @@ object StorageWorkspaceProvider {
             if (!src.exists()) {
                 return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
             }
+            overlapError(src, dest, "move")?.let { return it }
             dest.parentFile?.mkdirs()
             val renamed = src.renameTo(dest)
             if (renamed) {
                 ActionResult(true, "Moved from ${src.absolutePath} to ${dest.absolutePath}!", null)
             } else {
                 copyRecursively(src, dest)
-                src.deleteRecursively()
+                if (!src.deleteRecursively()) {
+                    return ActionResult(
+                        false,
+                        null,
+                        "Copied to ${dest.absolutePath}, but couldn't remove the original at ${src.absolutePath}."
+                    )
+                }
                 ActionResult(true, "Moved from ${src.absolutePath} to ${dest.absolutePath}!", null)
             }
         } catch (e: Exception) {
@@ -464,6 +472,8 @@ object StorageWorkspaceProvider {
             if (!src.exists()) {
                 return ActionResult(false, null, "Source path does not exist: ${src.absolutePath}")
             }
+            // A zip inside its own source would read back its growing output until storage is full.
+            overlapError(src, zipFile, "zip")?.let { return it }
             zipFile.parentFile?.mkdirs()
             ZipOutputStream(zipFile.outputStream().buffered()).use { zos ->
                 zipRecursively(src, src, zos)
@@ -576,12 +586,31 @@ object StorageWorkspaceProvider {
         }
     }
 
+    /**
+     * Fails when [dest] is [src] or lies inside it (#89). Copying a folder into itself
+     * recurses until the path is too long (and a move then deleted the source, destination
+     * included), and a file copied onto itself is truncated before it is read.
+     */
+    private fun overlapError(src: File, dest: File, verb: String): ActionResult? {
+        val srcPath = src.canonicalPath
+        val destPath = dest.canonicalPath
+        return when {
+            destPath == srcPath ->
+                ActionResult(false, null, "Can't $verb ${src.absolutePath} onto itself.")
+            destPath.startsWith(srcPath + File.separator) ->
+                ActionResult(false, null, "Can't $verb ${src.absolutePath} into ${dest.absolutePath}, which is inside it.")
+            else -> null
+        }
+    }
+
     private fun copyRecursively(src: File, dest: File) {
         if (src.isDirectory) {
+            // List before creating dest, so a dest inside src can never be part of its own copy.
+            val children = src.listFiles()
             if (!dest.exists()) {
                 dest.mkdirs()
             }
-            src.listFiles()?.forEach { file ->
+            children?.forEach { file ->
                 copyRecursively(file, File(dest, file.name))
             }
         } else {

@@ -166,6 +166,30 @@ class StorageWorkspaceProviderTest {
         assertEquals("important", StorageWorkspaceProvider.readFile(context, "Download/report.txt").data)
     }
 
+    @Test(timeout = 20_000)
+    fun `zipping a folder into a zip inside it fails instead of reading its own output`() {
+        // On the unfixed code this grows until storage is full, so it is only added
+        // alongside the fix (#89).
+        StorageWorkspaceProvider.writeFile(context, "p/a.txt", "x".repeat(50_000))
+
+        val result = StorageWorkspaceProvider.zipFiles(context, "p", "p/p.zip")
+
+        assertFalse(result.success)
+        assertFalse(File(workspace(), "p/p.zip").exists())
+    }
+
+    @Test
+    fun `moving and copying to a sibling still work`() {
+        StorageWorkspaceProvider.writeFile(context, "notes/a.txt", "keep")
+
+        assertTrue(StorageWorkspaceProvider.copyFile(context, "notes", "notes-copy").success)
+        assertTrue(StorageWorkspaceProvider.moveFile(context, "notes", "notes2").success)
+
+        assertEquals("keep", StorageWorkspaceProvider.readFile(context, "notes-copy/a.txt").data)
+        assertEquals("keep", StorageWorkspaceProvider.readFile(context, "notes2/a.txt").data)
+        assertFalse(File(workspace(), "notes").exists())
+    }
+
     @Test
     fun `advanced control actions file operations execute seamlessly`() = runBlocking {
         val actions = AdvancedControlActions()
