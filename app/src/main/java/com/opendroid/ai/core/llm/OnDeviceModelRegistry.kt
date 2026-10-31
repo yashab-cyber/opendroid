@@ -291,8 +291,7 @@ object OnDeviceModelRegistry {
         if (activityManager != null) {
             val memoryInfo = android.app.ActivityManager.MemoryInfo()
             activityManager.getMemoryInfo(memoryInfo)
-            val totalRam = memoryInfo.totalMem
-            val totalRamGb = totalRam.toDouble() / (1024 * 1024 * 1024)
+            val totalRamGb = DeviceRamTier.deviceGb(memoryInfo.totalMem)
             val modelName = spec.displayName
             
             // Critical system memory pressure check
@@ -303,15 +302,9 @@ object OnDeviceModelRegistry {
                 )
             }
 
-            val requiredRamGb = when {
-                spec.expectedSize >= 4.5 * 1024 * 1024 * 1024L -> 12.0 // e.g. Gemma 3n E4B (~4.92 GB)
-                spec.expectedSize >= 3.0 * 1024 * 1024 * 1024L -> 8.0  // e.g. Gemma 4 E4B (~3.66 GB), Gemma 3n E2B (~3.65 GB)
-                spec.expectedSize >= 2.0 * 1024 * 1024 * 1024L -> 6.0  // e.g. Gemma 4 E2B (~2.58 GB)
-                spec.expectedSize >= 1.0 * 1024 * 1024 * 1024L -> 4.0
-                else -> 3.5 // Small models (e.g. Qwen 2.5 0.5B ~546 MB) still need >= 3.5 GB system RAM
-            }
-            
-            if (totalRamGb < requiredRamGb) {
+            val requiredRamGb = DeviceRamTier.requiredGb(spec.expectedSize)
+
+            if (!DeviceRamTier.meetsRequirement(memoryInfo.totalMem, spec.expectedSize)) {
                 throw IllegalStateException(
                     "Insufficient device memory: $modelName requires at least ${String.format(java.util.Locale.US, "%.1f", requiredRamGb)} GB of system RAM, but your device only has ${String.format(java.util.Locale.US, "%.1f", totalRamGb)} GB RAM. " +
                     "Running this model will cause the system to crash. Please use a smaller model like Qwen 2.5."
