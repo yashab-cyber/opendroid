@@ -156,6 +156,47 @@ class ClaudeProviderNetworkTest {
     }
 
     @Test
+    fun `text blocks are joined and other block types skipped`() = runBlocking {
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"content":[{"type":"thinking","thinking":"hmm"},{"type":"text","text":"po"},{"type":"text","text":"ng"}],
+                   "usage":{"input_tokens":3,"output_tokens":4}}"""
+            )
+        )
+
+        assertEquals("pong", provider.complete(newRequest()).content)
+    }
+
+    @Test
+    fun `a reply without a text block is a malformed response`() {
+        for (body in listOf("""{"content":[]}""", """{"content":null}""", """{"type":"message"}""",
+                            """{"content":[{"type":"tool_use","id":"t1","name":"x","input":{}}]}""")) {
+            server.enqueue(jsonResponse(200, body))
+            assertEquals(body, LLMError.MalformedResponse, completeExpectingFailure().error)
+        }
+    }
+
+    @Test
+    fun `null usage reports zero tokens`() = runBlocking {
+        server.enqueue(jsonResponse(200, """{"content":[{"type":"text","text":"pong"}],"usage":null}"""))
+
+        assertEquals(0, provider.complete(newRequest()).tokensUsed)
+    }
+
+    @Test
+    fun `a non-JSON 200 while streaming fails as malformed, not as a network error`() {
+        // streamComplete wrapped every parse failure in IOException, which maps to NETWORK (#88).
+        server.enqueue(jsonResponse(200, "<html>gateway</html>"))
+
+        val failure = assertThrows(LLMException::class.java) {
+            runBlocking { provider.streamComplete(newRequest()).collect {} }
+        }
+
+        assertEquals(LLMError.MalformedResponse, failure.error)
+    }
+
+    @Test
     fun `a 401 becomes a redacted AuthInvalid`() {
         server.enqueue(
             jsonResponse(

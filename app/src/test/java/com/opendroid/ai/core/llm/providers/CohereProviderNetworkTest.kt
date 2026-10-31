@@ -106,6 +106,28 @@ class CohereProviderNetworkTest {
     }
 
     @Test
+    fun `input and output tokens are summed`() = runBlocking {
+        // Cohere v2 reports usage.tokens.{input_tokens, output_tokens}; there is no total (#88).
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"message":{"role":"assistant","content":[{"type":"text","text":"pong"}]},
+                   "usage":{"billed_units":{"input_tokens":30,"output_tokens":12},"tokens":{"input_tokens":30,"output_tokens":12}}}"""
+            )
+        )
+
+        assertEquals(42, provider.complete(newRequest()).tokensUsed)
+    }
+
+    @Test
+    fun `a reply without text content is a malformed response`() {
+        for (body in listOf("""{"message":{"role":"assistant","content":[]}}""", """{"message":{"role":"assistant"}}""", """{"usage":{}}""")) {
+            server.enqueue(jsonResponse(200, body))
+            assertEquals(body, LLMError.MalformedResponse, completeExpectingFailure().error)
+        }
+    }
+
+    @Test
     fun `a 401 becomes a redacted AuthInvalid`() {
         server.enqueue(
             jsonResponse(

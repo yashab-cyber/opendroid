@@ -138,6 +138,57 @@ class OpenAICompatibleProvidersNetworkTest(private val case: Case) {
     }
 
     @Test
+    fun `a refusal with null content is returned as the reply`() = runBlocking {
+        // OpenAI answers a refused request with content null and the text in "refusal" (#88).
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"choices":[{"message":{"role":"assistant","content":null,"refusal":"I can't help with that."}}]}"""
+            )
+        )
+
+        assertEquals("I can't help with that.", provider.complete(newRequest()).content)
+    }
+
+    @Test
+    fun `null content without a refusal is a malformed response`() {
+        server.enqueue(jsonResponse(200, """{"choices":[{"message":{"role":"assistant","content":null}}]}"""))
+
+        assertEquals(LLMError.MalformedResponse, completeExpectingFailure().error)
+    }
+
+    @Test
+    fun `a 200 error body without choices is a malformed response`() {
+        server.enqueue(jsonResponse(200, """{"error":{"message":"upstream failed","code":502}}"""))
+
+        assertEquals(LLMError.MalformedResponse, completeExpectingFailure().error)
+    }
+
+    @Test
+    fun `null usage fields report zero tokens instead of discarding the reply`() = runBlocking {
+        server.enqueue(jsonResponse(200, """{"choices":[{"message":{"role":"assistant","content":"pong"}}],"usage":null}"""))
+        server.enqueue(
+            jsonResponse(200, """{"choices":[{"message":{"role":"assistant","content":"pong"}}],"usage":{"total_tokens":null}}""")
+        )
+
+        assertEquals(0, provider.complete(newRequest()).tokensUsed)
+        assertEquals(0, provider.complete(newRequest()).tokensUsed)
+    }
+
+    @Test
+    fun `content given as typed parts keeps only the text parts`() = runBlocking {
+        server.enqueue(
+            jsonResponse(
+                200,
+                """{"choices":[{"message":{"role":"assistant","content":[
+                   {"type":"thinking","thinking":"hmm"},{"type":"text","text":"po"},{"type":"text","text":"ng"}]}}]}"""
+            )
+        )
+
+        assertEquals("pong", provider.complete(newRequest()).content)
+    }
+
+    @Test
     fun `a 401 becomes a redacted AuthInvalid`() {
         server.enqueue(
             jsonResponse(
